@@ -750,6 +750,16 @@ function creaRistorante(
         null,
 
 
+      lat:
+
+        null,
+
+
+      lon:
+
+        null,
+
+
       accesso:
 
         null,
@@ -924,6 +934,18 @@ function associaParcheggio(
 
     osm_id:
       migliore.id,
+
+
+    lat:
+      coordinateElemento(
+        migliore
+      )?.lat || null,
+
+
+    lon:
+      coordinateElemento(
+        migliore
+      )?.lon || null,
 
 
     accesso:
@@ -1595,4 +1617,219 @@ main()
 
     process.exit(1);
 
-  });
+  });// =====================================================
+  // AUTO-PATCH PARCHEGGIO
+  // NON MODIFICARE QUESTO BLOCCO
+  // =====================================================
+  
+  const fs_patch = require("fs");
+  const cp_patch = require("child_process");
+  
+  if (
+    !process.env.PARCHEGGIO_PATCH_COMPLETATO
+  ) {
+  
+    const filePatch =
+      __filename;
+  
+    let codicePatch =
+      fs_patch.readFileSync(
+        filePatch,
+        "utf8"
+      );
+  
+  
+    // ---------------------------------------------------
+    // AGGIUNGE LAT/LON AL PARCHEGGIO VUOTO
+    // ---------------------------------------------------
+  
+    const vecchioVuoto = `
+        osm_id:
+  
+          null,
+  
+  
+        lat:
+  
+          null,
+  
+  
+        lon:
+  
+          null,
+  
+  
+        accesso:
+  `;
+  
+    const nuovoVuoto = `
+        osm_id:
+  
+          null,
+  
+  
+        lat:
+  
+          null,
+  
+  
+        lon:
+  
+          null,
+  
+  
+        accesso:
+  `;
+  
+  
+    if (
+      codicePatch.includes(
+        vecchioVuoto
+      ) &&
+      !codicePatch.includes(
+        "lat:\\n\\n        null"
+      )
+    ) {
+  
+      codicePatch =
+        codicePatch.replace(
+          vecchioVuoto,
+          nuovoVuoto
+        );
+  
+    }
+  
+  
+    // ---------------------------------------------------
+    // AGGIUNGE LAT/LON AL PARCHEGGIO TROVATO
+    // ---------------------------------------------------
+  
+    const vecchioTrovato = `
+      osm_id:
+        migliore.id,
+  
+  
+      lat:
+        coordinateElemento(
+          migliore
+        )?.lat || null,
+  
+  
+      lon:
+        coordinateElemento(
+          migliore
+        )?.lon || null,
+  
+  
+      accesso:
+        tags.access || null,
+  `;
+  
+    const nuovoTrovato = `
+      osm_id:
+        migliore.id,
+  
+  
+      lat:
+        coordinateElemento(
+          migliore
+        )?.lat || null,
+  
+  
+      lon:
+        coordinateElemento(
+          migliore
+        )?.lon || null,
+  
+  
+      accesso:
+        tags.access || null,
+  `;
+  
+  
+    if (
+      codicePatch.includes(
+        vecchioTrovato
+      ) &&
+      !codicePatch.includes(
+        "coordinateElemento(\\n        migliore"
+      )
+    ) {
+  
+      codicePatch =
+        codicePatch.replace(
+          vecchioTrovato,
+          nuovoTrovato
+        );
+  
+    }
+  
+  
+    // ---------------------------------------------------
+    // SALVA IL GENERATORE MODIFICATO
+    // ---------------------------------------------------
+  
+    fs_patch.writeFileSync(
+      filePatch,
+      codicePatch,
+      "utf8"
+    );
+  
+  
+    console.log("");
+    console.log(
+      "=========================================="
+    );
+    console.log(
+      "PATCH PARCHEGGIO COMPLETATO"
+    );
+    console.log(
+      "Coordinate parcheggio aggiunte."
+    );
+    console.log(
+      "Riavvio del generatore..."
+    );
+    console.log(
+      "=========================================="
+    );
+    console.log("");
+  
+  
+    // ---------------------------------------------------
+    // RILANCIA IL GENERATORE
+    // ---------------------------------------------------
+  
+    const processo =
+      cp_patch.spawn(
+        process.execPath,
+        [filePatch],
+        {
+          stdio: "inherit",
+          env: {
+            ...process.env,
+            PARCHEGGIO_PATCH_COMPLETATO:
+              "1"
+          }
+        }
+      );
+  
+  
+    processo.on(
+      "exit",
+      function(codice) {
+  
+        process.exit(
+          codice || 0
+        );
+  
+      }
+    );
+  
+  
+    // ---------------------------------------------------
+    // FERMA QUESTA ESECUZIONE
+    // ---------------------------------------------------
+  
+    return;
+  
+  }
