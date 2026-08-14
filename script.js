@@ -10,10 +10,13 @@
 
 const CONFIG = {
 
+  // Distanza massima ristorante
   distanzaMassimaRistoranteKm: 2,
 
+  // Tolleranza
   tolleranzaDistanzaMetri: 100,
 
+  // Distanza effettiva = 2 km + 100 m
   get distanzaMassimaEffettivaMetri() {
 
     return (
@@ -103,14 +106,37 @@ const exitIcon = L.divIcon({
 
 
 // =====================================================
-// DATABASE
+// DATABASE USCITE
 // =====================================================
 
 let usciteItaliane = [];
 
 
 // =====================================================
-// CONTROLLA SE E' AREA DI SERVIZIO / AUTOGRILL
+// FUNZIONE:
+// NORMALIZZA TESTO
+// =====================================================
+
+function normalizzaTesto(valore) {
+
+  return String(valore || "")
+
+    .toLowerCase()
+
+    .normalize("NFD")
+
+    .replace(/[\u0300-\u036f]/g, "")
+
+    .replace(/\s+/g, " ")
+
+    .trim();
+
+}
+
+
+// =====================================================
+// FUNZIONE:
+// CONTROLLA AREA DI SERVIZIO / AUTOGRILL
 // =====================================================
 
 function eAreaDiServizio(uscita) {
@@ -123,53 +149,48 @@ function eAreaDiServizio(uscita) {
 
 
   // ---------------------------------------------
-  // CONTROLLO CAMPO TIPO
+  // TESTO COMPLESSIVO
   // ---------------------------------------------
 
-  const tipo = String(
-    uscita.tipo || ""
-  ).toLowerCase();
+  const testo = normalizzaTesto(
 
+    [
 
-  if (
+      uscita.nome,
 
-    tipo.includes("servizio") ||
+      uscita.tipo,
 
-    tipo.includes("autogrill") ||
+      uscita.nome_autostrada,
 
-    tipo.includes("ristoro") ||
+      uscita.autostrada,
 
-    tipo.includes("sosta") ||
+      uscita.descrizione,
 
-    tipo.includes("service")
+      uscita.categoria,
 
-  ) {
+      uscita.name,
 
-    return true;
+      uscita.amenity,
 
-  }
+      uscita.shop,
+
+      uscita.operator
+
+    ]
+
+      .filter(Boolean)
+
+      .join(" ")
+
+  );
 
 
   // ---------------------------------------------
-  // CONTROLLO NOME
+  // PAROLE CHE IDENTIFICANO
+  // AREE DI SERVIZIO
   // ---------------------------------------------
 
-  const nome = (
-
-    String(uscita.nome || "") +
-
-    " " +
-
-    String(uscita.nome_autostrada || "") +
-
-    " " +
-
-    String(uscita.autostrada || "")
-
-  ).toLowerCase();
-
-
-  const paroleDaEscludere = [
+  const paroleEscluse = [
 
     "area di servizio",
 
@@ -179,34 +200,88 @@ function eAreaDiServizio(uscita) {
 
     "area sosta",
 
-    "autogrill",
+    "area di ristoro",
 
     "area ristoro",
 
-    "ristoro",
+    "autogrill",
 
     "service area",
 
-    "service station"
+    "service station",
+
+    "rest area",
+
+    "rest stop",
+
+    "truck stop",
+
+    "parcheggio autostradale",
+
+    "sosta autostradale"
 
   ];
 
 
   for (
+
     let i = 0;
-    i < paroleDaEscludere.length;
+
+    i < paroleEscluse.length;
+
     i++
+
   ) {
 
     if (
-      nome.includes(
-        paroleDaEscludere[i]
+
+      testo.includes(
+
+        paroleEscluse[i]
+
       )
+
     ) {
 
       return true;
 
     }
+
+  }
+
+
+  // ---------------------------------------------
+  // CONTROLLO CAMPO TIPO
+  // ---------------------------------------------
+
+  const tipo = normalizzaTesto(
+
+    uscita.tipo
+
+  );
+
+
+  if (
+
+    tipo === "service" ||
+
+    tipo === "service_area" ||
+
+    tipo === "rest_area" ||
+
+    tipo === "rest stop" ||
+
+    tipo === "autogrill" ||
+
+    tipo === "area di servizio" ||
+
+    tipo === "area servizio" ||
+
+    tipo === "area di sosta"
+
+  ) {
+
+    return true;
 
   }
 
@@ -217,7 +292,7 @@ function eAreaDiServizio(uscita) {
 
 
 // =====================================================
-// CONTROLLA USCITA VALIDA
+// USCITA VALIDA
 // =====================================================
 
 function uscitaValida(uscita) {
@@ -228,6 +303,8 @@ function uscitaValida(uscita) {
 
   }
 
+
+  // Coordinate obbligatorie
 
   if (
 
@@ -242,8 +319,12 @@ function uscitaValida(uscita) {
   }
 
 
+  // Se esplicitamente nascosta
+
   if (
+
     uscita.visualizza_mappa === false
+
   ) {
 
     return false;
@@ -251,10 +332,12 @@ function uscitaValida(uscita) {
   }
 
 
-  // ESCLUDI AUTOGRILL / AREE DI SERVIZIO
+  // Escludi aree di servizio
 
   if (
+
     eAreaDiServizio(uscita)
+
   ) {
 
     return false;
@@ -268,7 +351,7 @@ function uscitaValida(uscita) {
 
 
 // =====================================================
-// CREA POPUP
+// CREA POPUP USCITA
 // =====================================================
 
 function creaPopup(uscita) {
@@ -278,7 +361,9 @@ function creaPopup(uscita) {
     <div class="exit-popup">
 
       <strong>
+
         ${uscita.nome || "Uscita autostradale"}
+
       </strong>
 
   `;
@@ -289,6 +374,7 @@ function creaPopup(uscita) {
     popup += `
 
       <small>
+
         ${uscita.autostrada}
 
     `;
@@ -297,6 +383,7 @@ function creaPopup(uscita) {
     if (uscita.numero_uscita) {
 
       popup +=
+
         ` · Uscita ${uscita.numero_uscita}`;
 
     }
@@ -316,7 +403,9 @@ function creaPopup(uscita) {
     popup += `
 
       <small>
+
         ${uscita.nome_autostrada}
+
       </small>
 
     `;
@@ -327,7 +416,9 @@ function creaPopup(uscita) {
   popup += `
 
       <small>
+
         📍 Uscita autostradale
+
       </small>
 
     </div>
@@ -351,14 +442,18 @@ fetch("./uscite.json")
     if (!response.ok) {
 
       throw new Error(
+
         "Impossibile caricare uscite.json"
+
       );
 
     }
 
+
     return response.json();
 
   })
+
 
   .then(function(database) {
 
@@ -366,20 +461,32 @@ fetch("./uscite.json")
 
 
     console.log(
+
       "================================="
+
     );
 
+
     console.log(
+
       "DATABASE 1 KM E SI MANGIA"
+
     );
 
+
     console.log(
+
       "Uscite caricate:",
+
       usciteItaliane.length
+
     );
 
+
     console.log(
+
       "================================="
+
     );
 
 
@@ -394,8 +501,11 @@ fetch("./uscite.json")
 
     usciteItaliane.forEach(function(uscita) {
 
+
       if (
+
         !uscitaValida(uscita)
+
       ) {
 
         usciteEscluse++;
@@ -408,19 +518,26 @@ fetch("./uscite.json")
       const marker = L.marker(
 
         [
+
           uscita.lat,
+
           uscita.lon
+
         ],
 
         {
+
           icon: exitIcon
+
         }
 
       );
 
 
       marker.bindPopup(
+
         creaPopup(uscita)
+
       );
 
 
@@ -437,14 +554,19 @@ fetch("./uscite.json")
           map.flyTo(
 
             [
+
               uscita.lat,
+
               uscita.lon
+
             ],
 
             14,
 
             {
+
               duration: 1
+
             }
 
           );
@@ -455,7 +577,9 @@ fetch("./uscite.json")
 
 
       clusterUscite.addLayer(
+
         marker
+
       );
 
 
@@ -465,30 +589,46 @@ fetch("./uscite.json")
 
 
     console.log(
+
       "Uscite visibili:",
+
       usciteVisibili
+
     );
 
 
     console.log(
+
       "Elementi esclusi:",
+
       usciteEscluse
+
     );
 
 
     console.log(
+
       "Filtro ristoranti:",
+
       CONFIG.distanzaMassimaRistoranteKm +
+
       " km + " +
+
       CONFIG.tolleranzaDistanzaMetri +
+
       " m"
+
     );
 
 
     console.log(
+
       "Distanza effettiva:",
+
       CONFIG.distanzaMassimaEffettivaMetri +
+
       " m"
+
     );
 
   })
@@ -497,26 +637,44 @@ fetch("./uscite.json")
   .catch(function(error) {
 
     console.error(
+
       "Errore database:",
+
       error
+
     );
 
   });
 
 
 // =====================================================
-// PULSANTE "ESPLORA LA MAPPA"
+// FUNZIONE:
+// TROVA SEZIONE MAPPA
+// =====================================================
+
+function getMapSection() {
+
+  return (
+
+    document.getElementById("mapSection") ||
+
+    document.getElementById("mappa")
+
+  );
+
+}
+
+
+// =====================================================
+// PULSANTE ESPLORA LA MAPPA
 // =====================================================
 
 const mapButton =
+
   document.getElementById(
+
     "mapButton"
-  );
 
-
-const mapSection =
-  document.getElementById(
-    "mapSection"
   );
 
 
@@ -528,15 +686,38 @@ if (mapButton) {
 
     function() {
 
-      if (mapSection) {
+      const mapSection =
 
-        mapSection.scrollIntoView({
+        getMapSection();
 
-          behavior: "smooth"
 
-        });
+      if (!mapSection) {
+
+        return;
 
       }
+
+
+      mapSection.scrollIntoView({
+
+        behavior: "smooth",
+
+        block: "start"
+
+      });
+
+
+      setTimeout(
+
+        function() {
+
+          map.invalidateSize();
+
+        },
+
+        500
+
+      );
 
     }
 
@@ -550,8 +731,11 @@ if (mapButton) {
 // =====================================================
 
 const locationButton =
+
   document.getElementById(
+
     "locationButton"
+
   );
 
 
@@ -570,7 +754,9 @@ if (locationButton) {
       if (!navigator.geolocation) {
 
         alert(
+
           "La geolocalizzazione non è disponibile."
+
         );
 
         return;
@@ -579,25 +765,34 @@ if (locationButton) {
 
 
       locationButton.textContent =
+
         "📍 RICERCA POSIZIONE...";
 
 
       navigator.geolocation.getCurrentPosition(
 
+
         function(position) {
 
+
           const lat =
+
             position.coords.latitude;
 
 
           const lng =
+
             position.coords.longitude;
 
 
           console.log(
+
             "Posizione GPS:",
+
             lat,
+
             lng
+
           );
 
 
@@ -608,7 +803,9 @@ if (locationButton) {
           if (userMarker) {
 
             map.removeLayer(
+
               userMarker
+
             );
 
           }
@@ -618,28 +815,33 @@ if (locationButton) {
           // MARKER UTENTE
           // ---------------------------------------
 
-          userMarker = L.circleMarker(
+          userMarker =
 
-            [
-              lat,
-              lng
-            ],
+            L.circleMarker(
 
-            {
+              [
 
-              radius: 9,
+                lat,
 
-              color: "#ffffff",
+                lng
 
-              weight: 4,
+              ],
 
-              fillColor: "#075c3b",
+              {
 
-              fillOpacity: 1
+                radius: 9,
 
-            }
+                color: "#ffffff",
 
-          );
+                weight: 4,
+
+                fillColor: "#075c3b",
+
+                fillOpacity: 1
+
+              }
+
+            );
 
 
           userMarker.addTo(map);
@@ -648,7 +850,9 @@ if (locationButton) {
           userMarker
 
             .bindPopup(
+
               "📍 Sei qui"
+
             )
 
             .openPopup();
@@ -661,14 +865,19 @@ if (locationButton) {
           map.flyTo(
 
             [
+
               lat,
+
               lng
+
             ],
 
             13,
 
             {
+
               duration: 1.5
+
             }
 
           );
@@ -678,11 +887,18 @@ if (locationButton) {
           // SCROLL MAPPA
           // ---------------------------------------
 
+          const mapSection =
+
+            getMapSection();
+
+
           if (mapSection) {
 
             mapSection.scrollIntoView({
 
-              behavior: "smooth"
+              behavior: "smooth",
+
+              block: "start"
 
             });
 
@@ -690,6 +906,7 @@ if (locationButton) {
 
 
           locationButton.textContent =
+
             "📍 POSIZIONE TROVATA";
 
         },
@@ -697,23 +914,31 @@ if (locationButton) {
 
         function(error) {
 
+
           console.error(
+
             "Errore GPS:",
+
             error
+
           );
 
 
           alert(
 
             "Non siamo riusciti ad ottenere " +
+
             "la tua posizione. " +
+
             "Controlla l'autorizzazione " +
+
             "alla geolocalizzazione."
 
           );
 
 
           locationButton.textContent =
+
             "📍 USA LA MIA POSIZIONE";
 
         },
@@ -739,275 +964,337 @@ if (locationButton) {
 
 
 // =====================================================
-// MENU LATERALE
-// =====================================================
-
-const menuButton =
-  document.querySelector(
-    ".menu-button"
-  );
-
-
-const siteMenu =
-  document.querySelector(
-    ".site-menu"
-  );
-
-
-const menuOverlay =
-  document.querySelector(
-    ".site-menu-overlay"
-  );
-
-
-const menuClose =
-  document.querySelector(
-    ".site-menu-close"
-  );
-
-
-// =====================================================
-// APRI MENU
-// =====================================================
-
-function openMenu() {
-
-  if (!siteMenu) {
-
-    console.warn(
-      "Menu non trovato"
-    );
-
-    return;
-
-  }
-
-
-  siteMenu.classList.add(
-    "open"
-  );
-
-
-  if (menuOverlay) {
-
-    menuOverlay.classList.add(
-      "open"
-    );
-
-  }
-
-
-  document.body.classList.add(
-    "menu-open"
-  );
-
-}
-
-
-// =====================================================
-// CHIUDI MENU
-// =====================================================
-
-function closeMenu() {
-
-  if (siteMenu) {
-
-    siteMenu.classList.remove(
-      "open"
-    );
-
-  }
-
-
-  if (menuOverlay) {
-
-    menuOverlay.classList.remove(
-      "open"
-    );
-
-  }
-
-
-  document.body.classList.remove(
-    "menu-open"
-  );
-
-}
-
-
-// =====================================================
-// TASTO MENU
-// =====================================================
-
-if (menuButton) {
-
-  menuButton.addEventListener(
-
-    "click",
-
-    function() {
-
-      if (
-
-        siteMenu &&
-
-        siteMenu.classList.contains(
-          "open"
-        )
-
-      ) {
-
-        closeMenu();
-
-      } else {
-
-        openMenu();
-
-      }
-
-    }
-
-  );
-
-}
-
-
-// =====================================================
-// TASTO X
-// =====================================================
-
-if (menuClose) {
-
-  menuClose.addEventListener(
-
-    "click",
-
-    function() {
-
-      closeMenu();
-
-    }
-
-  );
-
-}
-
-
-// =====================================================
-// CLICK OVERLAY
-// =====================================================
-
-if (menuOverlay) {
-
-  menuOverlay.addEventListener(
-
-    "click",
-
-    function() {
-
-      closeMenu();
-
-    }
-
-  );
-
-}
-
-
-// =====================================================
-// TASTO ESC
+// MENU PRINCIPALE
 // =====================================================
 
 document.addEventListener(
 
-  "keydown",
+  "DOMContentLoaded",
 
-  function(event) {
+  function() {
+
+
+    const menuButton =
+
+      document.querySelector(
+
+        ".menu-button"
+
+      );
+
+
+    const mobileMenu =
+
+      document.getElementById(
+
+        "mobileMenu"
+
+      );
+
+
+    const menuClose =
+
+      document.getElementById(
+
+        "menuClose"
+
+      );
+
+
+    // ---------------------------------------------
+    // CONTROLLO ELEMENTI
+    // ---------------------------------------------
 
     if (
-      event.key === "Escape"
+
+      !menuButton ||
+
+      !mobileMenu
+
     ) {
 
-      closeMenu();
+      console.warn(
+
+        "Menu principale: elementi non trovati"
+
+      );
+
+      return;
 
     }
 
-  }
 
-);
+    // ---------------------------------------------
+    // APRI MENU
+    // ---------------------------------------------
+
+    function openMenu() {
+
+      mobileMenu.classList.add(
+
+        "open"
+
+      );
 
 
-// =====================================================
-// LINK DEL MENU
-// =====================================================
+      mobileMenu.setAttribute(
 
-const menuLinks =
-  document.querySelectorAll(
-    ".menu-link"
-  );
+        "aria-hidden",
+
+        "false"
+
+      );
 
 
-menuLinks.forEach(
+      document.body.classList.add(
 
-  function(link) {
+        "menu-open"
 
-    link.addEventListener(
+      );
+
+    }
+
+
+    // ---------------------------------------------
+    // CHIUDI MENU
+    // ---------------------------------------------
+
+    function closeMenu() {
+
+      mobileMenu.classList.remove(
+
+        "open"
+
+      );
+
+
+      mobileMenu.setAttribute(
+
+        "aria-hidden",
+
+        "true"
+
+      );
+
+
+      document.body.classList.remove(
+
+        "menu-open"
+
+      );
+
+    }
+
+
+    // ---------------------------------------------
+    // PULSANTE HAMBURGER
+    // ---------------------------------------------
+
+    menuButton.addEventListener(
 
       "click",
 
       function(event) {
 
-        const target =
-          link.getAttribute(
-            "href"
-          );
+        event.preventDefault();
+
+        event.stopPropagation();
 
 
         if (
 
-          target &&
+          mobileMenu.classList.contains(
 
-          target.startsWith("#")
+            "open"
+
+          )
 
         ) {
 
-          event.preventDefault();
-
-
-          const elemento =
-            document.querySelector(
-              target
-            );
-
-
           closeMenu();
 
+        } else {
 
-          if (elemento) {
-
-            setTimeout(
-
-              function() {
-
-                elemento.scrollIntoView({
-
-                  behavior: "smooth",
-
-                  block: "start"
-
-                });
-
-              },
-
-              150
-
-            );
-
-          }
+          openMenu();
 
         }
 
       }
+
+    );
+
+
+    // ---------------------------------------------
+    // PULSANTE X
+    // ---------------------------------------------
+
+    if (menuClose) {
+
+      menuClose.addEventListener(
+
+        "click",
+
+        function(event) {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+
+          closeMenu();
+
+        }
+
+      );
+
+    }
+
+
+    // ---------------------------------------------
+    // CLICK SULLO SFONDO
+    // ---------------------------------------------
+
+    mobileMenu.addEventListener(
+
+      "click",
+
+      function(event) {
+
+
+        if (
+
+          event.target === mobileMenu
+
+        ) {
+
+          closeMenu();
+
+        }
+
+      }
+
+    );
+
+
+    // ---------------------------------------------
+    // TASTO ESC
+    // ---------------------------------------------
+
+    document.addEventListener(
+
+      "keydown",
+
+      function(event) {
+
+
+        if (
+
+          event.key === "Escape"
+
+        ) {
+
+          closeMenu();
+
+        }
+
+      }
+
+    );
+
+
+    // ---------------------------------------------
+    // LINK DEL MENU
+    // ---------------------------------------------
+
+    const menuLinks =
+
+      mobileMenu.querySelectorAll(
+
+        ".menu-link"
+
+      );
+
+
+    menuLinks.forEach(
+
+      function(link) {
+
+
+        link.addEventListener(
+
+          "click",
+
+          function(event) {
+
+
+            const target =
+
+              link.getAttribute(
+
+                "href"
+
+              );
+
+
+            if (
+
+              target &&
+
+              target.startsWith("#")
+
+            ) {
+
+              event.preventDefault();
+
+
+              const elemento =
+
+                document.querySelector(
+
+                  target
+
+                );
+
+
+              closeMenu();
+
+
+              if (elemento) {
+
+                setTimeout(
+
+                  function() {
+
+                    elemento.scrollIntoView({
+
+                      behavior: "smooth",
+
+                      block: "start"
+
+                    });
+
+                  },
+
+                  150
+
+                );
+
+              }
+
+            }
+
+          }
+
+        );
+
+      }
+
+    );
+
+
+    console.log(
+
+      "MENU PRINCIPALE ATTIVO"
 
     );
 
@@ -1048,122 +1335,47 @@ window.addEventListener(
 // =====================================================
 
 console.log(
+
   "================================="
+
 );
 
+
 console.log(
+
   "1 KM E SI MANGIA - SCRIPT AVVIATO"
+
 );
 
+
 console.log(
-  "Filtro:",
+
+  "Filtro ristoranti:",
+
   CONFIG.distanzaMassimaRistoranteKm +
+
   " km + " +
+
   CONFIG.tolleranzaDistanzaMetri +
+
   " m"
+
 );
+
 
 console.log(
-  "================================="
+
+  "Distanza effettiva:",
+
+  CONFIG.distanzaMassimaEffettivaMetri +
+
+  " m"
+
 );
-// =====================================================
-// MENU PRINCIPALE
-// =====================================================
-
-document.addEventListener("DOMContentLoaded", function () {
-
-  const menuButton = document.querySelector(".menu-button");
-  const mobileMenu = document.getElementById("mobileMenu");
-  const menuClose = document.getElementById("menuClose");
-
-  if (!menuButton || !mobileMenu) {
-    console.warn("Menu principale: elementi non trovati");
-    return;
-  }
-
-  function openMenu() {
-
-    mobileMenu.classList.add("open");
-    mobileMenu.setAttribute("aria-hidden", "false");
-
-    document.body.classList.add("menu-open");
-  }
 
 
-  function closeMenu() {
+console.log(
 
-    mobileMenu.classList.remove("open");
-    mobileMenu.setAttribute("aria-hidden", "true");
+  "================================="
 
-    document.body.classList.remove("menu-open");
-  }
-
-
-  // APERTURA
-  menuButton.addEventListener("click", function (event) {
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    openMenu();
-
-  });
-
-
-  // CHIUSURA CON X
-  if (menuClose) {
-
-    menuClose.addEventListener("click", function (event) {
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      closeMenu();
-
-    });
-
-  }
-
-
-  // CHIUSURA CLICCANDO FUORI DAL PANNELLO
-  mobileMenu.addEventListener("click", function (event) {
-
-    if (event.target === mobileMenu) {
-
-      closeMenu();
-
-    }
-
-  });
-
-
-  // CHIUSURA CON ESC
-  document.addEventListener("keydown", function (event) {
-
-    if (event.key === "Escape") {
-
-      closeMenu();
-
-    }
-
-  });
-
-
-  // LINK DEL MENU
-  const menuLinks =
-    mobileMenu.querySelectorAll(".menu-link");
-
-  menuLinks.forEach(function (link) {
-
-    link.addEventListener("click", function () {
-
-      closeMenu();
-
-    });
-
-  });
-
-
-  console.log("MENU PRINCIPALE ATTIVO");
-
-});
+);
