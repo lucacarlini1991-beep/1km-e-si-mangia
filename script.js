@@ -5,6 +5,44 @@
 
 
 // =====================================================
+// CONFIGURAZIONE
+// =====================================================
+
+const CONFIG = {
+
+  // Database uscite
+  databaseUscite: "./uscite_classificate.json",
+
+  // Filtro ristoranti futuro
+  distanzaMassimaRistorante: 2000,
+
+  // Tolleranza: 100 metri
+  tolleranzaDistanza: 100,
+
+  // Distanza effettiva massima
+  distanzaMassimaEffettiva: 2100
+
+};
+
+
+// =====================================================
+// ELEMENTI PAGINA
+// =====================================================
+
+const mapButton =
+  document.getElementById("mapButton");
+
+const locationButton =
+  document.getElementById("locationButton");
+
+const mapSection =
+  document.getElementById("mappa");
+
+const menuButton =
+  document.querySelector(".menu-button");
+
+
+// =====================================================
 // MAPPA
 // =====================================================
 
@@ -39,13 +77,18 @@ L.tileLayer(
 ).addTo(map);
 
 
-
 // =====================================================
-// GRUPPO USCITE
+// GRUPPO MARKER
 // =====================================================
 
-const clusterUscite =
-  L.markerClusterGroup({
+// Usiamo il clustering se il plugin è disponibile.
+// Altrimenti il sito continua comunque a funzionare.
+
+let clusterUscite;
+
+if (typeof L.markerClusterGroup === "function") {
+
+  clusterUscite = L.markerClusterGroup({
 
     showCoverageOnHover: false,
 
@@ -59,64 +102,59 @@ const clusterUscite =
 
   });
 
+} else {
 
-map.addLayer(
-  clusterUscite
-);
+  console.warn(
+    "MarkerCluster non disponibile: uso LayerGroup."
+  );
 
+  clusterUscite = L.layerGroup();
+
+}
+
+map.addLayer(clusterUscite);
 
 
 // =====================================================
 // ICONA USCITA
 // =====================================================
 
-const exitIcon =
-  L.divIcon({
+const exitIcon = L.divIcon({
 
-    className: "",
+  className: "",
 
-    html:
-      '<div class="custom-marker"></div>',
+  html:
+    '<div class="custom-marker"></div>',
 
-    iconSize: [
-      36,
-      36
-    ],
+  iconSize: [36, 36],
 
-    iconAnchor: [
-      18,
-      18
-    ],
+  iconAnchor: [18, 18],
 
-    popupAnchor: [
-      0,
-      -18
-    ]
+  popupAnchor: [0, -18]
 
-  });
-
+});
 
 
 // =====================================================
-// DATABASE USCITE
+// DATABASE
 // =====================================================
 
 let usciteItaliane = [];
 
 
-
 // =====================================================
-// CARICAMENTO DATABASE
+// CARICAMENTO DATABASE USCITE
 // =====================================================
 
-fetch("./uscite.json")
+fetch(CONFIG.databaseUscite)
 
   .then(function(response) {
 
     if (!response.ok) {
 
       throw new Error(
-        "Impossibile caricare uscite.json"
+        "Impossibile caricare " +
+        CONFIG.databaseUscite
       );
 
     }
@@ -125,12 +163,9 @@ fetch("./uscite.json")
 
   })
 
-
   .then(function(database) {
 
-    usciteItaliane =
-      database;
-
+    usciteItaliane = database;
 
     console.log(
       "================================="
@@ -141,7 +176,7 @@ fetch("./uscite.json")
     );
 
     console.log(
-      "Uscite caricate:",
+      "Record caricati:",
       usciteItaliane.length
     );
 
@@ -150,221 +185,217 @@ fetch("./uscite.json")
     );
 
 
-    // =================================================
+    // ---------------------------------------------
     // CREA MARKER
-    // =================================================
+    // ---------------------------------------------
 
-    usciteItaliane.forEach(
-      function(uscita) {
+    usciteItaliane.forEach(function(uscita) {
+
+      // -------------------------------------------
+      // COORDINATE VALIDE
+      // -------------------------------------------
+
+      if (
+
+        typeof uscita.lat !== "number" ||
+
+        typeof uscita.lon !== "number"
+
+      ) {
+
+        return;
+
+      }
 
 
-        // -----------------------------------------------
-        // CONTROLLO COORDINATE
-        // -----------------------------------------------
+      // -------------------------------------------
+      // FILTRO DATABASE
+      // -------------------------------------------
 
-        if (
+      // Se il nuovo database contiene il campo
+      // visualizza_mappa, rispettiamo quello.
 
-          typeof uscita.lat !== "number" ||
+      if (
+        uscita.visualizza_mappa === false
+      ) {
 
-          typeof uscita.lon !== "number"
+        return;
 
-        ) {
+      }
 
-          return;
+
+      // -------------------------------------------
+      // CREA MARKER
+      // -------------------------------------------
+
+      const marker = L.marker(
+
+        [
+          uscita.lat,
+          uscita.lon
+        ],
+
+        {
+          icon: exitIcon
+        }
+
+      );
+
+
+      // -------------------------------------------
+      // POPUP
+      // -------------------------------------------
+
+      let popup = `
+
+        <div class="exit-popup">
+
+          <strong>
+            ${escapeHTML(
+              uscita.nome || "Uscita autostradale"
+            )}
+          </strong>
+
+      `;
+
+
+      if (uscita.autostrada) {
+
+        popup += `
+
+          <small>
+
+            ${escapeHTML(
+              uscita.autostrada
+            )}
+
+        `;
+
+
+        if (uscita.numero_uscita) {
+
+          popup +=
+
+            ` · Uscita ${
+              escapeHTML(
+                String(uscita.numero_uscita)
+              )
+            }`;
 
         }
 
 
-        // -----------------------------------------------
-        // CREA MARKER
-        // -----------------------------------------------
+        popup += `
 
-        const marker =
-          L.marker(
+          </small>
+
+        `;
+
+      }
+
+
+      if (uscita.nome_autostrada) {
+
+        popup += `
+
+          <small>
+            ${escapeHTML(
+              uscita.nome_autostrada
+            )}
+          </small>
+
+        `;
+
+      }
+
+
+      popup += `
+
+          <small>
+            📍 Uscita autostradale
+          </small>
+
+        </div>
+
+      `;
+
+
+      marker.bindPopup(popup);
+
+
+      // -------------------------------------------
+      // CLICK MARKER
+      // -------------------------------------------
+
+      marker.on(
+
+        "click",
+
+        function() {
+
+          map.flyTo(
 
             [
               uscita.lat,
               uscita.lon
             ],
 
+            14,
+
             {
-              icon:
-                exitIcon
+              duration: 1
             }
 
           );
 
-
-        // -----------------------------------------------
-        // POPUP
-        // -----------------------------------------------
-
-        let popup = `
-
-          <div class="exit-popup">
-
-            <strong>
-              ${uscita.nome || "Uscita autostradale"}
-            </strong>
-
-        `;
-
-
-        // -----------------------------------------------
-        // AUTOSTRADA
-        // -----------------------------------------------
-
-        if (
-          uscita.autostrada
-        ) {
-
-          popup += `
-
-            <small>
-              ${uscita.autostrada}
-
-          `;
-
-
-          if (
-            uscita.numero_uscita
-          ) {
-
-            popup +=
-              ` · Uscita ${uscita.numero_uscita}`;
-
-          }
-
-
-          popup += `
-
-            </small>
-
-          `;
-
         }
 
-
-        // -----------------------------------------------
-        // NOME AUTOSTRADA
-        // -----------------------------------------------
-
-        if (
-          uscita.nome_autostrada
-        ) {
-
-          popup += `
-
-            <small>
-              ${uscita.nome_autostrada}
-            </small>
-
-          `;
-
-        }
+      );
 
 
-        // -----------------------------------------------
-        // TIPO
-        // -----------------------------------------------
+      clusterUscite.addLayer(marker);
 
-        popup += `
+    });
 
-            <small>
-              📍 Uscita autostradale
-            </small>
-
-          </div>
-
-        `;
-
-
-        marker.bindPopup(
-          popup
-        );
-
-
-        // -----------------------------------------------
-        // CLICK MARKER
-        // -----------------------------------------------
-
-        marker.on(
-
-          "click",
-
-          function() {
-
-            map.flyTo(
-
-              [
-                uscita.lat,
-                uscita.lon
-              ],
-
-              14,
-
-              {
-                duration: 1
-              }
-
-            );
-
-          }
-
-        );
-
-
-        // -----------------------------------------------
-        // AGGIUNGI AL CLUSTER
-        // -----------------------------------------------
-
-        clusterUscite.addLayer(
-          marker
-        );
-
-      }
-
-    );
 
   })
-
 
   .catch(function(error) {
 
     console.error(
-      "Errore database:",
+      "Errore database uscite:",
       error
     );
 
   });
 
 
-
 // =====================================================
-// SEZIONE MAPPA
+// SICUREZZA TESTO POPUP
 // =====================================================
 
-const mapButton =
-  document.getElementById(
-    "mapButton"
-  );
+function escapeHTML(value) {
 
+  return String(value)
 
-const mapSection =
-  document.getElementById(
-    "mapSection"
-  );
+    .replace(/&/g, "&amp;")
 
+    .replace(/</g, "&lt;")
+
+    .replace(/>/g, "&gt;")
+
+    .replace(/"/g, "&quot;")
+
+    .replace(/'/g, "&#039;");
+
+}
 
 
 // =====================================================
 // PULSANTE ESPLORA LA MAPPA
 // =====================================================
 
-if (
-  mapButton &&
-  mapSection
-) {
+if (mapButton) {
 
   mapButton.addEventListener(
 
@@ -372,15 +403,30 @@ if (
 
     function() {
 
+      if (!mapSection) {
+
+        return;
+
+      }
+
+
       mapSection.scrollIntoView({
 
-        behavior:
-          "smooth",
+        behavior: "smooth",
 
-        block:
-          "start"
+        block: "start"
 
       });
+
+
+      // Necessario quando Leaflet viene visualizzato
+      // dopo uno scroll.
+
+      setTimeout(function() {
+
+        map.invalidateSize();
+
+      }, 500);
 
     }
 
@@ -389,25 +435,14 @@ if (
 }
 
 
-
 // =====================================================
 // GEOLOCALIZZAZIONE
 // =====================================================
 
-const locationButton =
-  document.getElementById(
-    "locationButton"
-  );
+let userMarker = null;
 
 
-let userMarker =
-  null;
-
-
-
-if (
-  locationButton
-) {
+if (locationButton) {
 
   locationButton.addEventListener(
 
@@ -415,14 +450,7 @@ if (
 
     function() {
 
-
-      // -----------------------------------------------
-      // CONTROLLO SUPPORTO GPS
-      // -----------------------------------------------
-
-      if (
-        !navigator.geolocation
-      ) {
+      if (!navigator.geolocation) {
 
         alert(
           "La geolocalizzazione non è disponibile."
@@ -433,26 +461,16 @@ if (
       }
 
 
-      // -----------------------------------------------
-      // STATO PULSANTE
-      // -----------------------------------------------
-
       locationButton.textContent =
         "📍 RICERCA POSIZIONE...";
 
-
-      // -----------------------------------------------
-      // RICHIESTA POSIZIONE
-      // -----------------------------------------------
 
       navigator.geolocation.getCurrentPosition(
 
         function(position) {
 
-
           const lat =
             position.coords.latitude;
-
 
           const lng =
             position.coords.longitude;
@@ -465,13 +483,11 @@ if (
           );
 
 
-          // ---------------------------------------------
+          // ---------------------------------------
           // RIMUOVI VECCHIO MARKER
-          // ---------------------------------------------
+          // ---------------------------------------
 
-          if (
-            userMarker
-          ) {
+          if (userMarker) {
 
             map.removeLayer(
               userMarker
@@ -480,43 +496,35 @@ if (
           }
 
 
-          // ---------------------------------------------
-          // CREA MARKER UTENTE
-          // ---------------------------------------------
+          // ---------------------------------------
+          // MARKER UTENTE
+          // ---------------------------------------
 
-          userMarker =
-            L.circleMarker(
+          userMarker = L.circleMarker(
 
-              [
-                lat,
-                lng
-              ],
+            [
+              lat,
+              lng
+            ],
 
-              {
+            {
 
-                radius:
-                  9,
+              radius: 9,
 
-                color:
-                  "#ffffff",
+              color: "#ffffff",
 
-                weight:
-                  4,
+              weight: 4,
 
-                fillColor:
-                  "#075c3b",
+              fillColor: "#075c3b",
 
-                fillOpacity:
-                  1
+              fillOpacity: 1
 
-              }
+            }
 
-            );
-
-
-          userMarker.addTo(
-            map
           );
+
+
+          userMarker.addTo(map);
 
 
           userMarker
@@ -528,9 +536,9 @@ if (
             .openPopup();
 
 
-          // ---------------------------------------------
+          // ---------------------------------------
           // ZOOM
-          // ---------------------------------------------
+          // ---------------------------------------
 
           map.flyTo(
 
@@ -542,49 +550,39 @@ if (
             13,
 
             {
-
-              duration:
-                1.5
-
+              duration: 1.5
             }
 
           );
 
 
-          // ---------------------------------------------
-          // SCROLL ALLA MAPPA
-          // ---------------------------------------------
-
-          if (
-            mapSection
-          ) {
+          if (mapSection) {
 
             mapSection.scrollIntoView({
 
-              behavior:
-                "smooth",
+              behavior: "smooth",
 
-              block:
-                "start"
+              block: "start"
 
             });
 
           }
 
 
-          // ---------------------------------------------
-          // PULSANTE
-          // ---------------------------------------------
-
           locationButton.textContent =
             "📍 POSIZIONE TROVATA";
 
+
+          setTimeout(function() {
+
+            map.invalidateSize();
+
+          }, 700);
 
         },
 
 
         function(error) {
-
 
           console.error(
             "Errore GPS:",
@@ -610,14 +608,11 @@ if (
 
         {
 
-          enableHighAccuracy:
-            true,
+          enableHighAccuracy: true,
 
-          timeout:
-            10000,
+          timeout: 10000,
 
-          maximumAge:
-            30000
+          maximumAge: 30000
 
         }
 
@@ -630,143 +625,285 @@ if (
 }
 
 
-
 // =====================================================
-// MENU
+// MENU PRINCIPALE
 // =====================================================
 
-const menuButton =
-  document.getElementById(
-    "menuButton"
+let menuOverlay = null;
+
+
+// -----------------------------------------------------
+// CREA MENU
+// -----------------------------------------------------
+
+function createMenu() {
+
+  if (menuOverlay) {
+
+    return;
+
+  }
+
+
+  menuOverlay =
+    document.createElement("div");
+
+
+  menuOverlay.className =
+    "site-menu-overlay";
+
+
+  menuOverlay.innerHTML = `
+
+    <div
+      class="site-menu"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menu principale"
+    >
+
+      <div class="site-menu-header">
+
+        <div class="site-menu-brand">
+
+          <strong>
+            1 KM
+          </strong>
+
+          <span>
+            E SI MANGIA
+          </span>
+
+        </div>
+
+
+        <button
+          class="site-menu-close"
+          type="button"
+          aria-label="Chiudi menu"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <nav class="site-menu-nav">
+
+        <button
+          class="menu-link"
+          type="button"
+          data-target="top"
+        >
+          <span>🏠</span>
+          <strong>HOME</strong>
+        </button>
+
+
+        <button
+          class="menu-link"
+          type="button"
+          data-target="mappa"
+        >
+          <span>🗺️</span>
+          <strong>ESPLORA LE USCITE</strong>
+        </button>
+
+
+        <button
+          class="menu-link"
+          type="button"
+          data-target="come-funziona"
+        >
+          <span>❓</span>
+          <strong>COME FUNZIONA</strong>
+        </button>
+
+
+        <button
+          class="menu-link"
+          type="button"
+          data-target="distanze"
+        >
+          <span>📏</span>
+          <strong>QUANTO TI ALLONTANI?</strong>
+        </button>
+
+      </nav>
+
+
+      <div class="site-menu-footer">
+
+        <strong>
+          ESci. MANGIA. RIPARTI.
+        </strong>
+
+        <span>
+          Trova il posto giusto senza perdere tempo.
+        </span>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    menuOverlay
   );
 
 
-const mobileMenu =
-  document.getElementById(
-    "mobileMenu"
+  // -----------------------------------------------
+  // CHIUDI
+  // -----------------------------------------------
+
+  const closeButton =
+    menuOverlay.querySelector(
+      ".site-menu-close"
+    );
+
+
+  closeButton.addEventListener(
+
+    "click",
+
+    closeMenu
+
   );
 
 
-const menuClose =
-  document.getElementById(
-    "menuClose"
+  // -----------------------------------------------
+  // CLICK FUORI
+  // -----------------------------------------------
+
+  menuOverlay.addEventListener(
+
+    "click",
+
+    function(event) {
+
+      if (
+        event.target === menuOverlay
+      ) {
+
+        closeMenu();
+
+      }
+
+    }
+
   );
 
 
-const menuLinks =
-  document.querySelectorAll(
-    ".menu-link"
-  );
+  // -----------------------------------------------
+  // LINK MENU
+  // -----------------------------------------------
+
+  const links =
+    menuOverlay.querySelectorAll(
+      ".menu-link"
+    );
 
 
+  links.forEach(function(link) {
 
-// =====================================================
-// APERTURA MENU
-// =====================================================
+    link.addEventListener(
+
+      "click",
+
+      function() {
+
+        const target =
+          link.dataset.target;
+
+
+        closeMenu();
+
+
+        setTimeout(function() {
+
+          scrollToMenuTarget(
+            target
+          );
+
+        }, 200);
+
+      }
+
+    );
+
+  });
+
+}
+
+
+// -----------------------------------------------------
+// APRI MENU
+// -----------------------------------------------------
 
 function openMenu() {
 
-  if (
-    !mobileMenu
-  ) {
-
-    console.error(
-      "Menu non trovato."
-    );
-
-    return;
-
-  }
+  createMenu();
 
 
-  mobileMenu.classList.add(
-    "active"
+  menuOverlay.classList.add(
+    "is-open"
   );
 
 
-  mobileMenu.setAttribute(
-    "aria-hidden",
-    "false"
+  document.body.classList.add(
+    "menu-open"
   );
 
 
-  if (
-    menuButton
-  ) {
-
-    menuButton.setAttribute(
-      "aria-expanded",
-      "true"
-    );
-
-  }
-
-
-  document.body.style.overflow =
-    "hidden";
+  document.querySelector(
+    ".site-menu-close"
+  ).focus();
 
 }
 
 
-
-// =====================================================
-// CHIUSURA MENU
-// =====================================================
+// -----------------------------------------------------
+// CHIUDI MENU
+// -----------------------------------------------------
 
 function closeMenu() {
 
-  if (
-    !mobileMenu
-  ) {
+  if (!menuOverlay) {
 
     return;
 
   }
 
 
-  mobileMenu.classList.remove(
-    "active"
+  menuOverlay.classList.remove(
+    "is-open"
   );
 
 
-  mobileMenu.setAttribute(
-    "aria-hidden",
-    "true"
+  document.body.classList.remove(
+    "menu-open"
   );
-
-
-  if (
-    menuButton
-  ) {
-
-    menuButton.setAttribute(
-      "aria-expanded",
-      "false"
-    );
-
-  }
-
-
-  document.body.style.overflow =
-    "";
 
 }
 
 
+// -----------------------------------------------------
+// CLICK TASTO MENU
+// -----------------------------------------------------
 
-// =====================================================
-// TASTO ☰
-// =====================================================
-
-if (
-  menuButton
-) {
+if (menuButton) {
 
   menuButton.addEventListener(
 
     "click",
 
-    function() {
+    function(event) {
+
+      event.preventDefault();
+
+      event.stopPropagation();
 
       openMenu();
 
@@ -777,59 +914,8 @@ if (
 }
 
 
-
 // =====================================================
-// TASTO X
-// =====================================================
-
-if (
-  menuClose
-) {
-
-  menuClose.addEventListener(
-
-    "click",
-
-    function() {
-
-      closeMenu();
-
-    }
-
-  );
-
-}
-
-
-
-// =====================================================
-// LINK MENU
-// =====================================================
-
-menuLinks.forEach(
-
-  function(link) {
-
-    link.addEventListener(
-
-      "click",
-
-      function() {
-
-        closeMenu();
-
-      }
-
-    );
-
-  }
-
-);
-
-
-
-// =====================================================
-// ESC PER CHIUDERE
+// ESC PER CHIUDERE IL MENU
 // =====================================================
 
 document.addEventListener(
@@ -851,7 +937,286 @@ document.addEventListener(
 );
 
 
+// =====================================================
+// NAVIGAZIONE MENU
+// =====================================================
+
+function scrollToMenuTarget(target) {
+
+  if (target === "top") {
+
+    window.scrollTo({
+
+      top: 0,
+
+      behavior: "smooth"
+
+    });
+
+    return;
+
+  }
+
+
+  let element = null;
+
+
+  if (target === "mappa") {
+
+    element =
+      document.getElementById(
+        "mappa"
+      );
+
+  }
+
+
+  if (target === "come-funziona") {
+
+    element =
+      document.querySelector(
+        ".how-it-works"
+      );
+
+  }
+
+
+  if (target === "distanze") {
+
+    element =
+      document.querySelector(
+        ".rules"
+      );
+
+  }
+
+
+  if (!element) {
+
+    return;
+
+  }
+
+
+  element.scrollIntoView({
+
+    behavior: "smooth",
+
+    block: "start"
+
+  });
+
+
+  if (target === "mappa") {
+
+    setTimeout(function() {
+
+      map.invalidateSize();
+
+    }, 600);
+
+  }
+
+}
+
+
+// =====================================================
+// FILTRO DISTANZA
+// =====================================================
+//
+// PREPARAZIONE PER IL DATABASE RISTORANTI.
+//
+// Regola:
+// 2.000 metri + 100 metri di tolleranza
+// = 2.100 metri massimi.
+//
+// Non viene ancora applicato ai ristoranti perché
+// il database ristoranti verrà costruito nel prossimo
+// passaggio.
+// =====================================================
+
+function ristoranteDentroDistanza(
+  distanzaMetri
+) {
+
+  return (
+
+    typeof distanzaMetri === "number" &&
+
+    distanzaMetri <=
+      CONFIG.distanzaMassimaEffettiva
+
+  );
+
+}
+
+
+// =====================================================
+// DISTANZA TRA DUE COORDINATE
+// =====================================================
+
+function distanzaMetri(
+
+  lat1,
+  lon1,
+  lat2,
+  lon2
+
+) {
+
+  const R = 6371000;
+
+  const rad =
+    Math.PI / 180;
+
+
+  const phi1 =
+    lat1 * rad;
+
+  const phi2 =
+    lat2 * rad;
+
+
+  const deltaPhi =
+    (lat2 - lat1) * rad;
+
+
+  const deltaLambda =
+    (lon2 - lon1) * rad;
+
+
+  const a =
+
+    Math.sin(deltaPhi / 2) *
+    Math.sin(deltaPhi / 2)
+
+    +
+
+    Math.cos(phi1) *
+    Math.cos(phi2) *
+
+    Math.sin(deltaLambda / 2) *
+    Math.sin(deltaLambda / 2);
+
+
+  const c =
+
+    2 *
+    Math.atan2(
+
+      Math.sqrt(a),
+
+      Math.sqrt(1 - a)
+
+    );
+
+
+  return R * c;
+
+}
+
+
+// =====================================================
+// TROVA USCITE VICINE
+// =====================================================
+//
+// Funzione che utilizzeremo quando collegheremo
+// posizione GPS + uscita + ristoranti.
+// =====================================================
+
+function trovaUsciteVicino(
+
+  lat,
+  lon,
+  distanzaMassima = 2000
+
+) {
+
+  return usciteItaliane.filter(
+
+    function(uscita) {
+
+      if (
+
+        typeof uscita.lat !== "number" ||
+
+        typeof uscita.lon !== "number"
+
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        uscita.visualizza_mappa === false
+      ) {
+
+        return false;
+
+      }
+
+
+      const distanza =
+
+        distanzaMetri(
+
+          lat,
+          lon,
+
+          uscita.lat,
+          uscita.lon
+
+        );
+
+
+      return (
+        distanza <= distanzaMassima
+      );
+
+    }
+
+  );
+
+}
+
+
+// =====================================================
+// RESIZE MAPPA
+// =====================================================
+
+window.addEventListener(
+
+  "resize",
+
+  function() {
+
+    setTimeout(function() {
+
+      map.invalidateSize();
+
+    }, 200);
+
+  }
+
+);
+
 
 // =====================================================
 // FINE SCRIPT
 // =====================================================
+
+console.log(
+  "1 KM E SI MANGIA - SCRIPT CARICATO"
+);
+
+console.log(
+  "Filtro ristoranti:",
+  CONFIG.distanzaMassimaRistorante,
+  "m +",
+  CONFIG.tolleranzaDistanza,
+  "m =",
+  CONFIG.distanzaMassimaEffettiva,
+  "m"
+);
