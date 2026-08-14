@@ -2484,4 +2484,205 @@ document.addEventListener(
 
   },
   true
+);// =====================================================
+// PARCHEGGI - VISUALIZZAZIONE DEFINITIVA
+// =====================================================
+
+function statoParcheggioDefinitivo(ristorante) {
+
+  const p = ristorante?.parcheggio;
+
+  if (!p) {
+    return {
+      icona: "🟡",
+      testo: "Parcheggio da verificare",
+      classe: "da-verificare"
+    };
+  }
+
+  if (p.accesso) {
+
+    const accesso =
+      String(p.accesso).toLowerCase();
+
+    if (
+      accesso === "private" ||
+      accesso === "no"
+    ) {
+
+      return {
+        icona: "⚠️",
+        testo: "Parcheggio privato",
+        classe: "privato"
+      };
+
+    }
+
+  }
+
+  if (p.presente === true) {
+
+    if (
+      typeof p.distanza_m === "number"
+    ) {
+
+      return {
+        icona: "🟢",
+        testo:
+          "Parcheggio disponibile · " +
+          formattaDistanzaRistorante(
+            p.distanza_m
+          ),
+        classe: "disponibile"
+      };
+
+    }
+
+    return {
+      icona: "🟢",
+      testo: "Parcheggio disponibile",
+      classe: "disponibile"
+    };
+
+  }
+
+  return {
+    icona: "❌",
+    testo: "Nessun parcheggio rilevato",
+    classe: "assente"
+  };
+
+}
+
+
+// =====================================================
+// AGGIORNA LE SCHEDE DEI RISTORANTI
+// =====================================================
+
+function aggiornaStatoParcheggiPopup() {
+
+  const popup =
+    document.querySelector(
+      ".leaflet-popup"
+    );
+
+  if (!popup) {
+    return;
+  }
+
+  const contenitore =
+    popup.querySelector(
+      ".leaflet-popup-content"
+    );
+
+  if (!contenitore) {
+    return;
+  }
+
+  const pulsanti =
+    contenitore.querySelectorAll(
+      "[data-naviga-ristorante]"
+    );
+
+  pulsanti.forEach(
+    function(pulsante) {
+
+      const id =
+        pulsante.getAttribute(
+          "data-naviga-ristorante"
+        );
+
+      const ristorante =
+        ristorantiItaliani.find(
+          function(item) {
+            return item.id === id;
+          }
+        );
+
+      if (!ristorante) {
+        return;
+      }
+
+      const stato =
+        statoParcheggioDefinitivo(
+          ristorante
+        );
+
+      const card =
+        pulsante.closest(
+          "div"
+        );
+
+      if (!card) {
+        return;
+      }
+
+      const righe =
+        card.querySelectorAll(
+          "div"
+        );
+
+      // Cerca la riga che contiene
+      // il vecchio testo del parcheggio.
+
+      righe.forEach(
+        function(riga) {
+
+          const testo =
+            riga.textContent || "";
+
+          if (
+            testo.includes("Parcheggio")
+          ) {
+
+            riga.innerHTML =
+              stato.icona +
+              " " +
+              stato.testo;
+
+            riga.setAttribute(
+              "data-parcheggio-stato",
+              stato.classe
+            );
+
+          }
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// AGGIORNA DOPO L'APERTURA DEL POPUP
+// =====================================================
+
+if (
+  typeof map !== "undefined"
+) {
+
+  map.on(
+    "popupopen",
+    function() {
+
+      setTimeout(
+        aggiornaStatoParcheggiPopup,
+        50
+      );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// FINE PARCHEGGI
+// =====================================================
+
+console.log(
+  "Modulo parcheggi pronto"
 );
