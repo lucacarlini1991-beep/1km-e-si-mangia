@@ -12,6 +12,7 @@
 
   <title>1 KM E SI MANGIA</title>
 
+
   <!-- =====================================================
        FONT
        ===================================================== -->
@@ -41,7 +42,22 @@
 
 
   <!-- =====================================================
-       CSS
+       LEAFLET MARKER CLUSTER
+       ===================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  >
+
+
+  <!-- =====================================================
+       CSS DEL PROGETTO
        ===================================================== -->
 
   <link
@@ -115,7 +131,7 @@
 
 
     <!-- ===================================================
-         MENU BUTTON
+         PULSANTE MENU
          =================================================== -->
 
     <button
@@ -165,12 +181,18 @@
 
       <div class="menu-links">
 
+
         <a
           href="#home"
           class="menu-link"
         >
+
           <strong>HOME</strong>
-          <span>La nostra idea</span>
+
+          <span>
+            La nostra idea
+          </span>
+
         </a>
 
 
@@ -178,8 +200,13 @@
           href="#mapSection"
           class="menu-link"
         >
+
           <strong>ESPLORA LE USCITE</strong>
-          <span>Trova l'uscita più vicina</span>
+
+          <span>
+            Trova l'uscita più vicina
+          </span>
+
         </a>
 
 
@@ -187,8 +214,13 @@
           href="#come-funziona"
           class="menu-link"
         >
+
           <strong>COME FUNZIONA</strong>
-          <span>Scopri come utilizzare il servizio</span>
+
+          <span>
+            Scopri come utilizzare il servizio
+          </span>
+
         </a>
 
 
@@ -196,8 +228,13 @@
           href="#distanze"
           class="menu-link"
         >
+
           <strong>LE DISTANZE</strong>
-          <span>Quanto ti allontani dall'autostrada</span>
+
+          <span>
+            Quanto ti allontani dall'autostrada
+          </span>
+
         </a>
 
 
@@ -205,9 +242,15 @@
           href="#footer"
           class="menu-link"
         >
+
           <strong>CONTATTI</strong>
-          <span>1 KM E SI MANGIA</span>
+
+          <span>
+            1 KM E SI MANGIA
+          </span>
+
         </a>
+
 
       </div>
 
@@ -218,7 +261,7 @@
 
 
   <!-- =====================================================
-       CONTENUTO PRINCIPALE
+       CONTENUTO
        ===================================================== -->
 
   <main id="home">
@@ -232,32 +275,43 @@
 
       <div class="hero-content">
 
+
         <div class="small-title">
-          IL TUO PROSSIMO RISTORANTE È PIÙ VICINO DI QUANTO PENSI
+
+          IL TUO PROSSIMO RISTORANTE È PIÙ VICINO
+          DI QUANTO PENSI
+
         </div>
 
 
         <h1>
+
           ESCI.<br>
           MANGIA.<br>
           RIPARTI.
+
         </h1>
 
 
         <div class="description">
-          Trova ristoranti, trattorie e pizzerie a pochi minuti
-          dall'uscita autostradale.
+
+          Trova ristoranti, trattorie e pizzerie
+          a pochi minuti dall'uscita autostradale.
+
         </div>
 
 
         <div class="hero-buttons">
+
 
           <button
             class="location-button"
             id="locationButton"
             type="button"
           >
+
             📍 USA LA MIA POSIZIONE
+
           </button>
 
 
@@ -266,10 +320,14 @@
             id="mapButton"
             type="button"
           >
+
             🗺️ ESPLORA LA MAPPA
+
           </button>
 
+
         </div>
+
 
       </div>
 
@@ -311,20 +369,31 @@
       id="mapSection"
     >
 
+
       <div class="map-header">
 
+
         <div class="map-label">
+
           1 KM E SI MANGIA
+
         </div>
 
+
         <h2>
+
           ESPLORA LE USCITE
+
         </h2>
 
+
         <p>
-          Avvicinati sulla mappa per visualizzare le singole
-          uscite autostradali.
+
+          Avvicinati sulla mappa per visualizzare
+          le singole uscite autostradali.
+
         </p>
+
 
       </div>
 
@@ -334,11 +403,14 @@
 
       <div class="map-legend">
 
+
         <div>
 
           <span class="legend-dot"></span>
 
-          <span>Uscita autostradale</span>
+          <span>
+            Uscita autostradale
+          </span>
 
         </div>
 
@@ -347,11 +419,15 @@
 
           <span class="legend-route"></span>
 
-          <span>Autostrada</span>
+          <span>
+            Autostrada
+          </span>
 
         </div>
 
+
       </div>
+
 
     </section>
 
@@ -366,8 +442,11 @@
       id="come-funziona"
     >
 
+
       <h2>
+
         COME FUNZIONA
+
       </h2>
 
 
@@ -376,68 +455,94 @@
 
         <article class="step">
 
+
           <div class="step-icon">
             📍
           </div>
 
+
           <h3>
+
             Trova l'uscita
+
           </h3>
 
+
           <p>
-            Individua sulla mappa l'uscita autostradale
-            più vicina al tuo percorso.
+
+            Individua sulla mappa l'uscita
+            autostradale più vicina al tuo percorso.
+
           </p>
+
 
         </article>
 
 
 
         <article class="step">
+
 
           <div class="step-icon">
             🍕
+
           </div>
 
+
           <h3>
+
             Scegli dove mangiare
+
           </h3>
 
+
           <p>
+
             Scopri ristoranti, trattorie e pizzerie
             a pochi minuti dall'autostrada.
+
           </p>
+
 
         </article>
 
 
 
         <article class="step">
+
 
           <div class="step-icon">
             🚗
           </div>
 
+
           <h3>
+
             Riparti
+
           </h3>
 
+
           <p>
+
             Mangi, ti rilassi e torni rapidamente
             sul tuo percorso.
+
           </p>
+
 
         </article>
 
 
       </div>
 
+
     </section>
 
 
 
     <!-- ===================================================
-         REGOLE / DISTANZE
+         DISTANZE
          =================================================== -->
 
     <section
@@ -445,8 +550,11 @@
       id="distanze"
     >
 
+
       <h2>
+
         QUANTO TI ALLONTANI?
+
       </h2>
 
 
@@ -496,6 +604,7 @@
 
       </div>
 
+
     </section>
 
 
@@ -509,13 +618,22 @@
 
   <footer id="footer">
 
+
     <strong>
+
       1 KM E SI MANGIA
+
     </strong>
 
+
     <p>
-      Mangia bene. Perdi poco tempo. Riparti.
+
+      Mangia bene.
+      Perdi poco tempo.
+      Riparti.
+
     </p>
+
 
   </footer>
 
@@ -527,6 +645,15 @@
 
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  ></script>
+
+
+  <!-- =====================================================
+       LEAFLET MARKER CLUSTER
+       ===================================================== -->
+
+  <script
+    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
   ></script>
 
 
