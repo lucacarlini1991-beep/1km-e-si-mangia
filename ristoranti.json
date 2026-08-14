@@ -1,0 +1,47 @@
+[
+    {
+      "id": "",
+      "osm_id": "",
+      "nome": "",
+      "lat": 0,
+      "lon": 0,
+  
+      "cucina": "",
+      "categoria": "ristorante",
+  
+      "uscita_id": "",
+      "uscita_nome": "",
+      "distanza_uscita_m": 0,
+  
+      "parcheggio": {
+        "presente": null,
+        "tipo": "",
+        "accesso": "",
+        "distanza_m": null
+      },
+  
+      "mezzi_voluminosi": {
+        "stato": "non_verificato",
+        "hgv": null,
+        "maxheight": null,
+        "maxweight": null,
+        "maxlength": null
+      },
+  
+      "accesso": {
+        "strada": "",
+        "limitazioni": []
+      },
+  
+      "area_manovra": {
+        "stato": "non_verificato",
+        "fonte": ""
+      },
+  
+      "fonti": [
+        "OpenStreetMap"
+      ],
+  
+      "ultima_verifica": ""
+    }
+  ]
