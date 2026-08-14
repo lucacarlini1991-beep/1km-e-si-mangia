@@ -2164,4 +2164,324 @@ document.addEventListener(
 
 console.log(
   "1 KM E SI MANGIA - modulo ristoranti pronto"
+);// =====================================================
+// CORREZIONE POPUP RISTORANTI
+// - niente spostamento della mappa
+// - lista scrollabile
+// - mantiene il popup attuale
+// =====================================================
+
+let popupRistorantiAttivo = null;
+
+
+// Memorizza sempre il popup realmente aperto
+if (typeof map !== "undefined") {
+
+  map.on("popupopen", function (event) {
+
+    popupRistorantiAttivo = event.popup;
+
+  });
+
+  map.on("popupclose", function (event) {
+
+    if (
+      popupRistorantiAttivo === event.popup
+    ) {
+
+      popupRistorantiAttivo = null;
+
+    }
+
+  });
+
+}
+
+
+// =====================================================
+// FORMATTA IL POPUP RISTORANTI
+// =====================================================
+
+function aggiornaPopupRistorantiCorretto(
+  uscita,
+  mostraTutti
+) {
+
+  if (
+    !popupRistorantiAttivo ||
+    !uscita
+  ) {
+
+    return;
+
+  }
+
+  const popup =
+    popupRistorantiAttivo;
+
+
+  // Fondamentale:
+  // impedisce a Leaflet di spostare
+  // automaticamente la mappa.
+
+  popup.options.autoPan = false;
+
+
+  popup.setContent(
+    mostraRistorantiUscita(
+      uscita,
+      mostraTutti
+    )
+  );
+
+
+  popup.update();
+
+
+  // Rende il contenuto compatto
+  // e scrollabile.
+
+  setTimeout(function () {
+
+    const elemento =
+      popup.getElement();
+
+    if (!elemento) {
+
+      return;
+
+    }
+
+
+    const contenitore =
+      elemento.querySelector(
+        ".leaflet-popup-content"
+      );
+
+    if (contenitore) {
+
+      contenitore.style.maxHeight =
+        "55vh";
+
+      contenitore.style.overflowY =
+        "auto";
+
+      contenitore.style.overflowX =
+        "hidden";
+
+      contenitore.style.paddingRight =
+        "4px";
+
+    }
+
+
+    const lista =
+      elemento.querySelector(
+        ".restaurants-popup"
+      );
+
+    if (lista) {
+
+      lista.style.maxHeight =
+        "52vh";
+
+      lista.style.overflowY =
+        "auto";
+
+      lista.style.overflowX =
+        "hidden";
+
+    }
+
+  }, 0);
+
+}
+
+
+// =====================================================
+// INTERCETTA I CLICK PRIMA DEL VECCHIO CODICE
+// =====================================================
+
+document.addEventListener(
+  "click",
+  function (event) {
+
+
+    // -----------------------------------------------
+    // MOSTRA RISTORANTI
+    // -----------------------------------------------
+
+    const mostra =
+      event.target.closest(
+        "[data-mostra-ristoranti]"
+      );
+
+
+    if (mostra) {
+
+      event.preventDefault();
+
+      event.stopImmediatePropagation();
+
+
+      const uscitaId =
+        mostra.getAttribute(
+          "data-mostra-ristoranti"
+        );
+
+
+      const uscita =
+        usciteItaliane.find(
+          function (item) {
+
+            return (
+              item.id ===
+              uscitaId
+            );
+
+          }
+        );
+
+
+      if (!uscita) {
+
+        return;
+
+      }
+
+
+      aggiornaPopupRistorantiCorretto(
+        uscita,
+        false
+      );
+
+
+      return;
+
+    }
+
+
+    // -----------------------------------------------
+    // MOSTRA TUTTI
+    // -----------------------------------------------
+
+    const toggle =
+      event.target.closest(
+        "[data-toggle-ristoranti]"
+      );
+
+
+    if (toggle) {
+
+      event.preventDefault();
+
+      event.stopImmediatePropagation();
+
+
+      const uscitaId =
+        toggle.getAttribute(
+          "data-toggle-ristoranti"
+        );
+
+
+      const uscita =
+        usciteItaliane.find(
+          function (item) {
+
+            return (
+              item.id ===
+              uscitaId
+            );
+
+          }
+        );
+
+
+      if (!uscita) {
+
+        return;
+
+      }
+
+
+      const mostraSolo5 =
+        toggle.textContent
+          .includes(
+            "SOLO I 5"
+          );
+
+
+      aggiornaPopupRistorantiCorretto(
+        uscita,
+        mostraSolo5
+      );
+
+
+      return;
+
+    }
+
+
+    // -----------------------------------------------
+    // NAVIGA
+    // -----------------------------------------------
+
+    const naviga =
+      event.target.closest(
+        "[data-naviga-ristorante]"
+      );
+
+
+    if (naviga) {
+
+      event.preventDefault();
+
+      event.stopImmediatePropagation();
+
+
+      const id =
+        naviga.getAttribute(
+          "data-naviga-ristorante"
+        );
+
+
+      const ristorante =
+        ristorantiItaliani.find(
+          function (item) {
+
+            return (
+              item.id === id
+            );
+
+          }
+        );
+
+
+      if (!ristorante) {
+
+        return;
+
+      }
+
+
+      console.log(
+        "RISTORANTE SELEZIONATO:",
+        ristorante
+      );
+
+
+      alert(
+        "Hai selezionato:\n\n" +
+        ristorante.nome +
+        "\n\nLa navigazione verrà collegata nel prossimo passaggio."
+      );
+
+
+      return;
+
+    }
+
+
+  },
+  true
 );
