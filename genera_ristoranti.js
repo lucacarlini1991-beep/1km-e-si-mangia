@@ -9,13 +9,17 @@
 // OUTPUT:
 //   ristoranti.json
 //
-// DATI:
-//   OpenStreetMap / Overpass
+// FONTE DATI:
+//   OpenStreetMap tramite Overpass API
 //
-// REGOLA:
-//   ristorante entro 2.000 m
-//   + 100 m di tolleranza
-//   = 2.100 m massimi
+// DISTANZA:
+//   2.000 m + 100 m di tolleranza
+//   = 2.100 m
+//
+// NOTA:
+//   I dati relativi a parcheggio e mezzi voluminosi
+//   vengono indicati come verificati / non verificati.
+//   Non vengono inventate informazioni.
 // =====================================================
 
 
@@ -28,36 +32,176 @@ const fs = require("fs");
 
 const CONFIG = {
 
-  fileUscite:
-    "./uscite.json",
+  input: "./uscite.json",
 
-  fileOutput:
-    "./ristoranti.json",
+  output: "./ristoranti.json",
 
-  distanzaRistorante:
-    2100,
+  distanzaMassima: 2100,
 
-  distanzaParcheggio:
-    300,
+  distanzaParcheggio: 300,
 
-  batchUscite:
-    20,
+  batchSize: 20,
 
-  pausaTraRichieste:
-    1200,
+  pausaMs: 1200,
 
-  timeoutOverpass:
-    120
+  tentativi: 3
 
 };
 
 
 // =====================================================
-// OVERPASS
+// SERVER OVERPASS
 // =====================================================
 
-const OVERPASS_URL =
-  "https://overpass-api.de/api/interpreter";
+const OVERPASS_SERVERS = [
+
+  "https://overpass-api.de/api/interpreter",
+
+  "https://overpass.private.coffee/api/interpreter",
+
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+
+];
+
+
+// =====================================================
+// TESTO
+// =====================================================
+
+function normalizzaTesto(value) {
+
+  return String(value || "")
+
+    .toLowerCase()
+
+    .normalize("NFD")
+
+    .replace(/[\u0300-\u036f]/g, "")
+
+    .replace(/\s+/g, " ")
+
+    .trim();
+
+}
+
+
+// =====================================================
+// PAUSA
+// =====================================================
+
+function sleep(ms) {
+
+  return new Promise(function(resolve) {
+
+    setTimeout(resolve, ms);
+
+  });
+
+}
+
+
+// =====================================================
+// DISTANZA HAVERSINE
+// =====================================================
+
+function distanzaMetri(
+
+  lat1,
+  lon1,
+  lat2,
+  lon2
+
+) {
+
+  const R = 6371000;
+
+  const rad = Math.PI / 180;
+
+  const dLat =
+    (lat2 - lat1) * rad;
+
+  const dLon =
+    (lon2 - lon1) * rad;
+
+  const a =
+
+    Math.sin(dLat / 2) *
+    Math.sin(dLat / 2)
+
+    +
+
+    Math.cos(lat1 * rad) *
+    Math.cos(lat2 * rad) *
+
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
+
+  const c =
+
+    2 *
+
+    Math.atan2(
+
+      Math.sqrt(a),
+
+      Math.sqrt(1 - a)
+
+    );
+
+  return R * c;
+
+}
+
+
+// =====================================================
+// COORDINATE ELEMENTO OSM
+// =====================================================
+
+function coordinateElemento(elemento) {
+
+  if (
+
+    typeof elemento.lat === "number" &&
+
+    typeof elemento.lon === "number"
+
+  ) {
+
+    return {
+
+      lat: elemento.lat,
+
+      lon: elemento.lon
+
+    };
+
+  }
+
+
+  if (
+
+    elemento.center &&
+
+    typeof elemento.center.lat === "number" &&
+
+    typeof elemento.center.lon === "number"
+
+  ) {
+
+    return {
+
+      lat: elemento.center.lat,
+
+      lon: elemento.center.lon
+
+    };
+
+  }
+
+
+  return null;
+
+}
 
 
 // =====================================================
@@ -66,55 +210,46 @@ const OVERPASS_URL =
 
 function caricaUscite() {
 
-  console.log(
-    "Caricamento uscite.json..."
-  );
+  const testo =
 
-
-  const contenuto =
     fs.readFileSync(
-      CONFIG.fileUscite,
+
+      CONFIG.input,
+
       "utf8"
+
     );
 
 
   const database =
-    JSON.parse(
-      contenuto
-    );
+
+    JSON.parse(testo);
 
 
-  if (
-    !Array.isArray(database)
-  ) {
+  if (!Array.isArray(database)) {
 
     throw new Error(
-      "uscite.json non contiene un array."
+      "uscite.json deve contenere un array."
     );
 
   }
 
 
   const uscite =
-    database.filter(
 
-      function (uscita) {
+    database.filter(function(uscita) {
 
-        return (
+      return (
 
-          uscita &&
+        uscita &&
 
-          typeof uscita.lat ===
-            "number" &&
+        typeof uscita.lat === "number" &&
 
-          typeof uscita.lon ===
-            "number"
+        typeof uscita.lon === "number"
 
-        );
+      );
 
-      }
-
-    );
+    });
 
 
   console.log(
@@ -129,204 +264,59 @@ function caricaUscite() {
 
 
 // =====================================================
-// PAUSA
+// COSTRUZIONE QUERY OVERPASS
 // =====================================================
 
-function sleep(ms) {
-
-  return new Promise(
-
-    function (resolve) {
-
-      setTimeout(
-        resolve,
-        ms
-      );
-
-    }
-
-  );
-
-}
-
-
-// =====================================================
-// DISTANZA GPS
-// =====================================================
-
-function distanzaMetri(
-
-  lat1,
-  lon1,
-  lat2,
-  lon2
-
-) {
-
-  const R =
-    6371000;
-
-
-  const rad =
-    Math.PI / 180;
-
-
-  const dLat =
-    (lat2 - lat1) * rad;
-
-
-  const dLon =
-    (lon2 - lon1) * rad;
-
-
-  const a =
-
-    Math.sin(
-      dLat / 2
-    ) ** 2
-
-    +
-
-    Math.cos(
-      lat1 * rad
-    )
-
-    *
-
-    Math.cos(
-      lat2 * rad
-    )
-
-    *
-
-    Math.sin(
-      dLon / 2
-    ) ** 2;
-
-
-  const c =
-
-    2 *
-
-    Math.atan2(
-
-      Math.sqrt(a),
-
-      Math.sqrt(
-        1 - a
-      )
-
-    );
-
-
-  return R * c;
-
-}
-
-
-// =====================================================
-// CENTRO ELEMENTO OSM
-// =====================================================
-
-function coordinateElemento(
-  elemento
-) {
-
-  if (
-    typeof elemento.lat ===
-      "number" &&
-    typeof elemento.lon ===
-      "number"
-  ) {
-
-    return {
-
-      lat:
-        elemento.lat,
-
-      lon:
-        elemento.lon
-
-    };
-
-  }
-
-
-  if (
-    elemento.center &&
-    typeof elemento.center.lat ===
-      "number" &&
-    typeof elemento.center.lon ===
-      "number"
-  ) {
-
-    return {
-
-      lat:
-        elemento.center.lat,
-
-      lon:
-        elemento.center.lon
-
-    };
-
-  }
-
-
-  return null;
-
-}
-
-
-// =====================================================
-// CREAZIONE QUERY OVERPASS
-// =====================================================
-
-function creaQuery(
-  uscite
-) {
+function creaQuery(uscite) {
 
   let query =
 
-    `[out:json][timeout:${CONFIG.timeoutOverpass}];\n(\n`;
+    "[out:json][timeout:180];\n(\n";
 
 
-  uscite.forEach(
+  uscite.forEach(function(uscita) {
 
-    function (uscita) {
+    const lat = uscita.lat;
 
-      const lat =
-        uscita.lat;
-
-      const lon =
-        uscita.lon;
+    const lon = uscita.lon;
 
 
-      // ---------------------------------------------
-      // RISTORANTI
-      // ---------------------------------------------
+    // -----------------------------------------------
+    // RISTORANTI
+    // -----------------------------------------------
 
-      query +=
+    query +=
 
-        `nwr["amenity"="restaurant"](around:${CONFIG.distanzaRistorante},${lat},${lon});\n`;
+      `nwr["amenity"="restaurant"]["name"](around:2100,${lat},${lon});\n`;
 
 
-      // ---------------------------------------------
-      // PARCHEGGI
-      // ---------------------------------------------
+    // -----------------------------------------------
+    // PARCHEGGI
+    // -----------------------------------------------
 
-      query +=
+    query +=
 
-        `nwr["amenity"="parking"](around:${CONFIG.distanzaRistorante},${lat},${lon});\n`;
+      `nwr["amenity"="parking"](around:2100,${lat},${lon});\n`;
 
-    }
 
-  );
+    // -----------------------------------------------
+    // INGRESSI PARCHEGGIO
+    // -----------------------------------------------
+
+    query +=
+
+      `nwr["amenity"="parking_entrance"](around:2100,${lat},${lon});\n`;
+
+  });
 
 
   query +=
 
-    `);\nout center tags;`;
+    ");\n";
+
+  query +=
+
+    "out center tags;";
 
 
   return query;
@@ -335,108 +325,220 @@ function creaQuery(
 
 
 // =====================================================
-// CHIAMATA OVERPASS
+// RICHIESTA OVERPASS
 // =====================================================
 
-async function interrogaOverpass(
-  query
-) {
+async function richiestaOverpass(query) {
 
-  const response =
-    await fetch(
-      OVERPASS_URL,
-      {
+  let ultimoErrore = null;
 
-        method:
-          "POST",
 
-        headers: {
+  for (
 
-          "Content-Type":
-            "application/x-www-form-urlencoded"
+    let tentativo = 0;
 
-        },
+    tentativo < CONFIG.tentativi;
 
-        body:
-          "data=" +
-          encodeURIComponent(
-            query
-          )
+    tentativo++
+
+  ) {
+
+    for (
+
+      let i = 0;
+
+      i < OVERPASS_SERVERS.length;
+
+      i++
+
+    ) {
+
+      const server =
+        OVERPASS_SERVERS[i];
+
+
+      try {
+
+        console.log(
+          "Overpass:",
+          server
+        );
+
+
+        const controller =
+          new AbortController();
+
+
+        const timeout =
+          setTimeout(
+
+            function() {
+
+              controller.abort();
+
+            },
+
+            180000
+
+          );
+
+
+        const response =
+
+          await fetch(
+
+            server,
+
+            {
+
+              method: "POST",
+
+              headers: {
+
+                "Content-Type":
+                  "application/x-www-form-urlencoded",
+
+                "User-Agent":
+                  "1KMESIMANGIA/1.0"
+
+              },
+
+              body:
+
+                "data=" +
+
+                encodeURIComponent(
+                  query
+                ),
+
+              signal:
+                controller.signal
+
+            }
+
+          );
+
+
+        clearTimeout(timeout);
+
+
+        if (!response.ok) {
+
+          throw new Error(
+
+            "HTTP " +
+            response.status
+
+          );
+
+        }
+
+
+        const json =
+          await response.json();
+
+
+        return json;
 
       }
 
-    );
+      catch (errore) {
+
+        ultimoErrore =
+          errore;
+
+        console.warn(
+
+          "Server Overpass non disponibile:",
+
+          server,
+
+          errore.message
+
+        );
+
+      }
+
+    }
 
 
-  if (
-    !response.ok
-  ) {
-
-    const testo =
-      await response.text();
-
-
-    throw new Error(
-
-      "Overpass HTTP " +
-      response.status +
-      ": " +
-      testo.substring(
-        0,
-        500
-      )
-
+    await sleep(
+      3000 *
+      (tentativo + 1)
     );
 
   }
 
 
-  return response.json();
+  throw ultimoErrore;
 
 }
 
 
 // =====================================================
-// CREA CHIAVE UNICA OSM
+// CONTROLLA SE È UN'AREA DI SERVIZIO
 // =====================================================
 
-function osmKey(
-  elemento
-) {
+function eAreaDiServizio(tags) {
 
-  return (
+  if (!tags) {
 
-    elemento.type +
-    "/" +
-    elemento.id
-
-  );
-
-}
-
-
-// =====================================================
-// ESTRAE TAG
-// =====================================================
-
-function tag(
-  elemento,
-  nome
-) {
-
-  if (
-    !elemento.tags
-  ) {
-
-    return null;
+    return false;
 
   }
 
 
-  return (
-    elemento.tags[nome] ||
-    null
+  const testo = normalizzaTesto(
+
+    [
+
+      tags.name,
+
+      tags.operator,
+
+      tags.description,
+
+      tags.amenity,
+
+      tags.shop
+
+    ]
+
+      .filter(Boolean)
+
+      .join(" ")
+
   );
+
+
+  const parole = [
+
+    "area di servizio",
+
+    "area servizio",
+
+    "area di sosta",
+
+    "area sosta",
+
+    "autogrill",
+
+    "service area",
+
+    "service station",
+
+    "rest area",
+
+    "truck stop"
+
+  ];
+
+
+  return parole.some(function(parola) {
+
+    return testo.includes(parola);
+
+  });
 
 }
 
@@ -448,11 +550,13 @@ function tag(
 function creaRistorante(
 
   elemento,
+
   uscita
 
 ) {
 
   const coordinate =
+
     coordinateElemento(
       elemento
     );
@@ -466,25 +570,39 @@ function creaRistorante(
 
 
   const tags =
-    elemento.tags ||
-    {};
+    elemento.tags || {};
+
+
+  if (
+    eAreaDiServizio(tags)
+  ) {
+
+    return null;
+
+  }
 
 
   const distanza =
+
     distanzaMetri(
 
       coordinate.lat,
+
       coordinate.lon,
 
       uscita.lat,
+
       uscita.lon
 
     );
 
 
   if (
+
     distanza >
-    CONFIG.distanzaRistorante
+
+    CONFIG.distanzaMassima
+
   ) {
 
     return null;
@@ -495,89 +613,117 @@ function creaRistorante(
   return {
 
     id:
+
       "osm-" +
+
       elemento.type +
+
       "-" +
+
       elemento.id,
+
 
     osm_id:
+
       elemento.id,
 
+
     osm_type:
+
       elemento.type,
 
 
     nome:
-      tags.name ||
-      "Ristorante senza nome",
+
+      tags.name || "",
 
 
     lat:
+
       coordinate.lat,
 
+
     lon:
+
       coordinate.lon,
 
 
     categoria:
+
       "ristorante",
 
 
     cucina:
-      tags.cuisine ||
-      "",
+
+      tags.cuisine || "",
 
 
     telefono:
+
       tags.phone ||
+
       tags["contact:phone"] ||
+
       "",
 
 
     sito:
+
       tags.website ||
+
       tags["contact:website"] ||
+
       "",
 
 
     apertura:
+
       tags.opening_hours ||
+
       "",
 
 
     takeaway:
+
       tags.takeaway ||
+
       null,
 
 
     delivery:
+
       tags.delivery ||
+
       null,
 
 
     wheelchair:
+
       tags.wheelchair ||
+
       null,
 
 
     uscita: {
 
       id:
-        uscita.id ||
-        "",
+
+        uscita.id || "",
+
 
       nome:
-        uscita.nome ||
-        "",
+
+        uscita.nome || "",
+
 
       autostrada:
-        uscita.autostrada ||
-        "",
+
+        uscita.autostrada || "",
+
 
       distanza_m:
-        Math.round(
-          distanza
-        )
+
+        Math.round(distanza)
 
     },
 
@@ -585,21 +731,32 @@ function creaRistorante(
     parcheggio: {
 
       presente:
-        null,
+
+        false,
+
 
       tipo:
+
         null,
+
 
       distanza_m:
+
         null,
+
 
       osm_id:
+
         null,
+
 
       accesso:
+
         null,
 
+
       capacity:
+
         null
 
     },
@@ -608,18 +765,27 @@ function creaRistorante(
     mezzi_voluminosi: {
 
       stato:
+
         "non_verificato",
 
+
       hgv:
+
         null,
+
 
       maxheight:
+
         null,
+
 
       maxweight:
+
         null,
 
+
       maxlength:
+
         null
 
     },
@@ -628,9 +794,12 @@ function creaRistorante(
     area_manovra: {
 
       stato:
+
         "non_verificato",
 
+
       fonte:
+
         null
 
     },
@@ -644,8 +813,8 @@ function creaRistorante(
 
 
     ultima_verifica:
-      new Date()
-        .toISOString()
+
+      new Date().toISOString()
 
   };
 
@@ -653,100 +822,80 @@ function creaRistorante(
 
 
 // =====================================================
-// TROVA PARCHEGGIO VICINO
+// ASSOCIA PARCHEGGIO
 // =====================================================
 
 function associaParcheggio(
 
   ristorante,
+
   parcheggi
 
 ) {
 
-  let migliore =
-    null;
-
+  let migliore = null;
 
   let distanzaMigliore =
     Infinity;
 
 
-  parcheggi.forEach(
+  parcheggi.forEach(function(parcheggio) {
 
-    function (parcheggio) {
+    const coordinate =
 
-      const coordinate =
-        coordinateElemento(
-          parcheggio
-        );
-
-
-      if (!coordinate) {
-
-        return;
-
-      }
+      coordinateElemento(
+        parcheggio
+      );
 
 
-      const distanza =
-        distanzaMetri(
+    if (!coordinate) {
 
-          ristorante.lat,
-          ristorante.lon,
-
-          coordinate.lat,
-          coordinate.lon
-
-        );
-
-
-      if (
-
-        distanza <=
-        CONFIG.distanzaParcheggio &&
-
-        distanza <
-        distanzaMigliore
-
-      ) {
-
-        migliore =
-          parcheggio;
-
-        distanzaMigliore =
-          distanza;
-
-      }
+      return;
 
     }
 
-  );
+
+    const distanza =
+
+      distanzaMetri(
+
+        ristorante.lat,
+
+        ristorante.lon,
+
+        coordinate.lat,
+
+        coordinate.lon
+
+      );
+
+
+    if (
+
+      distanza <=
+      CONFIG.distanzaParcheggio &&
+
+      distanciaValida(
+        distanciaSeguro(distanza)
+      ) &&
+
+      distanciaSeguro(distanza) <
+      distanciaSeguro(distanzaMigliore)
+
+    ) {
+
+      migliore =
+        parcheggio;
+
+      distanzaMigliore =
+        distanza;
+
+    }
+
+  });
 
 
   if (!migliore) {
-
-    ristorante.parcheggio = {
-
-      presente:
-        false,
-
-      tipo:
-        null,
-
-      distanza_m:
-        null,
-
-      osm_id:
-        null,
-
-      accesso:
-        null,
-
-      capacity:
-        null
-
-    };
-
 
     return;
 
@@ -754,8 +903,7 @@ function associaParcheggio(
 
 
   const tags =
-    migliore.tags ||
-    {};
+    migliore.tags || {};
 
 
   ristorante.parcheggio = {
@@ -763,52 +911,54 @@ function associaParcheggio(
     presente:
       true,
 
+
     tipo:
-      tags.parking ||
-      null,
+      tags.parking || null,
+
 
     distanza_m:
       Math.round(
         distanzaMigliore
       ),
 
+
     osm_id:
       migliore.id,
 
+
     accesso:
-      tags.access ||
-      null,
+      tags.access || null,
+
 
     capacity:
-      tags.capacity ||
-      null
+      tags.capacity || null
 
   };
 
 
-  // ---------------------------------------------
-  // PRIMA INFORMAZIONE SUI MEZZI
-  // ---------------------------------------------
+  // -----------------------------------------------
+  // LIMITAZIONI MEZZI
+  // -----------------------------------------------
 
   const hgv =
-    tags.hgv ||
-    null;
+    tags.hgv || null;
 
 
   const maxheight =
+
     tags.maxheight ||
+
     tags["maxheight:physical"] ||
+
     null;
 
 
   const maxweight =
-    tags.maxweight ||
-    null;
+    tags.maxweight || null;
 
 
   const maxlength =
-    tags.maxlength ||
-    null;
+    tags.maxlength || null;
 
 
   if (
@@ -828,14 +978,18 @@ function associaParcheggio(
       stato:
         "dati_osm",
 
+
       hgv:
         hgv,
+
 
       maxheight:
         maxheight,
 
+
       maxweight:
         maxweight,
+
 
       maxlength:
         maxlength
@@ -845,18 +999,17 @@ function associaParcheggio(
   }
 
 
-  // ---------------------------------------------
+  // -----------------------------------------------
   // ACCESSO
-  // ---------------------------------------------
+  // -----------------------------------------------
 
-  if (
-    tags.access
-  ) {
+  if (tags.access) {
 
     ristorante.area_manovra = {
 
       stato:
         "da_verificare",
+
 
       fonte:
         "OpenStreetMap"
@@ -869,66 +1022,81 @@ function associaParcheggio(
 
 
 // =====================================================
+// FUNZIONI DI SICUREZZA NUMERICA
+// =====================================================
+
+function distanciaSeguro(valore) {
+
+  return typeof valore === "number"
+    ? valore
+    : Infinity;
+
+}
+
+
+function distanciaValida(valore) {
+
+  return Number.isFinite(valore);
+
+}
+
+
+// =====================================================
 // DEDUPLICAZIONE
 // =====================================================
 
-function deduplica(
-  ristoranti
-) {
+function deduplica(ristoranti) {
 
   const mappa =
     new Map();
 
 
-  ristoranti.forEach(
+  ristoranti.forEach(function(ristorante) {
 
-    function (ristorante) {
+    const chiave =
 
-      const chiave =
-        ristorante.osm_type +
-        "/" +
-        ristorante.osm_id;
+      ristorante.osm_type +
 
+      "/" +
 
-      const esistente =
-        mappa.get(
-          chiave
-        );
+      ristorante.osm_id;
 
 
-      if (!esistente) {
-
-        mappa.set(
-          chiave,
-          ristorante
-        );
-
-        return;
-
-      }
+    const precedente =
+      mappa.get(chiave);
 
 
-      // Mantiene il collegamento
-      // all'uscita più vicina.
+    if (!precedente) {
 
-      if (
+      mappa.set(
+        chiave,
+        ristorante
+      );
 
-        ristorante.uscita.distanza_m <
-
-        esistente.uscita.distanza_m
-
-      ) {
-
-        mappa.set(
-          chiave,
-          ristorante
-        );
-
-      }
+      return;
 
     }
 
-  );
+
+    // Mantieni il collegamento
+    // all'uscita più vicina.
+
+    if (
+
+      ristorante.uscita.distanza_m <
+
+      precedente.uscita.distanza_m
+
+    ) {
+
+      mappa.set(
+        chiave,
+        ristorante
+      );
+
+    }
+
+  });
 
 
   return Array.from(
@@ -945,19 +1113,34 @@ function deduplica(
 async function main() {
 
   console.log(
-    "========================================"
+    ""
   );
+
+
+  console.log(
+    "=========================================="
+  );
+
 
   console.log(
     "1 KM E SI MANGIA"
   );
 
+
   console.log(
     "GENERATORE DATABASE RISTORANTI"
   );
 
+
   console.log(
-    "========================================"
+    "=========================================="
+  );
+
+
+  console.log(
+    "Distanza massima:",
+    CONFIG.distanzaMassima,
+    "m"
   );
 
 
@@ -965,13 +1148,12 @@ async function main() {
     caricaUscite();
 
 
-  const tuttiRistoranti =
-    [];
+  const risultati = [];
 
 
-  // ---------------------------------------------
+  // =================================================
   // BATCH
-  // ---------------------------------------------
+  // =================================================
 
   for (
 
@@ -979,17 +1161,18 @@ async function main() {
 
     i < uscite.length;
 
-    i += CONFIG.batchUscite
+    i += CONFIG.batchSize
 
   ) {
 
     const batch =
+
       uscite.slice(
 
         i,
 
         i +
-        CONFIG.batchUscite
+        CONFIG.batchSize
 
       );
 
@@ -1001,30 +1184,18 @@ async function main() {
 
     console.log(
 
-      "Batch",
+      "BATCH",
 
       Math.floor(
         i /
-        CONFIG.batchUscite
+        CONFIG.batchSize
       ) + 1,
 
       "/",
 
       Math.ceil(
         uscite.length /
-        CONFIG.batchUscite
-      ),
-
-      "- uscite",
-
-      i + 1,
-
-      "-",
-
-      Math.min(
-        i +
-        CONFIG.batchUscite,
-        uscite.length
+        CONFIG.batchSize
       )
 
     );
@@ -1039,186 +1210,197 @@ async function main() {
 
 
       const dati =
-        await interrogaOverpass(
+        await richiestaOverpass(
           query
         );
 
 
       const elementi =
-        dati.elements ||
-        [];
+        dati.elements || [];
 
 
       console.log(
 
-        "Elementi OSM ricevuti:",
+        "Elementi ricevuti:",
 
         elementi.length
 
       );
 
 
-      // -----------------------------------------
-      // SEPARA RISTORANTI E PARCHEGGI
-      // -----------------------------------------
-
       const ristorantiOSM =
-        elementi.filter(
 
-          function (elemento) {
+        elementi.filter(function(elemento) {
 
-            return (
+          return (
 
-              elemento.tags &&
+            elemento.tags &&
 
-              elemento.tags.amenity ===
-                "restaurant"
+            elemento.tags.amenity ===
+              "restaurant" &&
 
-            );
+            elemento.tags.name
 
-          }
+          );
 
-        );
+        });
 
 
       const parcheggiOSM =
-        elementi.filter(
 
-          function (elemento) {
+        elementi.filter(function(elemento) {
 
-            return (
+          return (
 
-              elemento.tags &&
+            elemento.tags &&
+
+            (
 
               elemento.tags.amenity ===
-                "parking"
+                "parking" ||
 
-            );
+              elemento.tags.amenity ===
+                "parking_entrance"
 
-          }
-
-        );
-
-
-      // -----------------------------------------
-      // CREA RISTORANTI
-      // -----------------------------------------
-
-      ristorantiOSM.forEach(
-
-        function (elemento) {
-
-          let uscitaPiuVicino =
-            null;
-
-
-          let distanzaMigliore =
-            Infinity;
-
-
-          batch.forEach(
-
-            function (uscita) {
-
-              const coordinate =
-                coordinateElemento(
-                  elemento
-                );
-
-
-              if (!coordinate) {
-
-                return;
-
-              }
-
-
-              const distanza =
-                distanzaMetri(
-
-                  coordinate.lat,
-                  coordinate.lon,
-
-                  uscita.lat,
-                  uscita.lon
-
-                );
-
-
-              if (
-
-                distanza <=
-                CONFIG.distanzaRistorante &&
-
-                distanza <
-                distanzaMigliore
-
-              ) {
-
-                uscitaPiuVicino =
-                  uscita;
-
-                distanciaMigliore =
-                  distanciaSeguro(
-                    distancia
-                  );
-
-              }
-
-            }
+            )
 
           );
 
-
-          if (
-            !uscitaPiuVicino
-          ) {
-
-            return;
-
-          }
+        });
 
 
-          const ristorante =
-            creaRistorante(
+      console.log(
 
-              elemento,
+        "Ristoranti:",
 
-              uscitaPiuVicino
-
-            );
-
-
-          if (!ristorante) {
-
-            return;
-
-          }
-
-
-          associaParcheggio(
-
-            ristorante,
-
-            parcheggiOSM
-
-          );
-
-
-          tuttiRistoranti.push(
-            ristorante
-          );
-
-        }
+        ristorantiOSM.length
 
       );
 
 
-    } catch (errore) {
+      console.log(
+
+        "Parcheggi:",
+
+        parcheggiOSM.length
+
+      );
+
+
+      // -------------------------------------------
+      // RISTORANTI
+      // -------------------------------------------
+
+      ristorantiOSM.forEach(function(elemento) {
+
+        const coordinate =
+
+          coordinateElemento(
+            elemento
+          );
+
+
+        if (!coordinate) {
+
+          return;
+
+        }
+
+
+        let uscitaPiuVicino =
+          null;
+
+
+        let distanzaPiuVicino =
+          Infinity;
+
+
+        batch.forEach(function(uscita) {
+
+          const distanza =
+
+            distanzaMetri(
+
+              coordinate.lat,
+
+              coordinate.lon,
+
+              uscita.lat,
+
+              uscita.lon
+
+            );
+
+
+          if (
+
+            distanza <=
+            CONFIG.distanzaMassima &&
+
+            distanza <
+            distanzaPiuVicino
+
+          ) {
+
+            uscitaPiuVicino =
+              uscita;
+
+            distanzaPiuVicino =
+              distanza;
+
+          }
+
+        });
+
+
+        if (!uscitaPiuVicino) {
+
+          return;
+
+        }
+
+
+        const ristorante =
+
+          creaRistorante(
+
+            elemento,
+
+            uscitaPiuVicino
+
+          );
+
+
+        if (!ristorante) {
+
+          return;
+
+        }
+
+
+        associaParcheggio(
+
+          ristorante,
+
+          parcheggiOSM
+
+        );
+
+
+        risultati.push(
+          ristorante
+        );
+
+      });
+
+
+    }
+
+    catch (errore) {
 
       console.error(
 
-        "Errore batch:",
+        "ERRORE BATCH:",
 
         errore.message
 
@@ -1227,18 +1409,20 @@ async function main() {
     }
 
 
-    // -----------------------------------------
+    // ---------------------------------------------
     // PAUSA
-    // -----------------------------------------
+    // ---------------------------------------------
 
     if (
+
       i +
-      CONFIG.batchUscite <
+      CONFIG.batchSize <
       uscite.length
+
     ) {
 
       await sleep(
-        CONFIG.pausaTraRichieste
+        CONFIG.pausaMs
       );
 
     }
@@ -1247,47 +1431,44 @@ async function main() {
 
 
   // =================================================
-  // DEDUPLICAZIONE
+  // DEDUPLICA
   // =================================================
 
-  const ristoranti =
+  const databaseFinale =
+
     deduplica(
-      tuttiRistoranti
+      risultati
     );
 
 
   // =================================================
-  // ORDINAMENTO
+  // ORDINA PER DISTANZA
   // =================================================
 
-  ristoranti.sort(
+  databaseFinale.sort(function(a, b) {
 
-    function (a, b) {
+    return (
 
-      return (
+      a.uscita.distanza_m -
 
-        a.uscita.distanza_m -
+      b.uscita.distanza_m
 
-        b.uscita.distanza_m
+    );
 
-      );
-
-    }
-
-  );
+  });
 
 
   // =================================================
-  // SCRITTURA FILE
+  // SCRIVI JSON
   // =================================================
 
   fs.writeFileSync(
 
-    CONFIG.fileOutput,
+    CONFIG.output,
 
     JSON.stringify(
 
-      ristoranti,
+      databaseFinale,
 
       null,
 
@@ -1300,60 +1481,91 @@ async function main() {
   );
 
 
+  // =================================================
+  // STATISTICHE
+  // =================================================
+
+  const conParcheggio =
+
+    databaseFinale.filter(function(r) {
+
+      return (
+        r.parcheggio.presente === true
+      );
+
+    }).length;
+
+
+  const conDatiMezzi =
+
+    databaseFinale.filter(function(r) {
+
+      return (
+
+        r.mezzi_voluminosi.stato ===
+        "dati_osm"
+
+      );
+
+    }).length;
+
+
   console.log(
     ""
   );
 
 
   console.log(
-    "========================================"
+    "=========================================="
   );
 
 
   console.log(
 
-    "RISTORANTI TROVATI:",
-
-    ristoranti.length
+    "DATABASE COMPLETATO"
 
   );
 
 
   console.log(
 
-    "DATABASE SALVATO:",
+    "Ristoranti totali:",
 
-    CONFIG.fileOutput
+    databaseFinale.length
 
   );
 
 
   console.log(
-    "========================================"
+
+    "Con parcheggio OSM:",
+
+    conParcheggio
+
   );
 
-}
+
+  console.log(
+
+    "Con dati mezzi OSM:",
+
+    conDatiMezzi
+
+  );
 
 
-// =====================================================
-// SICUREZZA NUMERICA
-// =====================================================
+  console.log(
 
-function distanciaSeguro(
-  valore
-) {
+    "File:",
 
-  if (
-    typeof valore !==
-    "number"
-  ) {
+    CONFIG.output
 
-    return Infinity;
-
-  }
+  );
 
 
-  return valore;
+  console.log(
+    "=========================================="
+  );
 
 }
 
@@ -1364,26 +1576,23 @@ function distanciaSeguro(
 
 main()
 
-  .catch(
+  .catch(function(error) {
 
-    function (errore) {
+    console.error(
+      ""
+    );
 
-      console.error(
-        ""
-      );
 
-      console.error(
-        "ERRORE FATALE:"
-      );
+    console.error(
+      "ERRORE FATALE:"
+    );
 
-      console.error(
-        errore
-      );
 
-      process.exit(
-        1
-      );
+    console.error(
+      error
+    );
 
-    }
 
-  );
+    process.exit(1);
+
+  });
