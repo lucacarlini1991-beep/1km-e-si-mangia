@@ -1,6 +1,6 @@
 // =====================================================
 // 1 KM E SI MANGIA
-// DATABASE USCITE AUTOSTRADALI
+// SCRIPT PRINCIPALE
 // =====================================================
 
 
@@ -9,9 +9,13 @@
 // =====================================================
 
 const map = L.map("map", {
+
   center: [42.5, 12.5],
+
   zoom: 6,
+
   scrollWheelZoom: true
+
 });
 
 
@@ -20,59 +24,89 @@ const map = L.map("map", {
 // =====================================================
 
 L.tileLayer(
+
   "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+
   {
+
     maxZoom: 19,
+
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+
   }
+
 ).addTo(map);
+
 
 
 // =====================================================
 // GRUPPO USCITE
 // =====================================================
 
-const clusterUscite = L.markerClusterGroup({
-  showCoverageOnHover: false,
-  spiderfyOnMaxZoom: true,
-  zoomToBoundsOnClick: true,
-  removeOutsideVisibleBounds: true,
-  maxClusterRadius: 55
-});
+const clusterUscite =
+  L.markerClusterGroup({
 
-map.addLayer(clusterUscite);
+    showCoverageOnHover: false,
+
+    spiderfyOnMaxZoom: true,
+
+    zoomToBoundsOnClick: true,
+
+    removeOutsideVisibleBounds: true,
+
+    maxClusterRadius: 55
+
+  });
+
+
+map.addLayer(
+  clusterUscite
+);
+
 
 
 // =====================================================
 // ICONA USCITA
 // =====================================================
 
-const exitIcon = L.divIcon({
+const exitIcon =
+  L.divIcon({
 
-  className: "",
+    className: "",
 
-  html:
-    '<div class="custom-marker"></div>',
+    html:
+      '<div class="custom-marker"></div>',
 
-  iconSize: [36, 36],
+    iconSize: [
+      36,
+      36
+    ],
 
-  iconAnchor: [18, 18],
+    iconAnchor: [
+      18,
+      18
+    ],
 
-  popupAnchor: [0, -18]
+    popupAnchor: [
+      0,
+      -18
+    ]
 
-});
+  });
+
 
 
 // =====================================================
-// DATABASE
+// DATABASE USCITE
 // =====================================================
 
 let usciteItaliane = [];
 
 
+
 // =====================================================
-// CARICA IL NOSTRO DATABASE
+// CARICAMENTO DATABASE
 // =====================================================
 
 fetch("./uscite.json")
@@ -91,9 +125,12 @@ fetch("./uscite.json")
 
   })
 
+
   .then(function(database) {
 
-    usciteItaliane = database;
+    usciteItaliane =
+      database;
+
 
     console.log(
       "================================="
@@ -113,137 +150,181 @@ fetch("./uscite.json")
     );
 
 
-    // ---------------------------------------------
-    // CREA I MARKER
-    // ---------------------------------------------
+    // =================================================
+    // CREA MARKER
+    // =================================================
 
-    usciteItaliane.forEach(function(uscita) {
-
-      if (
-        typeof uscita.lat !== "number" ||
-        typeof uscita.lon !== "number"
-      ) {
-
-        return;
-
-      }
+    usciteItaliane.forEach(
+      function(uscita) {
 
 
-      const marker = L.marker(
+        // -----------------------------------------------
+        // CONTROLLO COORDINATE
+        // -----------------------------------------------
 
-        [
-          uscita.lat,
-          uscita.lon
-        ],
+        if (
 
-        {
-          icon: exitIcon
-        }
+          typeof uscita.lat !== "number" ||
 
-      );
+          typeof uscita.lon !== "number"
 
+        ) {
 
-      // -------------------------------------------
-      // INFORMAZIONI USCITA
-      // -------------------------------------------
-
-      let popup = `
-
-        <div class="exit-popup">
-
-          <strong>
-            ${uscita.nome}
-          </strong>
-
-      `;
-
-
-      if (uscita.autostrada) {
-
-        popup += `
-
-          <small>
-            ${uscita.autostrada}
-
-          `;
-
-        if (uscita.numero_uscita) {
-
-          popup +=
-            ` · Uscita ${uscita.numero_uscita}`;
+          return;
 
         }
 
-        popup += `
 
-          </small>
+        // -----------------------------------------------
+        // CREA MARKER
+        // -----------------------------------------------
 
-        `;
-
-      }
-
-
-      if (uscita.nome_autostrada) {
-
-        popup += `
-
-          <small>
-            ${uscita.nome_autostrada}
-          </small>
-
-        `;
-
-      }
-
-
-      popup += `
-
-          <small>
-            📍 Uscita autostradale
-          </small>
-
-        </div>
-
-      `;
-
-
-      marker.bindPopup(popup);
-
-
-      // -------------------------------------------
-      // CLICK
-      // -------------------------------------------
-
-      marker.on(
-
-        "click",
-
-        function() {
-
-          map.flyTo(
+        const marker =
+          L.marker(
 
             [
               uscita.lat,
               uscita.lon
             ],
 
-            14,
-
             {
-              duration: 1
+              icon:
+                exitIcon
             }
 
           );
 
+
+        // -----------------------------------------------
+        // POPUP
+        // -----------------------------------------------
+
+        let popup = `
+
+          <div class="exit-popup">
+
+            <strong>
+              ${uscita.nome || "Uscita autostradale"}
+            </strong>
+
+        `;
+
+
+        // -----------------------------------------------
+        // AUTOSTRADA
+        // -----------------------------------------------
+
+        if (
+          uscita.autostrada
+        ) {
+
+          popup += `
+
+            <small>
+              ${uscita.autostrada}
+
+          `;
+
+
+          if (
+            uscita.numero_uscita
+          ) {
+
+            popup +=
+              ` · Uscita ${uscita.numero_uscita}`;
+
+          }
+
+
+          popup += `
+
+            </small>
+
+          `;
+
         }
 
-      );
+
+        // -----------------------------------------------
+        // NOME AUTOSTRADA
+        // -----------------------------------------------
+
+        if (
+          uscita.nome_autostrada
+        ) {
+
+          popup += `
+
+            <small>
+              ${uscita.nome_autostrada}
+            </small>
+
+          `;
+
+        }
 
 
-      clusterUscite.addLayer(marker);
+        // -----------------------------------------------
+        // TIPO
+        // -----------------------------------------------
 
-    });
+        popup += `
 
+            <small>
+              📍 Uscita autostradale
+            </small>
+
+          </div>
+
+        `;
+
+
+        marker.bindPopup(
+          popup
+        );
+
+
+        // -----------------------------------------------
+        // CLICK MARKER
+        // -----------------------------------------------
+
+        marker.on(
+
+          "click",
+
+          function() {
+
+            map.flyTo(
+
+              [
+                uscita.lat,
+                uscita.lon
+              ],
+
+              14,
+
+              {
+                duration: 1
+              }
+
+            );
+
+          }
+
+        );
+
+
+        // -----------------------------------------------
+        // AGGIUNGI AL CLUSTER
+        // -----------------------------------------------
+
+        clusterUscite.addLayer(
+          marker
+        );
+
+      }
+
+    );
 
   })
 
@@ -258,18 +339,32 @@ fetch("./uscite.json")
   });
 
 
+
 // =====================================================
-// PULSANTE "ESPLORA LA MAPPA"
+// SEZIONE MAPPA
 // =====================================================
 
 const mapButton =
-  document.getElementById("mapButton");
+  document.getElementById(
+    "mapButton"
+  );
+
 
 const mapSection =
-  document.getElementById("mapSection");
+  document.getElementById(
+    "mapSection"
+  );
 
 
-if (mapButton) {
+
+// =====================================================
+// PULSANTE ESPLORA LA MAPPA
+// =====================================================
+
+if (
+  mapButton &&
+  mapSection
+) {
 
   mapButton.addEventListener(
 
@@ -279,7 +374,11 @@ if (mapButton) {
 
       mapSection.scrollIntoView({
 
-        behavior: "smooth"
+        behavior:
+          "smooth",
+
+        block:
+          "start"
 
       });
 
@@ -290,17 +389,25 @@ if (mapButton) {
 }
 
 
+
 // =====================================================
 // GEOLOCALIZZAZIONE
 // =====================================================
 
 const locationButton =
-  document.getElementById("locationButton");
+  document.getElementById(
+    "locationButton"
+  );
 
-let userMarker = null;
+
+let userMarker =
+  null;
 
 
-if (locationButton) {
+
+if (
+  locationButton
+) {
 
   locationButton.addEventListener(
 
@@ -309,7 +416,13 @@ if (locationButton) {
     function() {
 
 
-      if (!navigator.geolocation) {
+      // -----------------------------------------------
+      // CONTROLLO SUPPORTO GPS
+      // -----------------------------------------------
+
+      if (
+        !navigator.geolocation
+      ) {
 
         alert(
           "La geolocalizzazione non è disponibile."
@@ -320,9 +433,17 @@ if (locationButton) {
       }
 
 
+      // -----------------------------------------------
+      // STATO PULSANTE
+      // -----------------------------------------------
+
       locationButton.textContent =
         "📍 RICERCA POSIZIONE...";
 
+
+      // -----------------------------------------------
+      // RICHIESTA POSIZIONE
+      // -----------------------------------------------
 
       navigator.geolocation.getCurrentPosition(
 
@@ -344,11 +465,13 @@ if (locationButton) {
           );
 
 
-          // ---------------------------------------
+          // ---------------------------------------------
           // RIMUOVI VECCHIO MARKER
-          // ---------------------------------------
+          // ---------------------------------------------
 
-          if (userMarker) {
+          if (
+            userMarker
+          ) {
 
             map.removeLayer(
               userMarker
@@ -357,35 +480,43 @@ if (locationButton) {
           }
 
 
-          // ---------------------------------------
-          // MARKER UTENTE
-          // ---------------------------------------
+          // ---------------------------------------------
+          // CREA MARKER UTENTE
+          // ---------------------------------------------
 
-          userMarker = L.circleMarker(
+          userMarker =
+            L.circleMarker(
 
-            [
-              lat,
-              lng
-            ],
+              [
+                lat,
+                lng
+              ],
 
-            {
+              {
 
-              radius: 9,
+                radius:
+                  9,
 
-              color: "#ffffff",
+                color:
+                  "#ffffff",
 
-              weight: 4,
+                weight:
+                  4,
 
-              fillColor: "#075c3b",
+                fillColor:
+                  "#075c3b",
 
-              fillOpacity: 1
+                fillOpacity:
+                  1
 
-            }
+              }
 
+            );
+
+
+          userMarker.addTo(
+            map
           );
-
-
-          userMarker.addTo(map);
 
 
           userMarker
@@ -397,9 +528,9 @@ if (locationButton) {
             .openPopup();
 
 
-          // ---------------------------------------
-          // ZOOM SULLA POSIZIONE
-          // ---------------------------------------
+          // ---------------------------------------------
+          // ZOOM
+          // ---------------------------------------------
 
           map.flyTo(
 
@@ -411,18 +542,39 @@ if (locationButton) {
             13,
 
             {
-              duration: 1.5
+
+              duration:
+                1.5
+
             }
 
           );
 
 
-          mapSection.scrollIntoView({
+          // ---------------------------------------------
+          // SCROLL ALLA MAPPA
+          // ---------------------------------------------
 
-            behavior: "smooth"
+          if (
+            mapSection
+          ) {
 
-          });
+            mapSection.scrollIntoView({
 
+              behavior:
+                "smooth",
+
+              block:
+                "start"
+
+            });
+
+          }
+
+
+          // ---------------------------------------------
+          // PULSANTE
+          // ---------------------------------------------
 
           locationButton.textContent =
             "📍 POSIZIONE TROVATA";
@@ -432,6 +584,7 @@ if (locationButton) {
 
 
         function(error) {
+
 
           console.error(
             "Errore GPS:",
@@ -457,11 +610,14 @@ if (locationButton) {
 
         {
 
-          enableHighAccuracy: true,
+          enableHighAccuracy:
+            true,
 
-          timeout: 10000,
+          timeout:
+            10000,
 
-          maximumAge: 30000
+          maximumAge:
+            30000
 
         }
 
@@ -472,3 +628,230 @@ if (locationButton) {
   );
 
 }
+
+
+
+// =====================================================
+// MENU
+// =====================================================
+
+const menuButton =
+  document.getElementById(
+    "menuButton"
+  );
+
+
+const mobileMenu =
+  document.getElementById(
+    "mobileMenu"
+  );
+
+
+const menuClose =
+  document.getElementById(
+    "menuClose"
+  );
+
+
+const menuLinks =
+  document.querySelectorAll(
+    ".menu-link"
+  );
+
+
+
+// =====================================================
+// APERTURA MENU
+// =====================================================
+
+function openMenu() {
+
+  if (
+    !mobileMenu
+  ) {
+
+    console.error(
+      "Menu non trovato."
+    );
+
+    return;
+
+  }
+
+
+  mobileMenu.classList.add(
+    "active"
+  );
+
+
+  mobileMenu.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+
+  if (
+    menuButton
+  ) {
+
+    menuButton.setAttribute(
+      "aria-expanded",
+      "true"
+    );
+
+  }
+
+
+  document.body.style.overflow =
+    "hidden";
+
+}
+
+
+
+// =====================================================
+// CHIUSURA MENU
+// =====================================================
+
+function closeMenu() {
+
+  if (
+    !mobileMenu
+  ) {
+
+    return;
+
+  }
+
+
+  mobileMenu.classList.remove(
+    "active"
+  );
+
+
+  mobileMenu.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+
+  if (
+    menuButton
+  ) {
+
+    menuButton.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+  }
+
+
+  document.body.style.overflow =
+    "";
+
+}
+
+
+
+// =====================================================
+// TASTO ☰
+// =====================================================
+
+if (
+  menuButton
+) {
+
+  menuButton.addEventListener(
+
+    "click",
+
+    function() {
+
+      openMenu();
+
+    }
+
+  );
+
+}
+
+
+
+// =====================================================
+// TASTO X
+// =====================================================
+
+if (
+  menuClose
+) {
+
+  menuClose.addEventListener(
+
+    "click",
+
+    function() {
+
+      closeMenu();
+
+    }
+
+  );
+
+}
+
+
+
+// =====================================================
+// LINK MENU
+// =====================================================
+
+menuLinks.forEach(
+
+  function(link) {
+
+    link.addEventListener(
+
+      "click",
+
+      function() {
+
+        closeMenu();
+
+      }
+
+    );
+
+  }
+
+);
+
+
+
+// =====================================================
+// ESC PER CHIUDERE
+// =====================================================
+
+document.addEventListener(
+
+  "keydown",
+
+  function(event) {
+
+    if (
+      event.key === "Escape"
+    ) {
+
+      closeMenu();
+
+    }
+
+  }
+
+);
+
+
+
+// =====================================================
+// FINE SCRIPT
+// =====================================================
