@@ -2,41 +2,62 @@
 <html lang="it">
 
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>1 KM E SI MANGIA</title>
 
-  <link rel="stylesheet" href="styles.css">
+  <!-- =====================================================
+       FONT
+       ===================================================== -->
 
-  <!-- LEAFLET -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- =====================================================
+       LEAFLET
+       ===================================================== -->
+
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   >
 
-  <!-- MARKER CLUSTER -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  >
+
+  <!-- =====================================================
+       CSS
+       ===================================================== -->
 
   <link
     rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+    href="styles.css"
   >
-
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-  </script>
-
-  <script
-    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js">
-  </script>
 
 </head>
 
+
 <body>
+
+
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
 
   <header class="topbar">
 
@@ -44,174 +65,290 @@
 
       <div class="logo-pin">
 
-        <svg viewBox="0 0 100 120"
-             xmlns="http://www.w3.org/2000/svg">
+        <svg
+          viewBox="0 0 48 55"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
 
           <path
-            d="M50 115
-               C50 115 12 72 12 43
-               C12 19 29 5 50 5
-               C71 5 88 19 88 43
-               C88 72 50 115 50 115Z"
+            d="M24 2
+               C12 2 4 11 4 22
+               C4 37 24 53 24 53
+               C24 53 44 37 44 22
+               C44 11 36 2 24 2Z"
             fill="white"
           />
 
           <circle
-            cx="50"
-            cy="42"
-            r="22"
+            cx="24"
+            cy="21"
+            r="11"
             fill="none"
             stroke="#075c3b"
-            stroke-width="5"
+            stroke-width="3"
           />
 
           <circle
-            cx="50"
-            cy="42"
-            r="13"
+            cx="24"
+            cy="21"
+            r="5"
             fill="none"
             stroke="#075c3b"
-            stroke-width="3"
-          />
-
-          <line
-            x1="28"
-            y1="27"
-            x2="28"
-            y2="58"
-            stroke="#075c3b"
-            stroke-width="4"
-          />
-
-          <line
-            x1="24"
-            y1="27"
-            x2="24"
-            y2="39"
-            stroke="#075c3b"
-            stroke-width="3"
-          />
-
-          <line
-            x1="28"
-            y1="27"
-            x2="28"
-            y2="39"
-            stroke="#075c3b"
-            stroke-width="3"
-          />
-
-          <line
-            x1="32"
-            y1="27"
-            x2="32"
-            y2="39"
-            stroke="#075c3b"
-            stroke-width="3"
-          />
-
-          <path
-            d="M72 27 L72 58"
-            stroke="#075c3b"
-            stroke-width="5"
-            stroke-linecap="round"
+            stroke-width="2"
           />
 
         </svg>
 
       </div>
 
+
       <div class="logo-text">
+
         <strong>1 KM</strong>
+
         <span>E SI MANGIA</span>
+
       </div>
 
     </div>
 
-    <button class="menu-button" aria-label="Menu">
+
+    <!-- ===================================================
+         MENU BUTTON
+         =================================================== -->
+
+    <button
+      class="menu-button"
+      id="menuButton"
+      type="button"
+      aria-label="Apri menu"
+      aria-expanded="false"
+    >
       ☰
     </button>
 
   </header>
 
 
-  <main>
 
-    <!-- HERO -->
+  <!-- =====================================================
+       MENU
+       ===================================================== -->
+
+  <nav
+    class="mobile-menu"
+    id="mobileMenu"
+    aria-hidden="true"
+  >
+
+    <div class="mobile-menu-inner">
+
+      <button
+        class="menu-close"
+        id="menuClose"
+        type="button"
+        aria-label="Chiudi menu"
+      >
+        ×
+      </button>
+
+
+      <div class="mobile-menu-title">
+
+        <strong>1 KM</strong>
+
+        <span>E SI MANGIA</span>
+
+      </div>
+
+
+      <div class="menu-links">
+
+        <a
+          href="#home"
+          class="menu-link"
+        >
+          <strong>HOME</strong>
+          <span>La nostra idea</span>
+        </a>
+
+
+        <a
+          href="#mapSection"
+          class="menu-link"
+        >
+          <strong>ESPLORA LE USCITE</strong>
+          <span>Trova l'uscita più vicina</span>
+        </a>
+
+
+        <a
+          href="#come-funziona"
+          class="menu-link"
+        >
+          <strong>COME FUNZIONA</strong>
+          <span>Scopri come utilizzare il servizio</span>
+        </a>
+
+
+        <a
+          href="#distanze"
+          class="menu-link"
+        >
+          <strong>LE DISTANZE</strong>
+          <span>Quanto ti allontani dall'autostrada</span>
+        </a>
+
+
+        <a
+          href="#footer"
+          class="menu-link"
+        >
+          <strong>CONTATTI</strong>
+          <span>1 KM E SI MANGIA</span>
+        </a>
+
+      </div>
+
+    </div>
+
+  </nav>
+
+
+
+  <!-- =====================================================
+       CONTENUTO PRINCIPALE
+       ===================================================== -->
+
+  <main id="home">
+
+
+    <!-- ===================================================
+         HERO
+         =================================================== -->
 
     <section class="hero">
 
       <div class="hero-content">
 
-        <p class="small-title">
+        <div class="small-title">
           IL TUO PROSSIMO RISTORANTE È PIÙ VICINO DI QUANTO PENSI
-        </p>
+        </div>
+
 
         <h1>
-          Esci.<br>
-          Mangia.<br>
-          Riparti.
+          ESCI.<br>
+          MANGIA.<br>
+          RIPARTI.
         </h1>
 
-        <p class="description">
-          Trova ristoranti, trattorie e pizzerie
-          a pochi minuti dall'uscita autostradale.
-        </p>
 
-        <button
-          class="location-button"
-          id="locationButton">
-          📍 USA LA MIA POSIZIONE
-        </button>
+        <div class="description">
+          Trova ristoranti, trattorie e pizzerie a pochi minuti
+          dall'uscita autostradale.
+        </div>
 
-        <button
-          class="map-button"
-          id="mapButton">
-          🗺️ ESPLORA LA MAPPA
-        </button>
+
+        <div class="hero-buttons">
+
+          <button
+            class="location-button"
+            id="locationButton"
+            type="button"
+          >
+            📍 USA LA MIA POSIZIONE
+          </button>
+
+
+          <button
+            class="map-button"
+            id="mapButton"
+            type="button"
+          >
+            🗺️ ESPLORA LA MAPPA
+          </button>
+
+        </div>
 
       </div>
 
     </section>
 
 
-    <!-- MAPPA -->
 
-    <section class="map-section" id="mapSection">
+    <!-- ===================================================
+         SPAZIO PUBBLICITARIO
+         =================================================== -->
 
-      <div class="map-header">
+    <section
+      class="ad-space"
+      aria-label="Spazio pubblicitario"
+    >
 
-        <div>
+      <div class="ad-box">
 
-          <p class="map-label">
-            1 KM E SI MANGIA
-          </p>
+        <span class="ad-label">
+          PUBBLICITÀ
+        </span>
 
-          <h2>
-            Esplora le uscite
-          </h2>
-
-          <p>
-            Avvicinati sulla mappa per visualizzare
-            le singole uscite autostradali.
-          </p>
-
-        </div>
+        <span class="ad-placeholder">
+          SPAZIO PUBBLICITARIO
+        </span>
 
       </div>
 
+    </section>
+
+
+
+    <!-- ===================================================
+         MAPPA
+         =================================================== -->
+
+    <section
+      class="map-section"
+      id="mapSection"
+    >
+
+      <div class="map-header">
+
+        <div class="map-label">
+          1 KM E SI MANGIA
+        </div>
+
+        <h2>
+          ESPLORA LE USCITE
+        </h2>
+
+        <p>
+          Avvicinati sulla mappa per visualizzare le singole
+          uscite autostradali.
+        </p>
+
+      </div>
+
+
       <div id="map"></div>
+
 
       <div class="map-legend">
 
         <div>
+
           <span class="legend-dot"></span>
-          Uscita autostradale
+
+          <span>Uscita autostradale</span>
+
         </div>
 
+
         <div>
+
           <span class="legend-route"></span>
-          Autostrada
+
+          <span>Autostrada</span>
+
         </div>
 
       </div>
@@ -219,107 +356,188 @@
     </section>
 
 
-    <!-- COME FUNZIONA -->
 
-    <section class="how-it-works">
+    <!-- ===================================================
+         COME FUNZIONA
+         =================================================== -->
 
-      <h2>Come funziona</h2>
+    <section
+      class="how-it-works"
+      id="come-funziona"
+    >
+
+      <h2>
+        COME FUNZIONA
+      </h2>
+
 
       <div class="steps">
 
-        <div class="step">
 
-          <div class="step-icon">📍</div>
+        <article class="step">
 
-          <h3>Trova la tua uscita</h3>
+          <div class="step-icon">
+            📍
+          </div>
 
-          <p>
-            Ti mostriamo le prossime uscite
-            nella tua direzione.
-          </p>
-
-        </div>
-
-        <div class="step">
-
-          <div class="step-icon">🍴</div>
-
-          <h3>Scegli dove mangiare</h3>
+          <h3>
+            Trova l'uscita
+          </h3>
 
           <p>
-            Troviamo i locali realmente
-            raggiungibili dal casello.
+            Individua sulla mappa l'uscita autostradale
+            più vicina al tuo percorso.
           </p>
 
-        </div>
+        </article>
 
-        <div class="step">
 
-          <div class="step-icon">🚗</div>
 
-          <h3>Solo entro 2 km</h3>
+        <article class="step">
+
+          <div class="step-icon">
+            🍕
+          </div>
+
+          <h3>
+            Scegli dove mangiare
+          </h3>
 
           <p>
-            La distanza è stradale,
-            non in linea d'aria.
+            Scopri ristoranti, trattorie e pizzerie
+            a pochi minuti dall'autostrada.
           </p>
 
-        </div>
+        </article>
+
+
+
+        <article class="step">
+
+          <div class="step-icon">
+            🚗
+          </div>
+
+          <h3>
+            Riparti
+          </h3>
+
+          <p>
+            Mangi, ti rilassi e torni rapidamente
+            sul tuo percorso.
+          </p>
+
+        </article>
+
 
       </div>
 
     </section>
 
 
-    <!-- REGOLE -->
 
-    <section class="rules">
+    <!-- ===================================================
+         REGOLE / DISTANZE
+         =================================================== -->
 
-      <h2>Le nostre regole</h2>
+    <section
+      class="rules"
+      id="distanze"
+    >
+
+      <h2>
+        QUANTO TI ALLONTANI?
+      </h2>
+
 
       <div class="rule-list">
 
-        <div class="rule green">
 
-          <strong>0–1 KM</strong>
+        <article class="rule green">
 
-          <span>OTTIMA SOSTA</span>
+          <strong>
+            1 KM
+          </strong>
 
-        </div>
+          <span>
+            PRATICAMENTE SULL'USCITA
+          </span>
 
-        <div class="rule yellow">
+        </article>
 
-          <strong>1–2 KM</strong>
 
-          <span>QUALCHE OPZIONE</span>
 
-        </div>
+        <article class="rule yellow">
 
-        <div class="rule red">
+          <strong>
+            3 KM
+          </strong>
 
-          <strong>OLTRE 2 KM</strong>
+          <span>
+            POCHI MINUTI DI STRADA
+          </span>
 
-          <span>NESSUN RISULTATO</span>
+        </article>
 
-        </div>
+
+
+        <article class="rule red">
+
+          <strong>
+            5 KM+
+          </strong>
+
+          <span>
+            VALE LA PENA?
+          </span>
+
+        </article>
+
 
       </div>
 
     </section>
+
 
   </main>
 
 
-  <footer>
 
-    <strong>1 KM E SI MANGIA</strong>
+  <!-- =====================================================
+       FOOTER
+       ===================================================== -->
 
-    <p>Esci. Mangia. Riparti.</p>
+  <footer id="footer">
+
+    <strong>
+      1 KM E SI MANGIA
+    </strong>
+
+    <p>
+      Mangia bene. Perdi poco tempo. Riparti.
+    </p>
 
   </footer>
 
 
-  <script src="script.js"></script>
+
+  <!-- =====================================================
+       LEAFLET
+       ===================================================== -->
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  ></script>
+
+
+  <!-- =====================================================
+       JAVASCRIPT DEL PROGETTO
+       ===================================================== -->
+
+  <script
+    src="script.js"
+  ></script>
+
 
 </body>
 
