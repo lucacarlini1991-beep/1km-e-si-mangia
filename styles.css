@@ -1555,4 +1555,328 @@ footer p {
 
   }
 
+}/* =====================================================
+   MENU MOBILE - 1 KM E SI MANGIA
+   ===================================================== */
+
+.site-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+
+  background: rgba(0, 0, 0, 0.55);
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s ease;
+}
+
+
+.site-menu-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+
+/* =====================================================
+   PANNELLO
+   ===================================================== */
+
+.site-menu {
+  width: min(390px, 88vw);
+  height: 100%;
+
+  background: #075c3b;
+
+  color: #ffffff;
+
+  box-shadow:
+    -10px 0 35px rgba(0, 0, 0, 0.25);
+
+  transform: translateX(100%);
+
+  transition:
+    transform 0.3s ease;
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+.site-menu-overlay.is-open .site-menu {
+  transform: translateX(0);
+}
+
+
+/* =====================================================
+   TESTATA MENU
+   ===================================================== */
+
+.site-menu-header {
+  min-height: 90px;
+
+  padding:
+    20px 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.25);
+}
+
+
+.site-menu-brand {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.site-menu-brand strong {
+  font-family:
+    "Roboto Condensed",
+    sans-serif;
+
+  font-size: 28px;
+
+  line-height: 1;
+
+  letter-spacing: 1px;
+}
+
+
+.site-menu-brand span {
+  margin-top: 5px;
+
+  font-family:
+    "Roboto Condensed",
+    sans-serif;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  letter-spacing: 2px;
+
+  color: #f5a900;
+}
+
+
+/* =====================================================
+   PULSANTE CHIUDI
+   ===================================================== */
+
+.site-menu-close {
+  width: 46px;
+  height: 46px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.45);
+
+  background: transparent;
+
+  color: #ffffff;
+
+  font-size: 34px;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+
+.site-menu-close:hover {
+  background: #f5a900;
+
+  color: #075c3b;
+}
+
+
+/* =====================================================
+   NAVIGAZIONE
+   ===================================================== */
+
+.site-menu-nav {
+  padding: 22px 18px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+
+.site-menu-nav .menu-link {
+  width: 100%;
+
+  min-height: 64px;
+
+  padding:
+    12px 16px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.22);
+
+  background:
+    rgba(255, 255, 255, 0.06);
+
+  color: #ffffff;
+
+  font-family:
+    "Roboto Condensed",
+    sans-serif;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  text-align: left;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.site-menu-nav .menu-link:hover {
+  background: #f5a900;
+
+  border-color: #f5a900;
+
+  color: #075c3b;
+
+  transform: translateX(-4px);
+}
+
+
+.site-menu-nav .menu-link span {
+  width: 28px;
+
+  font-size: 21px;
+
+  text-align: center;
+}
+
+
+.site-menu-nav .menu-link strong {
+  font-size: 16px;
+
+  letter-spacing: 0.5px;
+}
+
+
+/* =====================================================
+   FOOTER MENU
+   ===================================================== */
+
+.site-menu-footer {
+  margin-top: auto;
+
+  padding:
+    22px;
+
+  border-top:
+    1px solid rgba(255, 255, 255, 0.2);
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.site-menu-footer strong {
+  font-family:
+    "Roboto Condensed",
+    sans-serif;
+
+  font-size: 18px;
+
+  text-transform: uppercase;
+}
+
+
+.site-menu-footer span {
+  font-size: 13px;
+
+  line-height: 1.4;
+
+  color:
+    rgba(255, 255, 255, 0.7);
+}
+
+
+/* =====================================================
+   BLOCCA LO SCROLL QUANDO IL MENU È APERTO
+   ===================================================== */
+
+body.menu-open {
+  overflow: hidden;
+}
+
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 700px) {
+
+  .site-menu {
+    width: 88vw;
+    max-width: 360px;
+  }
+
+  .site-menu-header {
+    min-height: 80px;
+
+    padding:
+      16px 18px;
+  }
+
+  .site-menu-brand strong {
+    font-size: 25px;
+  }
+
+  .site-menu-nav {
+    padding:
+      18px 14px;
+  }
+
+  .site-menu-nav .menu-link {
+    min-height: 60px;
+  }
+
+}
+
+
+/* =====================================================
+   DESKTOP
+   ===================================================== */
+
+@media (min-width: 701px) {
+
+  .site-menu {
+    width: 390px;
+  }
+
 }
