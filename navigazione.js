@@ -561,9 +561,17 @@ function coordinateNavigazione(
       url
     );
   
-  
-    window.location.href =
-      url;
+    const nuovaFinestra = window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+    
+    if (!nuovaFinestra) {
+    
+      window.location.assign(url);
+    
+    }
   
   }
   
