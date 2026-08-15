@@ -1066,7 +1066,7 @@ function apriNavigazione(
       "Apri Mappe e naviga",
 
       creaIconaNeutra(
-        "🧭"
+        ""
       ),
 
       function() {
