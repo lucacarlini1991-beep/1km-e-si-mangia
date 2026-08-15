@@ -1,256 +1,446 @@
 // =====================================================
 // 1 KM E SI MANGIA
-// NAVIGAZIONE
+// MODULO NAVIGAZIONE
 // =====================================================
 //
-// Gestisce la scelta dell'app di navigazione:
+// Google Maps = coordinate
+// Waze       = coordinate
+// Apple Maps = coordinate
 //
-//   Google Maps
-//   Waze
-//   Apple Maps
-//
-// Non modifica la mappa e non richiede API key.
+// IMPORTANTE:
+// la posizione reale del ristorante viene determinata
+// esclusivamente da latitudine e longitudine.
 // =====================================================
 
 
 // =====================================================
-// CONFIGURAZIONE
+// STILI
 // =====================================================
 
-const NAVIGAZIONE_CONFIG = {
+(function creaStiliNavigazione() {
 
-    nomeApplicazione:
-      "1 KM E SI MANGIA",
-  
-    zoomDestinazione:
-      17
-  
-  };
-  
-  
-  // =====================================================
-  // SICUREZZA TESTO
-  // =====================================================
-  
-  function navigazioneEscapeHtml(
-    valore
-  ) {
-  
-    return String(
-      valore == null
-        ? ""
-        : valore
+  if (
+    document.getElementById(
+      "stili-navigazione-1km"
     )
-  
-      .replace(
-        /&/g,
-        "&amp;"
-      )
-  
-      .replace(
-        /</g,
-        "&lt;"
-      )
-  
-      .replace(
-        />/g,
-        "&gt;"
-      )
-  
-      .replace(
-        /"/g,
-        "&quot;"
-      )
-  
-      .replace(
-        /'/g,
-        "&#039;"
-      );
-  
+  ) {
+    return;
   }
-  
-  
-  // =====================================================
-  // VERIFICA COORDINATE
-  // =====================================================
-  
-  function coordinateNavigazioneValide(
+
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.id =
+    "stili-navigazione-1km";
+
+
+  style.textContent = `
+
+    .navigazione-overlay-1km {
+
+      position:fixed;
+
+      inset:0;
+
+      z-index:999999;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      padding:20px;
+
+      background:rgba(0,0,0,.55);
+
+      box-sizing:border-box;
+
+    }
+
+
+    .navigazione-box-1km {
+
+      width:min(440px,100%);
+
+      max-height:90vh;
+
+      overflow:auto;
+
+      background:#fff;
+
+      border-radius:22px;
+
+      box-shadow:
+        0 20px 60px
+        rgba(0,0,0,.30);
+
+      padding:20px;
+
+      box-sizing:border-box;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    }
+
+
+    .navigazione-header-1km {
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:space-between;
+
+      gap:12px;
+
+      margin-bottom:16px;
+
+    }
+
+
+    .navigazione-titolo-1km {
+
+      margin:0;
+
+      color:#075c3b;
+
+      font-size:21px;
+
+      font-weight:800;
+
+    }
+
+
+    .navigazione-sottotitolo-1km {
+
+      margin:4px 0 0;
+
+      color:#666;
+
+      font-size:14px;
+
+    }
+
+
+    .navigazione-chiudi-1km {
+
+      width:38px;
+
+      height:38px;
+
+      border:0;
+
+      border-radius:50%;
+
+      background:#f0f0f0;
+
+      color:#222;
+
+      font-size:20px;
+
+      font-weight:700;
+
+      cursor:pointer;
+
+      flex-shrink:0;
+
+    }
+
+
+    .navigazione-opzione-1km {
+
+      width:100%;
+
+      display:flex;
+
+      align-items:center;
+
+      gap:14px;
+
+      margin-top:10px;
+
+      padding:14px;
+
+      border:1px solid #e1e1e1;
+
+      border-radius:15px;
+
+      background:#fff;
+
+      text-align:left;
+
+      cursor:pointer;
+
+      transition:
+        transform .12s ease,
+        background .12s ease,
+        box-shadow .12s ease;
+
+      box-sizing:border-box;
+
+    }
+
+
+    .navigazione-opzione-1km:hover {
+
+      background:#f7f7f7;
+
+      transform:translateY(-1px);
+
+      box-shadow:
+        0 4px 14px
+        rgba(0,0,0,.08);
+
+    }
+
+
+    .navigazione-icona-1km {
+
+      width:48px;
+
+      height:48px;
+
+      min-width:48px;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      border-radius:12px;
+
+      background:#f3f3f3;
+
+      overflow:hidden;
+
+    }
+
+
+    .navigazione-icona-1km img {
+
+      width:38px;
+
+      height:38px;
+
+      object-fit:contain;
+
+      display:block;
+
+    }
+
+
+    .navigazione-icona-neutra-1km {
+
+      font-size:27px;
+
+      line-height:1;
+
+    }
+
+
+    .navigazione-testo-1km {
+
+      min-width:0;
+
+      flex:1;
+
+    }
+
+
+    .navigazione-nome-1km {
+
+      display:block;
+
+      color:#222;
+
+      font-size:16px;
+
+      font-weight:800;
+
+      line-height:1.2;
+
+    }
+
+
+    .navigazione-descrizione-1km {
+
+      display:block;
+
+      margin-top:4px;
+
+      color:#777;
+
+      font-size:13px;
+
+      line-height:1.25;
+
+    }
+
+
+    .navigazione-annulla-1km {
+
+      width:100%;
+
+      margin-top:14px;
+
+      padding:12px;
+
+      border:0;
+
+      border-radius:12px;
+
+      background:#eeeeee;
+
+      color:#222;
+
+      font-size:14px;
+
+      font-weight:700;
+
+      cursor:pointer;
+
+    }
+
+
+    @media (max-width:480px) {
+
+      .navigazione-overlay-1km {
+
+        padding:12px;
+
+      }
+
+
+      .navigazione-box-1km {
+
+        border-radius:18px;
+
+        padding:16px;
+
+      }
+
+
+      .navigazione-opzione-1km {
+
+        padding:12px;
+
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+})();
+
+
+// =====================================================
+// COORDINATE
+// =====================================================
+
+function coordinateNavigazione(
+  ristorante
+) {
+
+  if (!ristorante) {
+
+    return null;
+
+  }
+
+
+  const lat =
+    Number(
+      ristorante.lat
+    );
+
+
+  const lon =
+    Number(
+      ristorante.lon
+    );
+
+
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon) ||
+    lat < -90 ||
+    lat > 90 ||
+    lon < -180 ||
+    lon > 180
+  ) {
+
+    console.error(
+      "NAVIGAZIONE: coordinate non valide",
+      ristorante
+    );
+
+    return null;
+
+  }
+
+
+  return {
     lat,
     lon
-  ) {
-  
-    const latNumero =
-      Number(lat);
-  
-    const lonNumero =
-      Number(lon);
-  
-  
-    if (
-      !Number.isFinite(
-        latNumero
-      ) ||
-      !Number.isFinite(
-        lonNumero
-      )
-    ) {
-  
-      return false;
-  
-    }
-  
-  
-    if (
-      latNumero < -90 ||
-      latNumero > 90
-    ) {
-  
-      return false;
-  
-    }
-  
-  
-    if (
-      lonNumero < -180 ||
-      lonNumero > 180
-    ) {
-  
-      return false;
-  
-    }
-  
-  
-    return true;
-  
-  }
-  
-  
+  };}
+
+
   // =====================================================
-  // URL GOOGLE MAPS
+  // GOOGLE MAPS
+  // =====================================================
+  //
+  // DESTINAZIONE = SOLO COORDINATE
   // =====================================================
   
-  function creaUrlGoogleMaps(
-    lat,
-    lon,
-    nome
+  function apriGoogleMaps(
+    ristorante
   ) {
   
-    const destinazione =
-      encodeURIComponent(
-        `${lat},${lon}`
+    const coordinate =
+      coordinateNavigazione(
+        ristorante
       );
   
   
-    const nomeEncoded =
-      encodeURIComponent(
-        nome || ""
-      );
-  
-  
-    return (
-  
-      "https://www.google.com/maps/dir/" +
-  
-      "?api=1" +
-  
-      "&destination=" +
-      destinazione +
-  
-      "&travelmode=driving" +
-  
-      (
-        nomeEncoded
-          ? "&destination_place_id=" +
-            ""
-          : ""
-      )
-  
-    );
-  
-  }
-  
-  
-  // =====================================================
-  // URL WAZE
-  // =====================================================
-  
-  function creaUrlWaze(
-    lat,
-    lon
-  ) {
-  
-    return (
-  
-      "https://www.waze.com/ul" +
-  
-      "?ll=" +
-      encodeURIComponent(
-        `${lat},${lon}`
-      ) +
-  
-      "&navigate=yes" +
-  
-      "&zoom=" +
-      NAVIGAZIONE_CONFIG.zoomDestinazione
-  
-    );
-  
-  }
-  
-  
-  // =====================================================
-  // URL APPLE MAPS
-  // =====================================================
-  
-  function creaUrlAppleMaps(
-    lat,
-    lon,
-    nome
-  ) {
-  
-    const destinazione =
-      encodeURIComponent(
-        `${lat},${lon}`
-      );
-  
-  
-    const query =
-      encodeURIComponent(
-        nome ||
-        `${lat},${lon}`
-      );
-  
-  
-    return (
-  
-      "https://maps.apple.com/" +
-  
-      "?daddr=" +
-      destinazione +
-  
-      "&dirflg=d" +
-  
-      "&q=" +
-      query
-  
-    );
-  
-  }
-  
-  
-  // =====================================================
-  // APERTURA URL
-  // =====================================================
-  
-  function apriUrlNavigazione(
-    url
-  ) {
-  
-    if (!url) {
+    if (!coordinate) {
   
       return;
   
     }
+  
+  
+    const url =
+      "https://www.google.com/maps/dir/?api=1" +
+  
+      "&destination=" +
+  
+      encodeURIComponent(
+        coordinate.lat +
+        "," +
+        coordinate.lon
+      ) +
+  
+      "&travelmode=driving";
+  
+  
+    console.log(
+      "NAVIGAZIONE GOOGLE:",
+      url
+    );
   
   
     window.open(
@@ -263,511 +453,705 @@ const NAVIGAZIONE_CONFIG = {
   
   
   // =====================================================
-  // CHIUDI PANNELLO
+  // WAZE
+  // =====================================================
+  //
+  // DESTINAZIONE = SOLO LAT/LON
   // =====================================================
   
-  function chiudiSceltaNavigazione() {
+  function apriWaze(
+    ristorante
+  ) {
   
-    const pannello =
-      document.getElementById(
-        "sceltaNavigazionePanel"
+    const coordinate =
+      coordinateNavigazione(
+        ristorante
       );
   
   
-    if (pannello) {
+    if (!coordinate) {
   
-      pannello.remove();
+      return;
   
     }
+  
+  
+    const url =
+      "https://waze.com/ul" +
+  
+      "?ll=" +
+  
+      encodeURIComponent(
+        coordinate.lat +
+        "," +
+        coordinate.lon
+      ) +
+  
+      "&navigate=yes" +
+  
+      "&zoom=17";
+  
+  
+    console.log(
+      "NAVIGAZIONE WAZE:",
+      url
+    );
+  
+  
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
   
   }
   
   
   // =====================================================
-  // CREA PANNELLO SCELTA
+  // APPLE MAPS
+  // =====================================================
+  //
+  // DESTINAZIONE = SOLO COORDINATE
+  //
+  // NON passiamo il nome del ristorante.
+  // Usiamo daddr=LAT,LON.
+  //
+  // In questo modo Apple Maps non deve
+  // cercare il nome del locale e non dovrebbe
+  // confonderlo con l'Outlet di Serravalle.
   // =====================================================
   
-  function mostraSceltaNavigazione(
+  function apriAppleMaps(
     ristorante
   ) {
   
-    if (!ristorante) {
+    const coordinate =
+      coordinateNavigazione(
+        ristorante
+      );
+  
+  
+    if (!coordinate) {
   
       return;
   
     }
   
   
-    const lat =
-      Number(
-        ristorante.lat
-      );
+    const destinazione =
+      coordinate.lat +
+      "," +
+      coordinate.lon;
   
   
-    const lon =
-      Number(
-        ristorante.lon
-      );
+    const url =
+      "https://maps.apple.com/" +
+  
+      "?daddr=" +
+  
+      encodeURIComponent(
+        destinazione
+      ) +
+  
+      "&dirflg=d";
   
   
-    if (
-      !coordinateNavigazioneValide(
-        lat,
-        lon
-      )
-    ) {
-  
-      alert(
-        "Questo ristorante non ha coordinate valide per la navigazione."
-      );
-  
-      return;
-  
-    }
+    console.log(
+      "NAVIGAZIONE APPLE:",
+      url
+    );
   
   
-    chiudiSceltaNavigazione();
+    window.location.href =
+      url;
+  
+  }
   
   
-    const nome =
-      navigazioneEscapeHtml(
-        ristorante.nome ||
-        "Ristorante"
-      );
+  // =====================================================
+  // ICONA GOOGLE MAPS
+  // =====================================================
   
+  function creaIconaGoogleMaps() {
   
-    const pannello =
+    const contenitore =
       document.createElement(
         "div"
       );
   
   
-    pannello.id =
-      "sceltaNavigazionePanel";
+    contenitore.className =
+      "navigazione-icona-1km";
   
   
-    pannello.style.cssText = `
-  
-      position:fixed;
-  
-      z-index:30000;
-  
-      left:50%;
-  
-      top:50%;
-  
-      transform:
-        translate(-50%,-50%);
-  
-      width:min(
-        92vw,
-        430px
+    const immagine =
+      document.createElement(
+        "img"
       );
   
-      background:#ffffff;
   
-      border-radius:20px;
-  
-      box-shadow:
-        0 15px 50px
-        rgba(0,0,0,.35);
-  
-      padding:20px;
-  
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-  
-    `;
+    immagine.src =
+      "assets/google-maps.svg";
   
   
-    pannello.innerHTML = `
-  
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:flex-start;
-          gap:12px;
-          margin-bottom:18px;
-        "
-      >
-  
-        <div>
-  
-          <div
-            style="
-              font-size:20px;
-              font-weight:800;
-            "
-          >
-            🧭 COME VUOI NAVIGARE?
-          </div>
-  
-          <div
-            style="
-              margin-top:5px;
-              font-size:14px;
-              color:#555;
-            "
-          >
-            ${nome}
-          </div>
-  
-        </div>
+    immagine.alt =
+      "Google Maps";
   
   
-        <button
-          type="button"
-          id="chiudiSceltaNavigazione"
-          style="
-            border:0;
-            width:36px;
-            height:36px;
-            border-radius:50%;
-            background:#eeeeee;
-            font-size:22px;
-            cursor:pointer;
-          "
-        >
-          ×
-        </button>
+    immagine.onerror =
+      function() {
   
-      </div>
+        immagine.remove();
   
   
-      <button
-        type="button"
-        data-navigazione="google"
-        style="
-          display:flex;
-          align-items:center;
-          gap:14px;
-          width:100%;
-          padding:15px;
-          margin-bottom:10px;
-          border:1px solid #dddddd;
-          border-radius:14px;
-          background:#ffffff;
-          cursor:pointer;
-          text-align:left;
-          font-size:16px;
-          font-weight:700;
-        "
-      >
-  
-        <span
-          style="
-            font-size:27px;
-          "
-        >
-          🗺️
-        </span>
-  
-        <span>
-          Google Maps
-          <small
-            style="
-              display:block;
-              font-size:12px;
-              color:#666;
-              font-weight:400;
-              margin-top:2px;
-            "
-          >
-            Avvia indicazioni stradali
-          </small>
-        </span>
-  
-      </button>
+        const fallback =
+          document.createElement(
+            "span"
+          );
   
   
-      <button
-        type="button"
-        data-navigazione="waze"
-        style="
-          display:flex;
-          align-items:center;
-          gap:14px;
-          width:100%;
-          padding:15px;
-          margin-bottom:10px;
-          border:1px solid #dddddd;
-          border-radius:14px;
-          background:#ffffff;
-          cursor:pointer;
-          text-align:left;
-          font-size:16px;
-          font-weight:700;
-        "
-      >
-  
-        <span
-          style="
-            font-size:27px;
-          "
-        >
-          🚗
-        </span>
-  
-        <span>
-          Waze
-          <small
-            style="
-              display:block;
-              font-size:12px;
-              color:#666;
-              font-weight:400;
-              margin-top:2px;
-            "
-          >
-            Apri Waze e naviga
-          </small>
-        </span>
-  
-      </button>
+        fallback.className =
+          "navigazione-icona-neutra-1km";
   
   
-      <button
-        type="button"
-        data-navigazione="apple"
-        style="
-          display:flex;
-          align-items:center;
-          gap:14px;
-          width:100%;
-          padding:15px;
-          margin-bottom:10px;
-          border:1px solid #dddddd;
-          border-radius:14px;
-          background:#ffffff;
-          cursor:pointer;
-          text-align:left;
-          font-size:16px;
-          font-weight:700;
-        "
-      >
-  
-        <span
-          style="
-            font-size:27px;
-          "
-        >
-          🍎
-        </span>
-  
-        <span>
-          Apple Maps
-          <small
-            style="
-              display:block;
-              font-size:12px;
-              color:#666;
-              font-weight:400;
-              margin-top:2px;
-            "
-          >
-            Apri Mappe e naviga
-          </small>
-        </span>
-  
-      </button>
+        fallback.textContent =
+          "🗺️";
   
   
-      <button
-        type="button"
-        id="annullaNavigazione"
-        style="
-          width:100%;
-          margin-top:5px;
-          padding:12px;
-          border:0;
-          border-radius:12px;
-          background:#eeeeee;
-          cursor:pointer;
-          font-weight:700;
-        "
-      >
-        ANNULLA
-      </button>
+        contenitore.appendChild(
+          fallback
+        );
   
-    `;
+      };
   
   
-    document.body.appendChild(
-      pannello
+    contenitore.appendChild(
+      immagine
     );
   
   
-    // ---------------------------------------------------
-    // CHIUDI
-    // ---------------------------------------------------
-  
-    pannello
-      .querySelector(
-        "#chiudiSceltaNavigazione"
-      )
-      .addEventListener(
-        "click",
-        chiudiSceltaNavigazione
-      );
-  
-  
-    pannello
-      .querySelector(
-        "#annullaNavigazione"
-      )
-      .addEventListener(
-        "click",
-        chiudiSceltaNavigazione
-      );
-  
-  
-    // ---------------------------------------------------
-    // GOOGLE
-    // ---------------------------------------------------
-  
-    pannello
-      .querySelector(
-        '[data-navigazione="google"]'
-      )
-      .addEventListener(
-        "click",
-        function() {
-  
-          const url =
-            creaUrlGoogleMaps(
-              lat,
-              lon,
-              ristorante.nome
-            );
-  
-  
-          apriUrlNavigazione(
-            url
-          );
-  
-        }
-      );
-  
-  
-    // ---------------------------------------------------
-    // WAZE
-    // ---------------------------------------------------
-  
-    pannello
-      .querySelector(
-        '[data-navigazione="waze"]'
-      )
-      .addEventListener(
-        "click",
-        function() {
-  
-          const url =
-            creaUrlWaze(
-              lat,
-              lon
-            );
-  
-  
-          apriUrlNavigazione(
-            url
-          );
-  
-        }
-      );
-  
-  
-    // ---------------------------------------------------
-    // APPLE MAPS
-    // ---------------------------------------------------
-  
-    pannello
-      .querySelector(
-        '[data-navigazione="apple"]'
-      )
-      .addEventListener(
-        "click",
-        function() {
-  
-          const url =
-            creaUrlAppleMaps(
-              lat,
-              lon,
-              ristorante.nome
-            );
-  
-  
-          apriUrlNavigazione(
-            url
-          );
-  
-        }
-      );
+    return contenitore;
   
   }
   
   
   // =====================================================
-  // FUNZIONE PUBBLICA
+  // ICONA NEUTRA
   // =====================================================
   
-  window.mostraSceltaNavigazione =
-    mostraSceltaNavigazione;
+  function creaIconaNeutra(
+    simbolo
+  ) {
+  
+    const contenitore =
+      document.createElement(
+        "div"
+      );
+  
+  
+    contenitore.className =
+      "navigazione-icona-1km";
+  
+  
+    const icona =
+      document.createElement(
+        "span"
+      );
+  
+  
+    icona.className =
+      "navigazione-icona-neutra-1km";
+  
+  
+    icona.textContent =
+      simbolo;
+  
+  
+    contenitore.appendChild(
+      icona
+    );
+  
+  
+    return contenitore;
+  
+  }
   
   
   // =====================================================
-  // FUNZIONE PUBBLICA ALTERNATIVA
-  // =====================================================
-  //
-  // Possiamo usarla direttamente come:
-  //
-  //   apriNavigazione(ristorante)
-  //
-  
-  window.apriNavigazione =
-    mostraSceltaNavigazione;
-  
-  
-  // =====================================================
-  // ESC
+  // CREA OPZIONE NAVIGAZIONE
   // =====================================================
   
-  document.addEventListener(
-    "keydown",
-    function(event) {
+  function creaOpzioneNavigazione(
+    nome,
+    descrizione,
+    icona,
+    funzione
+  ) {
   
-      if (
-        event.key === "Escape"
-      ) {
+    const bottone =
+      document.createElement(
+        "button"
+      );
   
-        chiudiSceltaNavigazione();
+  
+    bottone.type =
+      "button";
+  
+  
+    bottone.className =
+      "navigazione-opzione-1km";
+  
+  
+    bottone.appendChild(
+      icona
+    );
+  
+  
+    const testo =
+      document.createElement(
+        "div"
+      );
+  
+  
+    testo.className =
+      "navigazione-testo-1km";
+  
+  
+    const titolo =
+      document.createElement(
+        "span"
+      );
+  
+  
+    titolo.className =
+      "navigazione-nome-1km";
+  
+  
+    titolo.textContent =
+      nome;
+  
+  
+    const sotto =
+      document.createElement(
+        "span"
+      );
+  
+  
+    sotto.className =
+      "navigazione-descrizione-1km";
+  
+  
+    sotto.textContent =
+      descrizione;
+  
+  
+    testo.appendChild(
+      titolo
+    );
+  
+  
+    testo.appendChild(
+      sotto
+    );
+  
+  
+    bottone.appendChild(
+      testo
+    );
+  
+  
+    bottone.addEventListener(
+      "click",
+      function(event) {
+  
+        event.preventDefault();
+  
+        event.stopPropagation();
+  
+  
+        funzione();
+  
+  
+        chiudiNavigazione();
   
       }
+    );
+  
+  
+    return bottone;
+  
+  }
+  
+  
+  // =====================================================
+  // CHIUDI NAVIGAZIONE
+  // =====================================================
+  
+  function chiudiNavigazione() {
+  
+    const overlay =
+      document.getElementById(
+        "navigazione-overlay-1km"
+      );
+  
+  
+    if (overlay) {
+  
+      overlay.remove();
   
     }
+  
+  
+    document.body.style.overflow =
+      "";
+  
+  }// =====================================================
+// APRI PANNELLO NAVIGAZIONE
+// =====================================================
+
+function apriNavigazione(
+  ristorante
+) {
+
+  const coordinate =
+    coordinateNavigazione(
+      ristorante
+    );
+
+
+  if (!coordinate) {
+
+    alert(
+      "Coordinate del ristorante non disponibili."
+    );
+
+    return;
+
+  }
+
+
+  /*
+   * Se esiste già un pannello,
+   * lo chiudiamo prima.
+   */
+
+  chiudiNavigazione();
+
+
+  const overlay =
+    document.createElement(
+      "div"
+    );
+
+
+  overlay.id =
+    "navigazione-overlay-1km";
+
+
+  overlay.className =
+    "navigazione-overlay-1km";
+
+
+  overlay.addEventListener(
+    "click",
+    function(event) {
+
+      if (
+        event.target ===
+        overlay
+      ) {
+
+        chiudiNavigazione();
+
+      }
+
+    }
   );
-  
-  
-  // =====================================================
-  // AVVIO
-  // =====================================================
-  
-  console.log(
-    "================================="
+
+
+  const box =
+    document.createElement(
+      "div"
+    );
+
+
+  box.className =
+    "navigazione-box-1km";
+
+
+  box.addEventListener(
+    "click",
+    function(event) {
+
+      event.stopPropagation();
+
+    }
   );
-  
-  console.log(
-    "NAVIGAZIONE.JS ATTIVO"
+
+
+  // ===================================================
+  // HEADER
+  // ===================================================
+
+  const header =
+    document.createElement(
+      "div"
+    );
+
+
+  header.className =
+    "navigazione-header-1km";
+
+
+  const testoHeader =
+    document.createElement(
+      "div"
+    );
+
+
+  const titolo =
+    document.createElement(
+      "h2"
+    );
+
+
+  titolo.className =
+    "navigazione-titolo-1km";
+
+
+  titolo.textContent =
+    "COME VUOI NAVIGARE?";
+
+
+  const sottotitolo =
+    document.createElement(
+      "p"
+    );
+
+
+  sottotitolo.className =
+    "navigazione-sottotitolo-1km";
+
+
+  sottotitolo.textContent =
+    String(
+      ristorante.nome ||
+      "Ristorante"
+    );
+
+
+  testoHeader.appendChild(
+    titolo
   );
-  
-  console.log(
-    "Google Maps / Waze / Apple Maps"
+
+
+  testoHeader.appendChild(
+    sottotitolo
   );
-  
-  console.log(
-    "================================="
+
+
+  const chiudi =
+    document.createElement(
+      "button"
+    );
+
+
+  chiudi.type =
+    "button";
+
+
+  chiudi.className =
+    "navigazione-chiudi-1km";
+
+
+  chiudi.textContent =
+    "×";
+
+
+  chiudi.addEventListener(
+    "click",
+    chiudiNavigazione
   );
+
+
+  header.appendChild(
+    testoHeader
+  );
+
+
+  header.appendChild(
+    chiudi
+  );
+
+
+  box.appendChild(
+    header
+  );
+
+
+  // ===================================================
+  // GOOGLE MAPS
+  // ===================================================
+
+  box.appendChild(
+
+    creaOpzioneNavigazione(
+
+      "Google Maps",
+
+      "Avvia indicazioni stradali",
+
+      creaIconaGoogleMaps(),
+
+      function() {
+
+        apriGoogleMaps(
+          ristorante
+        );
+
+      }
+
+    )
+
+  );
+
+
+  // ===================================================
+  // WAZE
+  // ===================================================
+
+  box.appendChild(
+
+    creaOpzioneNavigazione(
+
+      "Waze",
+
+      "Apri Waze e naviga",
+
+      creaIconaNeutra(
+        "🚗"
+      ),
+
+      function() {
+
+        apriWaze(
+          ristorante
+        );
+
+      }
+
+    )
+
+  );
+
+
+  // ===================================================
+  // APPLE MAPS
+  // ===================================================
+
+  box.appendChild(
+
+    creaOpzioneNavigazione(
+
+      "Apple Maps",
+
+      "Apri Mappe e naviga",
+
+      creaIconaNeutra(
+        "🧭"
+      ),
+
+      function() {
+
+        apriAppleMaps(
+          ristorante
+        );
+
+      }
+
+    )
+
+  );
+
+
+  // ===================================================
+  // ANNULLA
+  // ===================================================
+
+  const annulla =
+    document.createElement(
+      "button"
+    );
+
+
+  annulla.type =
+    "button";
+
+
+  annulla.className =
+    "navigazione-annulla-1km";
+
+
+  annulla.textContent =
+    "ANNULLA";
+
+
+  annulla.addEventListener(
+    "click",
+    chiudiNavigazione
+  );
+
+
+  box.appendChild(
+    annulla
+  );
+
+
+  overlay.appendChild(
+    box
+  );
+
+
+  document.body.appendChild(
+    overlay
+  );
+
+
+  document.body.style.overflow =
+    "hidden";
+
+}
+
+
+// =====================================================
+// FUNZIONI PUBBLICHE
+// =====================================================
+window.apriNavigazione =
+  apriNavigazione;
+
+
+window.chiudiNavigazione =
+  chiudiNavigazione;
+// =====================================================
+// AVVIO
+// =====================================================
+
+console.log(
+  "=========================================="
+);
+
+console.log(
+  "NAVIGAZIONE.JS ATTIVO"
+);
+
+console.log(
+  "DESTINAZIONE: COORDINATE"
+);
+
+console.log(
+  "Google Maps / Waze / Apple Maps"
+);
+
+console.log(
+  "=========================================="
+);
