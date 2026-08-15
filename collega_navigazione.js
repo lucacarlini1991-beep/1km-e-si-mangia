@@ -3,8 +3,8 @@
 // COLLEGAMENTO NAVIGAZIONE
 // =====================================================
 //
-// Collega le schede dei ristoranti alla funzione
-// contenuta in navigazione.js.
+// Collega i ristoranti mostrati nel pannello
+// "MOSTRA TUTTI" al modulo navigazione.js.
 //
 // NON modifica script.js.
 // =====================================================
@@ -14,7 +14,7 @@ let databaseNavigazione = [];
 
 
 // =====================================================
-// CARICA DATABASE
+// CARICA RISTORANTI
 // =====================================================
 
 fetch("./ristoranti.json")
@@ -43,22 +43,21 @@ fetch("./ristoranti.json")
 
     }
 
-    databaseNavigazione =
-      database;
+    databaseNavigazione = database;
 
     console.log(
-      "COLLEGAMENTO NAVIGAZIONE: database caricato",
+      "NAVIGAZIONE: database caricato:",
       databaseNavigazione.length
     );
 
-    collegaPulsantiNavigazione();
+    avviaControlloRistoranti();
 
   })
 
   .catch(function(error) {
 
     console.error(
-      "COLLEGAMENTO NAVIGAZIONE:",
+      "NAVIGAZIONE: errore caricamento database",
       error
     );
 
@@ -66,68 +65,27 @@ fetch("./ristoranti.json")
 
 
 // =====================================================
-// SICUREZZA TESTO
+// TROVA RISTORANTE PER NOME
 // =====================================================
 
-function escapeNavigazione(
-  valore
-) {
-
-  return String(
-    valore == null
-      ? ""
-      : valore
-  )
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-// =====================================================
-// TROVA RISTORANTE
-// =====================================================
-
-function trovaRistoranteNavigazione(
+function trovaRistorante(
   nome
 ) {
 
-  const nomePulito =
-    String(
-      nome || ""
-    )
-      .trim()
-      .toLowerCase();
-
-
-  if (!nomePulito) {
+  if (!nome) {
 
     return null;
 
   }
 
 
-  // ---------------------------------------------------
-  // Prima ricerca: corrispondenza esatta
-  // ---------------------------------------------------
+  const nomePulito =
+    String(nome)
+      .trim()
+      .toLowerCase();
+
+
+  // Corrispondenza esatta
 
   let risultato =
     databaseNavigazione.find(
@@ -151,9 +109,7 @@ function trovaRistoranteNavigazione(
   }
 
 
-  // ---------------------------------------------------
-  // Seconda ricerca: corrispondenza parziale
-  // ---------------------------------------------------
+  // Corrispondenza parziale
 
   risultato =
     databaseNavigazione.find(
@@ -192,31 +148,37 @@ function trovaRistoranteNavigazione(
 // CREA PULSANTE NAVIGA
 // =====================================================
 
-function creaPulsanteNavigazione(
+function creaBottoneNaviga(
   ristorante
 ) {
 
-  const button =
+  const bottone =
     document.createElement(
       "button"
     );
 
 
-  button.type =
+  bottone.type =
     "button";
 
 
-  button.className =
-    "pulsante-navigazione-ristorante";
+  bottone.className =
+    "bottone-naviga-1km";
 
 
-  button.innerHTML =
+  bottone.textContent =
     "🧭 NAVIGA";
 
 
-  button.style.cssText = `
+  bottone.style.cssText = `
 
-    flex:1;
+    display:block;
+
+    width:100%;
+
+    margin-top:10px;
+
+    padding:10px 14px;
 
     border:0;
 
@@ -224,20 +186,18 @@ function creaPulsanteNavigazione(
 
     background:#075c3b;
 
-    color:#ffffff;
+    color:white;
 
-    padding:9px 10px;
+    font-size:14px;
 
-    font-weight:700;
+    font-weight:800;
 
     cursor:pointer;
-
-    min-width:90px;
 
   `;
 
 
-  button.addEventListener(
+  bottone.addEventListener(
     "click",
     function(event) {
 
@@ -268,46 +228,51 @@ function creaPulsanteNavigazione(
   );
 
 
-  return button;
+  return bottone;
 
 }
 
 
 // =====================================================
-// AGGIUNGE NAVIGA ALLE SCHEDE
+// CERCA LE SCHEDE DEI RISTORANTI
 // =====================================================
 
-function collegaPulsantiNavigazione() {
+function cercaSchedeRistoranti() {
 
-  const panel =
-    document.getElementById(
-      "ristorantiMapPanel"
-    );
-
-
-  if (!panel) {
+  if (
+    !databaseNavigazione.length
+  ) {
 
     return;
 
   }
 
 
-  const mapButtons =
-    panel.querySelectorAll(
-      "[data-ristorante-index]"
+  /*
+   * Cerchiamo gli elementi che contengono
+   * "dall'uscita".
+   *
+   * Nella finestra MOSTRA TUTTI ogni ristorante
+   * contiene questa informazione.
+   */
+
+  const elementi =
+    Array.from(
+      document.querySelectorAll(
+        "div"
+      )
     );
 
 
-  mapButtons.forEach(
-    function(mapButton) {
+  elementi.forEach(
+    function(elemento) {
 
-      const card =
-        mapButton.closest(
-          "div[style*='border:1px solid']"
-        );
+      const testo =
+        elemento.textContent
+          ?.trim() || "";
 
 
-      if (!card) {
+      if (!testo) {
 
         return;
 
@@ -315,8 +280,8 @@ function collegaPulsantiNavigazione() {
 
 
       if (
-        card.querySelector(
-          ".pulsante-navigazione-ristorante"
+        !testo.includes(
+          "dall'uscita"
         )
       ) {
 
@@ -325,14 +290,45 @@ function collegaPulsantiNavigazione() {
       }
 
 
-      // ---------------------------------------------
-      // Recupera il nome dalla scheda
-      // ---------------------------------------------
+      /*
+       * Evitiamo di prendere contenitori
+       * troppo grandi che comprendono
+       * più ristoranti.
+       */
 
-      const titolo =
-        card.querySelector(
+      const figliDiv =
+        elemento.querySelectorAll(
+          ":scope > div"
+        );
+
+
+      if (
+        figliDiv.length > 8
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+       * Cerchiamo il titolo del ristorante.
+       */
+
+      let titolo =
+        elemento.querySelector(
           "strong"
         );
+
+
+      if (!titolo) {
+
+        titolo =
+          elemento.querySelector(
+            "b"
+          );
+
+      }
 
 
       if (!titolo) {
@@ -342,21 +338,45 @@ function collegaPulsantiNavigazione() {
       }
 
 
-      let nome =
+      const nome =
         titolo.textContent
-          .trim();
+          .trim()
+          .replace(
+            /^\d+\.\s*/,
+            ""
+          );
 
 
-      // Rimuove "1. " / "2. " ecc.
-      nome =
-        nome.replace(
-          /^\d+\.\s*/,
-          ""
-        );
+      if (!nome) {
 
+        return;
+
+      }
+
+
+      /*
+       * Se il pulsante esiste già,
+       * non facciamo nulla.
+       */
+
+      if (
+        elemento.querySelector(
+          ".bottone-naviga-1km"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+       * Cerchiamo il ristorante
+       * nel database.
+       */
 
       const ristorante =
-        trovaRistoranteNavigazione(
+        trovaRistorante(
           nome
         );
 
@@ -364,22 +384,34 @@ function collegaPulsantiNavigazione() {
       if (!ristorante) {
 
         console.warn(
-          "Navigazione: ristorante non trovato:",
+          "NAVIGAZIONE: ristorante non trovato:",
           nome
         );
 
         return;
 
       }
+
+
+      const lat =
+        Number(
+          ristorante.lat
+        );
+
+
+      const lon =
+        Number(
+          ristorante.lon
+        );
 
 
       if (
-        typeof ristorante.lat !== "number" ||
-        typeof ristorante.lon !== "number"
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lon)
       ) {
 
         console.warn(
-          "Navigazione: coordinate mancanti:",
+          "NAVIGAZIONE: coordinate mancanti:",
           nome
         );
 
@@ -388,51 +420,26 @@ function collegaPulsantiNavigazione() {
       }
 
 
-      // ---------------------------------------------
-      // Crea contenitore pulsanti
-      // ---------------------------------------------
+      /*
+       * Aggiungiamo il pulsante
+       * direttamente nella scheda.
+       */
 
-      const contenitore =
-        document.createElement(
-          "div"
-        );
-
-
-      contenitore.style.cssText = `
-
-        display:flex;
-
-        gap:8px;
-
-        margin-top:10px;
-
-      `;
-
-
-      // Spostiamo MAPPA dentro il contenitore
-      mapButton.style.flex =
-        "1";
-
-
-      contenitore.appendChild(
-        mapButton
-      );
-
-
-      contenitore.appendChild(
-        creaPulsanteNavigazione(
+      const bottone =
+        creaBottoneNaviga(
           ristorante
-        )
+        );
+
+
+      elemento.appendChild(
+        bottone
       );
 
 
-      // Inseriamo il contenitore
-      // nel punto originale del pulsante
-
-      mapButton.parentNode
-        ?.appendChild(
-          contenitore
-        );
+      console.log(
+        "NAVIGA aggiunto:",
+        nome
+      );
 
     }
   );
@@ -441,38 +448,78 @@ function collegaPulsantiNavigazione() {
 
 
 // =====================================================
-// OSSERVA LA CREAZIONE DEL PANNELLO
+// CONTROLLO AUTOMATICO
+// =====================================================
+
+let controlloNavigazione = null;
+
+
+function avviaControlloRistoranti() {
+
+  if (
+    controlloNavigazione
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+   * Il pannello MOSTRA TUTTI viene creato
+   * dinamicamente da script.js.
+   *
+   * Controlliamo quindi periodicamente
+   * se sono apparse nuove schede.
+   */
+
+  controlloNavigazione =
+    setInterval(
+      function() {
+
+        cercaSchedeRistoranti();
+
+      },
+      500
+    );
+
+
+  /*
+   * Primo controllo immediato.
+   */
+
+  cercaSchedeRistoranti();
+
+}
+
+
+// =====================================================
+// MUTATION OBSERVER
 // =====================================================
 //
-// Il pannello viene creato dinamicamente da script.js.
-// Per questo non possiamo cercarlo solamente al caricamento.
+// In aggiunta al controllo periodico,
+// osserviamo le modifiche della pagina.
 // =====================================================
-
-const osservatoreNavigazione =
-  new MutationObserver(
-    function() {
-
-      if (
-        databaseNavigazione.length
-      ) {
-
-        collegaPulsantiNavigazione();
-
-      }
-
-    }
-  );
-
 
 if (
   document.body
 ) {
 
-  osservatoreNavigazione.observe(
+  const observer =
+    new MutationObserver(
+      function() {
+
+        cercaSchedeRistoranti();
+
+      }
+    );
+
+
+  observer.observe(
     document.body,
     {
-      childList: true,
-      subtree: true
+      childList:true,
+      subtree:true
     }
   );
 
@@ -492,7 +539,7 @@ console.log(
 );
 
 console.log(
-  "NAVIGA pronto per Google / Waze / Apple"
+  "In attesa delle schede ristorante..."
 );
 
 console.log(
