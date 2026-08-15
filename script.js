@@ -108,30 +108,759 @@ const exitIcon = L.divIcon({
 
 let usciteItaliane = [];
 
-
 // =====================================================
-// NORMALIZZA TESTO
+// DATABASE RISTORANTI
 // =====================================================
 
-function normalizzaTesto(valore) {
+let ristorantiDatabase = [];
 
-  return String(valore || "")
+const ristorantiLayer =
+  L.layerGroup().addTo(map);
 
-    .toLowerCase()
+const ristorantiPerUscitaMap =
+  new Map();
 
-    .normalize("NFD")
+const restaurantIcon =
+  L.divIcon({
 
-    .replace(/[\u0300-\u036f]/g, "")
+    className:
+      "restaurant-map-icon",
 
-    .replace(/\s+/g, " ")
+    html:
+      '<div style="width:34px;height:34px;border-radius:50%;background:#ffffff;border:3px solid #075c3b;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35);">🍴</div>',
 
-    .trim();
+    iconSize:
+      [34, 34],
+
+    iconAnchor:
+      [17, 17],
+
+    popupAnchor:
+      [0, -17]
+
+  });
+
+
+function escapeHtml(value) {
+
+  return String(
+    value == null
+      ? ""
+      : value
+  )
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 }
 
 
+function ristorantiPerUscita(uscita) {
+
+  if (!uscita || !uscita.id) {
+
+    return [];
+
+  }
+
+  return ristorantiPerUscitaMap.get(
+    String(uscita.id)
+  ) || [];
+
+}
+
+
+function creaPopupRistorante(ristorante) {
+
+  const nome =
+    escapeHtml(
+      ristorante.nome ||
+      "Ristorante"
+    );
+
+  const distanza =
+    Number.isFinite(
+      Number(
+        ristorante?.uscita?.distanza_m
+      )
+    )
+      ? `<small>📍 ${
+          Math.round(
+            Number(
+              ristorante.uscita.distanza_m
+            )
+          )
+        } m dall'uscita</small>`
+      : "";
+
+  const parcheggio =
+    ristorante.parcheggio?.presente === true
+      ? `<small>🅿️ Parcheggio ${
+          ristorante.parcheggio.distanza_m != null
+            ? Math.round(
+                Number(
+                  ristorante.parcheggio.distanza_m
+                )
+              ) + " m"
+            : "presente"
+        }</small>`
+      : `<small>🅿️ Parcheggio da verificare</small>`;
+
+  return `
+    <div style="min-width:190px;line-height:1.4">
+      <strong>${nome}</strong>
+      ${
+        ristorante.cucina
+          ? `<small>🍽️ ${escapeHtml(
+              ristorante.cucina
+            )}</small>`
+          : ""
+      }
+      ${distanza}
+      ${parcheggio}
+      ${
+        ristorante.telefono
+          ? `<small>📞 ${escapeHtml(
+              ristorante.telefono
+            )}</small>`
+          : ""
+      }
+    </div>
+  `;
+
+}
+
+
+function creaMarkerRistorante(ristorante) {
+
+  if (
+    typeof ristorante.lat !== "number" ||
+    typeof ristorante.lon !== "number"
+  ) {
+
+    return null;
+
+  }
+
+  const marker =
+    L.marker(
+      [
+        ristorante.lat,
+        ristorante.lon
+      ],
+      {
+        icon:
+          restaurantIcon
+      }
+    );
+
+  marker.bindPopup(
+    creaPopupRistorante(
+      ristorante
+    )
+  );
+
+  return marker;
+
+}
+
+
+function chiudiPannelloRistoranti() {
+
+  const panel =
+    document.getElementById(
+      "ristorantiMapPanel"
+    );
+
+  if (panel) {
+
+    panel.remove();
+
+  }
+
+}
+
+
+function mostraTuttiRistoranti(uscita) {
+
+  if (!uscita) {
+
+    return;
+
+  }
+
+  const ristoranti =
+    ristorantiPerUscita(
+      uscita
+    );
+
+  ristorantiLayer.clearLayers();
+
+  chiudiPannelloRistoranti();
+
+
+  // -----------------------------------------------
+  // CREA MARKER
+  // -----------------------------------------------
+
+  const bounds =
+    L.latLngBounds(
+      [
+        [
+          uscita.lat,
+          uscita.lon
+        ]
+      ]
+    );
+
+  let markerCount = 0;
+
+  ristoranti.forEach(
+    function(ristorante) {
+
+      const marker =
+        creaMarkerRistorante(
+          ristorante
+        );
+
+      if (!marker) {
+
+        return;
+
+      }
+
+      marker.addTo(
+        ristorantiLayer
+      );
+
+      bounds.extend(
+        [
+          ristorante.lat,
+          ristorante.lon
+        ]
+      );
+
+      markerCount++;
+
+    }
+  );
+
+
+  if (bounds.isValid()) {
+
+    map.fitBounds(
+      bounds,
+      {
+        padding:
+          [45, 45],
+
+        maxZoom:
+          15
+      }
+    );
+
+  }
+
+
+  // -----------------------------------------------
+  // PANNELLO
+  // -----------------------------------------------
+
+  const panel =
+    document.createElement(
+      "div"
+    );
+
+  panel.id =
+    "ristorantiMapPanel";
+
+  panel.style.cssText =
+    "position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:80vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:18px;font-family:system-ui,sans-serif;";
+
+
+  if (!ristoranti.length) {
+
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:20px">
+          Nessun ristorante
+        </strong>
+
+        <button
+          id="chiudiRistorantiMap"
+          type="button"
+          style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer"
+        >
+          ×
+        </button>
+      </div>
+
+      <p>
+        Non risultano ristoranti associati
+        a questa uscita nel database.
+      </p>
+    `;
+
+    document.body.appendChild(
+      panel
+    );
+
+    panel
+      .querySelector(
+        "#chiudiRistorantiMap"
+      )
+      .addEventListener(
+        "click",
+        chiudiPannelloRistoranti
+      );
+
+    return;
+
+  }
+
+
+  const cards =
+    ristoranti.map(
+      function(
+        ristorante,
+        index
+      ) {
+
+        const nome =
+          escapeHtml(
+            ristorante.nome ||
+            "Ristorante"
+          );
+
+        const distanza =
+          Number.isFinite(
+            Number(
+              ristorante?.uscita?.distanza_m
+            )
+          )
+            ? Math.round(
+                Number(
+                  ristorante.uscita.distanza_m
+                )
+              ) + " m dall'uscita"
+            : "";
+
+        const parcheggio =
+          ristorante.parcheggio?.presente === true
+            ? "🅿️ Parcheggio " +
+              (
+                ristorante.parcheggio.distanza_m != null
+                  ? Math.round(
+                      Number(
+                        ristorante.parcheggio.distanza_m
+                      )
+                    ) + " m"
+                  : "presente"
+              )
+            : "🅿️ Parcheggio da verificare";
+
+        return `
+          <div
+            style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px"
+          >
+
+            <div
+              style="display:flex;justify-content:space-between;gap:10px"
+            >
+
+              <div>
+
+                <strong>
+                  ${index + 1}. ${nome}
+                </strong>
+
+                ${
+                  ristorante.cucina
+                    ? `<div style="font-size:12px;color:#555;margin-top:3px">
+                        🍽️ ${escapeHtml(
+                          ristorante.cucina
+                        )}
+                      </div>`
+                    : ""
+                }
+
+              </div>
+
+              ${
+                typeof ristorante.lat === "number" &&
+                typeof ristorante.lon === "number"
+
+                  ? `<button
+                      type="button"
+                      data-ristorante-index="${index}"
+                      style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer"
+                    >
+                      📍 MAPPA
+                    </button>`
+
+                  : ""
+              }
+
+            </div>
+
+            <div
+              style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px"
+            >
+
+              ${
+                distanza
+                  ? `<span>📍 ${distanza}</span>`
+                  : ""
+              }
+
+              <span>
+                ${parcheggio}
+              </span>
+
+              ${
+                ristorante.telefono
+                  ? `<span>
+                      📞 ${escapeHtml(
+                        ristorante.telefono
+                      )}
+                    </span>`
+                  : ""
+              }
+
+            </div>
+
+          </div>
+        `;
+
+      }
+    )
+    .join("");
+
+
+  panel.innerHTML = `
+
+    <div
+      style="display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px"
+    >
+
+      <div>
+
+        <strong style="font-size:20px">
+          🍴 Ristoranti
+        </strong>
+
+        <div style="font-size:13px;color:#555">
+          ${escapeHtml(
+            uscita.nome ||
+            "Uscita autostradale"
+          )}
+
+          ·
+
+          ${ristoranti.length}
+          trovati
+
+        </div>
+
+      </div>
+
+
+      <button
+        id="chiudiRistorantiMap"
+        type="button"
+        style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer"
+      >
+        ×
+      </button>
+
+    </div>
+
+    ${cards}
+
+    <button
+      id="chiudiRistorantiMapBottom"
+      type="button"
+      style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:700;cursor:pointer"
+    >
+      CHIUDI
+    </button>
+
+  `;
+
+  document.body.appendChild(
+    panel
+  );
+
+
+  panel
+    .querySelector(
+      "#chiudiRistorantiMap"
+    )
+    .addEventListener(
+      "click",
+      chiudiPannelloRistoranti
+    );
+
+  panel
+    .querySelector(
+      "#chiudiRistorantiMapBottom"
+    )
+    .addEventListener(
+      "click",
+      chiudiPannelloRistoranti
+    );
+
+
+  panel
+    .querySelectorAll(
+      "[data-ristorante-index]"
+    )
+    .forEach(
+      function(button) {
+
+        button.addEventListener(
+          "click",
+          function() {
+
+            const index =
+              Number(
+                button.getAttribute(
+                  "data-ristorante-index"
+                )
+              );
+
+            const ristorante =
+              ristoranti[index];
+
+            if (!ristorante) {
+
+              return;
+
+            }
+
+            chiudiPannelloRistoranti();
+
+            map.setView(
+              [
+                ristorante.lat,
+                ristorante.lon
+              ],
+              17,
+              {
+                animate:
+                  true
+              }
+            );
+
+
+            ristorantiLayer.eachLayer(
+              function(layer) {
+
+                if (
+                  layer.getLatLng &&
+                  Math.abs(
+                    layer.getLatLng().lat -
+                    ristorante.lat
+                  ) < 0.000001 &&
+                  Math.abs(
+                    layer.getLatLng().lng -
+                    ristorante.lon
+                  ) < 0.000001
+                ) {
+
+                  layer.openPopup();
+
+                }
+
+              }
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  console.log(
+    "Ristoranti mostrati:",
+    ristoranti.length,
+    "Marker:",
+    markerCount,
+    "Uscita:",
+    uscita.nome
+  );
+
+}
+
+
+window.mostraTuttiRistoranti =
+  mostraTuttiRistoranti;
+
+
+fetch("./ristoranti.json")
+  .then(
+    function(response) {
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Impossibile caricare ristoranti.json"
+        );
+
+      }
+
+      return response.json();
+
+    }
+  )
+  .then(
+    function(database) {
+
+      if (
+        !Array.isArray(database)
+      ) {
+
+        throw new Error(
+          "ristoranti.json non contiene un array"
+        );
+
+      }
+
+      ristorantiDatabase =
+        database;
+
+      ristorantiPerUscitaMap.clear();
+
+      ristorantiDatabase.forEach(
+        function(ristorante) {
+
+          const id =
+            ristorante?.uscita?.id;
+
+          if (!id) {
+
+            return;
+
+          }
+
+          const chiave =
+            String(id);
+
+          if (
+            !ristorantiPerUscitaMap.has(
+              chiave
+            )
+          ) {
+
+            ristorantiPerUscitaMap.set(
+              chiave,
+              []
+            );
+
+          }
+
+          ristorantiPerUscitaMap
+            .get(chiave)
+            .push(
+              ristorante
+            );
+
+        }
+      );
+
+      console.log(
+        "Ristoranti caricati:",
+        ristorantiDatabase.length
+      );
+
+      console.log(
+        "Uscite con ristoranti:",
+        ristorantiPerUscitaMap.size
+      );
+
+    }
+  )
+  .catch(
+    function(error) {
+
+      console.error(
+        "Errore database ristoranti:",
+        error
+      );
+
+    }
+  );
+
+
 // =====================================================
-// CONTROLLA AREA DI SERVIZIO / AUTOGRILL
+// CLICK "MOSTRA TUTTI" DAL POPUP
+// =====================================================
+
+document.addEventListener(
+  "click",
+  function(event) {
+
+    const button =
+      event.target.closest(
+        ".mostra-tutti-ristoranti"
+      );
+
+    if (!button) {
+
+      return;
+
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const id =
+      button.getAttribute(
+        "data-uscita-id"
+      );
+
+    if (!id) {
+
+      return;
+
+    }
+
+    const uscita =
+      usciteItaliane.find(
+        function(item) {
+
+          return String(
+            item.id || ""
+          ) === String(id);
+
+        }
+      );
+
+    if (!uscita) {
+
+      console.error(
+        "Uscita non trovata:",
+        id
+      );
+
+      return;
+
+    }
+
+    mostraTuttiRistoranti(
+      uscita
+    );
+
+  },
+  true
+);
+
+
+// =====================================================
+// CONTROLLA SE E' AREA DI SERVIZIO / AUTOGRILL
 // =====================================================
 
 function eAreaDiServizio(uscita) {
@@ -143,53 +872,26 @@ function eAreaDiServizio(uscita) {
   }
 
 
-  const tipo =
-    normalizzaTesto(
-      uscita.tipo
-    );
-
-
-  const nome =
-    normalizzaTesto(
-      uscita.nome
-    );
-
-
-  const nomeAutostrada =
-    normalizzaTesto(
-      uscita.nome_autostrada
-    );
-
-
-  const autostrada =
-    normalizzaTesto(
-      uscita.autostrada
-    );
-
-
   // ---------------------------------------------
-  // TIPO
+  // CONTROLLO CAMPO TIPO
   // ---------------------------------------------
+
+  const tipo = String(
+    uscita.tipo || ""
+  ).toLowerCase();
+
 
   if (
 
-    tipo === "area_servizio" ||
+    tipo.includes("servizio") ||
 
-    tipo === "area di servizio" ||
+    tipo.includes("autogrill") ||
 
-    tipo === "area servizio" ||
+    tipo.includes("ristoro") ||
 
-    tipo === "area_sosta" ||
+    tipo.includes("sosta") ||
 
-    tipo === "area di sosta" ||
-
-    tipo === "autogrill" ||
-
-    tipo === "service_area" ||
-
-    tipo === "service area" ||
-
-    tipo === "rest_area"
+    tipo.includes("service")
 
   ) {
 
@@ -199,17 +901,25 @@ function eAreaDiServizio(uscita) {
 
 
   // ---------------------------------------------
-  // NOME
+  // CONTROLLO NOME
   // ---------------------------------------------
 
-  const testo =
+  const nome = (
 
-    nome + " " +
-    nomeAutostrada + " " +
-    autostrada;
+    String(uscita.nome || "") +
+
+    " " +
+
+    String(uscita.nome_autostrada || "") +
+
+    " " +
+
+    String(uscita.autostrada || "")
+
+  ).toLowerCase();
 
 
-  const paroleEscluse = [
+  const paroleDaEscludere = [
 
     "area di servizio",
 
@@ -219,41 +929,29 @@ function eAreaDiServizio(uscita) {
 
     "area sosta",
 
-    "area di ristoro",
+    "autogrill",
 
     "area ristoro",
 
-    "autogrill",
+    "ristoro",
 
     "service area",
 
-    "service station",
-
-    "rest area",
-
-    "rest stop",
-
-    "truck stop"
+    "service station"
 
   ];
 
 
   for (
-
     let i = 0;
-
-    i < paroleEscluse.length;
-
+    i < paroleDaEscludere.length;
     i++
-
   ) {
 
     if (
-
-      testo.includes(
-        paroleEscluse[i]
+      nome.includes(
+        paroleDaEscludere[i]
       )
-
     ) {
 
       return true;
@@ -281,8 +979,6 @@ function uscitaValida(uscita) {
   }
 
 
-  // Coordinate
-
   if (
 
     typeof uscita.lat !== "number" ||
@@ -296,12 +992,8 @@ function uscitaValida(uscita) {
   }
 
 
-  // Database: se false, non mostrare
-
   if (
-
     uscita.visualizza_mappa === false
-
   ) {
 
     return false;
@@ -309,12 +1001,10 @@ function uscitaValida(uscita) {
   }
 
 
-  // Area di servizio / autogrill
+  // ESCLUDI AUTOGRILL / AREE DI SERVIZIO
 
   if (
-
     eAreaDiServizio(uscita)
-
   ) {
 
     return false;
@@ -333,12 +1023,30 @@ function uscitaValida(uscita) {
 
 function creaPopup(uscita) {
 
+  const id =
+    escapeHtml(
+      String(
+        uscita.id || ""
+      )
+    );
+
+  const ristoranti =
+    ristorantiPerUscita(
+      uscita
+    );
+
+  const numero =
+    ristoranti.length;
+
   let popup = `
 
     <div class="exit-popup">
 
       <strong>
-        ${uscita.nome || "Uscita autostradale"}
+        ${escapeHtml(
+          uscita.nome ||
+          "Uscita autostradale"
+        )}
       </strong>
 
   `;
@@ -349,7 +1057,9 @@ function creaPopup(uscita) {
     popup += `
 
       <small>
-        ${uscita.autostrada}
+        ${escapeHtml(
+          uscita.autostrada
+        )}
 
     `;
 
@@ -357,7 +1067,9 @@ function creaPopup(uscita) {
     if (uscita.numero_uscita) {
 
       popup +=
-        ` · Uscita ${uscita.numero_uscita}`;
+        ` · Uscita ${escapeHtml(
+          uscita.numero_uscita
+        )}`;
 
     }
 
@@ -376,7 +1088,9 @@ function creaPopup(uscita) {
     popup += `
 
       <small>
-        ${uscita.nome_autostrada}
+        ${escapeHtml(
+          uscita.nome_autostrada
+        )}
       </small>
 
     `;
@@ -390,6 +1104,31 @@ function creaPopup(uscita) {
         📍 Uscita autostradale
       </small>
 
+      <button
+        type="button"
+        class="mostra-tutti-ristoranti"
+        data-uscita-id="${id}"
+        style="
+          display:block;
+          width:100%;
+          margin-top:10px;
+          border:0;
+          border-radius:10px;
+          background:#075c3b;
+          color:#fff;
+          padding:10px 12px;
+          font-weight:700;
+          cursor:pointer;
+        "
+      >
+        🍴 MOSTRA TUTTI
+        ${
+          numero
+            ? `(${numero})`
+            : ""
+        }
+      </button>
+
     </div>
 
   `;
@@ -401,7 +1140,7 @@ function creaPopup(uscita) {
 
 
 // =====================================================
-// CARICA DATABASE
+// CARICA DATABASE USCITE
 // =====================================================
 
 fetch("./uscite.json")
@@ -416,11 +1155,9 @@ fetch("./uscite.json")
 
     }
 
-
     return response.json();
 
   })
-
 
   .then(function(database) {
 
@@ -436,7 +1173,7 @@ fetch("./uscite.json")
     );
 
     console.log(
-      "Record caricati:",
+      "Uscite caricate:",
       usciteItaliane.length
     );
 
@@ -445,105 +1182,112 @@ fetch("./uscite.json")
     );
 
 
-    let visibili = 0;
+    let usciteVisibili = 0;
 
-    let escluse = 0;
-
-
-    usciteItaliane.forEach(
-
-      function(uscita) {
+    let usciteEscluse = 0;
 
 
-        if (
-          !uscitaValida(uscita)
-        ) {
+    // ---------------------------------------------
+    // CREA MARKER
+    // ---------------------------------------------
 
-          escluse++;
+    usciteItaliane.forEach(function(uscita) {
 
-          return;
+      if (
+        !uscitaValida(uscita)
+      ) {
 
-        }
+        usciteEscluse++;
 
-
-        const marker = L.marker(
-
-          [
-
-            uscita.lat,
-
-            uscita.lon
-
-          ],
-
-          {
-
-            icon: exitIcon
-
-          }
-
-        );
-
-
-        marker.bindPopup(
-
-          creaPopup(uscita)
-
-        );
-
-
-        marker.on(
-
-          "click",
-
-          function() {
-
-            map.flyTo(
-
-              [
-
-                uscita.lat,
-
-                uscita.lon
-
-              ],
-
-              14,
-
-              {
-
-                duration: 1
-
-              }
-
-            );
-
-          }
-
-        );
-
-
-        clusterUscite.addLayer(
-          marker
-        );
-
-
-        visibili++;
+        return;
 
       }
 
-    );
+
+      const marker = L.marker(
+
+        [
+          uscita.lat,
+          uscita.lon
+        ],
+
+        {
+          icon: exitIcon
+        }
+
+      );
+
+
+      marker.bindPopup(
+        creaPopup(uscita)
+      );
+
+
+      // -------------------------------------------
+      // CLICK MARKER
+      // -------------------------------------------
+
+      marker.on(
+
+        "click",
+
+        function() {
+
+          map.flyTo(
+
+            [
+              uscita.lat,
+              uscita.lon
+            ],
+
+            14,
+
+            {
+              duration: 1
+            }
+
+          );
+
+        }
+
+      );
+
+
+      clusterUscite.addLayer(
+        marker
+      );
+
+
+      usciteVisibili++;
+
+    });
 
 
     console.log(
       "Uscite visibili:",
-      visibili
+      usciteVisibili
     );
 
 
     console.log(
-      "Record esclusi:",
-      escluse
+      "Elementi esclusi:",
+      usciteEscluse
+    );
+
+
+    console.log(
+      "Filtro ristoranti:",
+      CONFIG.distanzaMassimaRistoranteKm +
+      " km + " +
+      CONFIG.tolleranzaDistanzaMetri +
+      " m"
+    );
+
+
+    console.log(
+      "Distanza effettiva:",
+      CONFIG.distanzaMassimaEffettivaMetri +
+      " m"
     );
 
   })
@@ -560,7 +1304,7 @@ fetch("./uscite.json")
 
 
 // =====================================================
-// MAPPA - PULSANTE ESPLORA
+// PULSANTE "ESPLORA LA MAPPA"
 // =====================================================
 
 const mapButton =
@@ -570,9 +1314,6 @@ const mapButton =
 
 
 const mapSection =
-  document.getElementById(
-    "mappa"
-  ) ||
   document.getElementById(
     "mapSection"
   );
@@ -586,33 +1327,15 @@ if (mapButton) {
 
     function() {
 
-      if (!mapSection) {
+      if (mapSection) {
 
-        return;
+        mapSection.scrollIntoView({
+
+          behavior: "smooth"
+
+        });
 
       }
-
-
-      mapSection.scrollIntoView({
-
-        behavior: "smooth",
-
-        block: "start"
-
-      });
-
-
-      setTimeout(
-
-        function() {
-
-          map.invalidateSize();
-
-        },
-
-        500
-
-      );
 
     }
 
@@ -662,7 +1385,6 @@ if (locationButton) {
 
         function(position) {
 
-
           const lat =
             position.coords.latitude;
 
@@ -678,6 +1400,10 @@ if (locationButton) {
           );
 
 
+          // ---------------------------------------
+          // RIMUOVI VECCHIO MARKER
+          // ---------------------------------------
+
           if (userMarker) {
 
             map.removeLayer(
@@ -687,37 +1413,35 @@ if (locationButton) {
           }
 
 
-          userMarker =
-            L.circleMarker(
+          // ---------------------------------------
+          // MARKER UTENTE
+          // ---------------------------------------
 
-              [
+          userMarker = L.circleMarker(
 
-                lat,
+            [
+              lat,
+              lng
+            ],
 
-                lng
+            {
 
-              ],
+              radius: 9,
 
-              {
+              color: "#ffffff",
 
-                radius: 9,
+              weight: 4,
 
-                color: "#ffffff",
+              fillColor: "#075c3b",
 
-                weight: 4,
+              fillOpacity: 1
 
-                fillColor: "#075c3b",
+            }
 
-                fillOpacity: 1
-
-              }
-
-            );
-
-
-          userMarker.addTo(
-            map
           );
+
+
+          userMarker.addTo(map);
 
 
           userMarker
@@ -729,34 +1453,35 @@ if (locationButton) {
             .openPopup();
 
 
+          // ---------------------------------------
+          // ZOOM
+          // ---------------------------------------
+
           map.flyTo(
 
             [
-
               lat,
-
               lng
-
             ],
 
             13,
 
             {
-
               duration: 1.5
-
             }
 
           );
 
 
+          // ---------------------------------------
+          // SCROLL MAPPA
+          // ---------------------------------------
+
           if (mapSection) {
 
             mapSection.scrollIntoView({
 
-              behavior: "smooth",
-
-              block: "start"
+              behavior: "smooth"
 
             });
 
@@ -813,1876 +1538,206 @@ if (locationButton) {
 
 
 // =====================================================
-// MENU MOBILE
+// MENU PRINCIPALE - GESTIONE UNIFICATA
 // =====================================================
 
-document.addEventListener(
+(function () {
 
-  "DOMContentLoaded",
+  function initMenu() {
 
-  function() {
+    const menuButton = document.querySelector(".menu-button");
 
-
-    const menuButton =
-      document.querySelector(
-        ".menu-button"
-      );
-
-
-    const mobileMenu =
-      document.getElementById(
-        "mobileMenu"
-      );
-
+    // Supportiamo entrambe le versioni che abbiamo usato:
+    // #mobileMenu / .mobile-menu
+    // #siteMenu / .site-menu
+    const menuPanel =
+      document.getElementById("mobileMenu") ||
+      document.querySelector(".mobile-menu") ||
+      document.getElementById("siteMenu") ||
+      document.querySelector(".site-menu");
 
     const menuClose =
-      document.getElementById(
-        "menuClose"
-      );
+      document.getElementById("menuClose") ||
+      document.querySelector(".menu-close") ||
+      document.querySelector(".site-menu-close");
 
+    const overlay =
+      document.querySelector(".site-menu-overlay") ||
+      document.querySelector(".mobile-menu-overlay");
 
-    console.log(
-      "MENU BUTTON:",
-      menuButton
-    );
-
-
-    console.log(
-      "MOBILE MENU:",
-      mobileMenu
-    );
-
-
-    console.log(
-      "MENU CLOSE:",
-      menuClose
-    );
-
-
-    if (!menuButton) {
-
-      console.error(
-        "ERRORE: pulsante menu non trovato."
-      );
-
+    if (!menuButton || !menuPanel) {
+      console.warn("MENU: elementi non trovati", {
+        menuButton: !!menuButton,
+        menuPanel: !!menuPanel
+      });
       return;
-
     }
 
-
-    if (!mobileMenu) {
-
-      console.error(
-        "ERRORE: #mobileMenu non trovato."
-      );
-
-      return;
-
-    }
-
-
-    // ---------------------------------------------
-    // APRI
-    // ---------------------------------------------
+    let aperto = false;
 
     function openMenu() {
 
-      console.log(
-        "APERTURA MENU"
-      );
+      aperto = true;
 
+      menuPanel.classList.add("open");
+      menuPanel.classList.add("active");
 
-      mobileMenu.classList.add(
-        "open"
-      );
+      menuPanel.setAttribute("aria-hidden", "false");
 
+      menuButton.setAttribute("aria-expanded", "true");
 
-      mobileMenu.setAttribute(
-        "aria-hidden",
-        "false"
-      );
+      document.body.classList.add("menu-open");
 
+      // Forziamo anche lo stile essenziale in modo che il menu
+      // funzioni anche se una vecchia regola CSS è rimasta nel file.
+      menuPanel.style.visibility = "visible";
+      menuPanel.style.opacity = "1";
+      menuPanel.style.pointerEvents = "auto";
+      menuPanel.style.zIndex = "9999";
 
-      document.body.classList.add(
-        "menu-open"
-      );
+      if (overlay) {
+        overlay.classList.add("open");
+        overlay.classList.add("active");
+        overlay.style.visibility = "visible";
+        overlay.style.opacity = "1";
+        overlay.style.pointerEvents = "auto";
+        overlay.style.zIndex = "9998";
+      }
 
-
-      // Fallback visivo.
-      // Serve se il CSS attuale non riconosce
-      // correttamente la classe .open.
-
-      mobileMenu.style.visibility =
-        "visible";
-
-      mobileMenu.style.opacity =
-        "1";
-
-      mobileMenu.style.pointerEvents =
-        "auto";
-
-      mobileMenu.style.transform =
-        "translateX(0)";
-
+      console.log("MENU APERTO");
     }
-
-
-    // ---------------------------------------------
-    // CHIUDI
-    // ---------------------------------------------
 
     function closeMenu() {
 
-      console.log(
-        "CHIUSURA MENU"
-      );
+      aperto = false;
 
+      menuPanel.classList.remove("open");
+      menuPanel.classList.remove("active");
 
-      mobileMenu.classList.remove(
-        "open"
-      );
+      menuPanel.setAttribute("aria-hidden", "true");
 
+      menuButton.setAttribute("aria-expanded", "false");
 
-      mobileMenu.setAttribute(
-        "aria-hidden",
-        "true"
-      );
+      document.body.classList.remove("menu-open");
 
+      menuPanel.style.visibility = "hidden";
+      menuPanel.style.opacity = "0";
+      menuPanel.style.pointerEvents = "none";
 
-      document.body.classList.remove(
-        "menu-open"
-      );
-
-
-      mobileMenu.style.opacity =
-        "";
-
-      mobileMenu.style.pointerEvents =
-        "";
-
-      mobileMenu.style.transform =
-        "";
-
-    }
-
-
-    // ---------------------------------------------
-    // HAMBURGER
-    // ---------------------------------------------
-
-    menuButton.addEventListener(
-
-      "click",
-
-      function(event) {
-
-        event.preventDefault();
-
-        event.stopPropagation();
-
-
-        if (
-
-          mobileMenu.classList.contains(
-            "open"
-          )
-
-        ) {
-
-          closeMenu();
-
-        } else {
-
-          openMenu();
-
-        }
-
+      if (overlay) {
+        overlay.classList.remove("open");
+        overlay.classList.remove("active");
+        overlay.style.visibility = "hidden";
+        overlay.style.opacity = "0";
+        overlay.style.pointerEvents = "none";
       }
 
-    );
+      console.log("MENU CHIUSO");
+    }
 
+    // Stato iniziale
+    closeMenu();
 
-    // ---------------------------------------------
-    // X
-    // ---------------------------------------------
+    // Pulsante hamburger
+    menuButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
 
+      if (aperto) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    // Pulsante X
     if (menuClose) {
-
-      menuClose.addEventListener(
-
-        "click",
-
-        function(event) {
-
-          event.preventDefault();
-
-          event.stopPropagation();
-
-
-          closeMenu();
-
-        }
-
-      );
-
+      menuClose.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeMenu();
+      });
     }
 
+    // Overlay
+    if (overlay) {
+      overlay.addEventListener("click", function () {
+        closeMenu();
+      });
+    }
 
-    // ---------------------------------------------
     // ESC
-    // ---------------------------------------------
-
-    document.addEventListener(
-
-      "keydown",
-
-      function(event) {
-
-        if (
-          event.key === "Escape"
-        ) {
-
-          closeMenu();
-
-        }
-
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeMenu();
       }
+    });
 
-    );
+    // Link del menu
+    const menuLinks = menuPanel.querySelectorAll(".menu-link");
 
+    menuLinks.forEach(function (link) {
 
-    // ---------------------------------------------
-    // LINK MENU
-    // ---------------------------------------------
+      link.addEventListener("click", function (event) {
 
-    const menuLinks =
-      mobileMenu.querySelectorAll(
-        "a"
-      );
+        const target = link.getAttribute("href");
 
+        closeMenu();
 
-    menuLinks.forEach(
+        if (target && target.startsWith("#")) {
 
-      function(link) {
+          const elemento = document.querySelector(target);
 
-        link.addEventListener(
+          if (elemento) {
+            event.preventDefault();
 
-          "click",
-
-          function() {
-
-            closeMenu();
-
+            setTimeout(function () {
+              elemento.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+              });
+            }, 150);
           }
+        }
+      });
+    });
 
-        );
-
-      }
-
-    );
-
-
+    console.log("MENU PRINCIPALE ATTIVO");
   }
 
-);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMenu);
+  } else {
+    initMenu();
+  }
+
+})();
 
 
 // =====================================================
 // RESIZE MAPPA
 // =====================================================
 
-window.addEventListener(
+window.addEventListener("resize", function () {
 
-  "resize",
+  setTimeout(function () {
+    map.invalidateSize();
+  }, 100);
 
-  function() {
-
-    setTimeout(
-
-      function() {
-
-        map.invalidateSize();
-
-      },
-
-      100
-
-    );
-
-  }
-
-);
-
-
-// =====================================================
-// DISTANZA GPS
-// =====================================================
-
-function distanzaMetri(
-
-  lat1,
-  lon1,
-  lat2,
-  lon2
-
-) {
-
-  const R = 6371000;
-
-  const rad =
-    Math.PI / 180;
-
-
-  const dLat =
-    (lat2 - lat1) * rad;
-
-
-  const dLon =
-    (lon2 - lon1) * rad;
-
-
-  const a =
-
-    Math.sin(
-      dLat / 2
-    ) ** 2
-
-    +
-
-    Math.cos(
-      lat1 * rad
-    )
-
-    *
-
-    Math.cos(
-      lat2 * rad
-    )
-
-    *
-
-    Math.sin(
-      dLon / 2
-    ) ** 2;
-
-
-  const c =
-
-    2 *
-
-    Math.atan2(
-
-      Math.sqrt(a),
-
-      Math.sqrt(1 - a)
-
-    );
-
-
-  return R * c;
-
-}
-
-
-// =====================================================
-// CONTROLLO RISTORANTE
-// 2 KM + 100 METRI
-// =====================================================
-
-function ristoranteEntroDistanza(
-
-  latRistorante,
-  lonRistorante,
-  latUscita,
-  lonUscita
-
-) {
-
-  const distanza =
-
-    distanzaMetri(
-
-      latRistorante,
-      lonRistorante,
-
-      latUscita,
-      lonUscita
-
-    );
-
-
-  return {
-
-    distanzaMetri:
-      Math.round(
-        distanza
-      ),
-
-    entroLimite:
-
-      distanza <=
-      CONFIG.distanzaMassimaEffettivaMetri
-
-  };
-
-}
+});
 
 
 // =====================================================
 // AVVIO
 // =====================================================
 
+console.log("=================================");
+console.log("1 KM E SI MANGIA - SCRIPT AVVIATO");
 console.log(
-  "================================="
-);
-
-console.log(
-  "1 KM E SI MANGIA - AVVIATO"
-);
-
-console.log(
-  "Distanza ristorante:",
+  "Filtro:",
   CONFIG.distanzaMassimaRistoranteKm +
   " km + " +
   CONFIG.tolleranzaDistanzaMetri +
   " m"
 );
-
-console.log(
-  "Limite effettivo:",
-  CONFIG.distanzaMassimaEffettivaMetri +
-  " m"
-);
-
-console.log(
-  "================================="
-);// =====================================================
-// 1 KM E SI MANGIA
-// INTEGRAZIONE RISTORANTI
-// =====================================================
-
-let ristorantiItaliani = [];
-
-
-// =====================================================
-// CONFIGURAZIONE
-// =====================================================
-
-const RISTORANTI_CONFIG = {
-
-  distanzaMassima: 2100,
-
-  risultatiIniziali: 5
-
-};
-
-
-// =====================================================
-// CARICA RISTORANTI.JSON
-// =====================================================
-
-fetch("./ristoranti.json")
-
-  .then(function(response) {
-
-    if (!response.ok) {
-
-      throw new Error(
-        "Impossibile caricare ristoranti.json"
-      );
-
-    }
-
-    return response.json();
-
-  })
-
-  .then(function(database) {
-
-    if (!Array.isArray(database)) {
-
-      throw new Error(
-        "ristoranti.json non contiene un array valido"
-      );
-
-    }
-
-    ristorantiItaliani = database;
-
-    console.log(
-      "RISTORANTI CARICATI:",
-      ristorantiItaliani.length
-    );
-
-  })
-
-  .catch(function(error) {
-
-    console.error(
-      "Errore ristoranti.json:",
-      error
-    );
-
-  });
-
-
-// =====================================================
-// FORMATTA DISTANZA
-// =====================================================
-
-function formattaDistanzaRistorante(
-  metri
-) {
-
-  if (
-    typeof metri !== "number"
-  ) {
-
-    return "n/d";
-
-  }
-
-  if (metri < 1000) {
-
-    return (
-      Math.round(metri) +
-      " m"
-    );
-
-  }
-
-  return (
-    (metri / 1000)
-      .toFixed(1)
-      .replace(".", ",") +
-    " km"
-  );
-
-}
-
-
-// =====================================================
-// DEDUPLICA RISTORANTI
-// =====================================================
-
-function deduplicaRistoranti(
-  lista
-) {
-
-  const risultati = [];
-
-  lista.forEach(function(ristorante) {
-
-    const nome =
-      String(
-        ristorante.nome || ""
-      )
-      .trim()
-      .toLowerCase();
-
-    const duplicato =
-      risultati.some(function(esistente) {
-
-        const nomeEsistente =
-          String(
-            esistente.nome || ""
-          )
-          .trim()
-          .toLowerCase();
-
-        if (
-          !nome ||
-          !nomeEsistente ||
-          nome !== nomeEsistente
-        ) {
-
-          return false;
-
-        }
-
-        if (
-          typeof ristorante.lat !== "number" ||
-          typeof ristorante.lon !== "number" ||
-          typeof esistente.lat !== "number" ||
-          typeof esistente.lon !== "number"
-        ) {
-
-          return false;
-
-        }
-
-        const distanza =
-          distanzaTraCoordinate(
-            ristorante.lat,
-            ristorante.lon,
-            esistente.lat,
-            esistente.lon
-          );
-
-        return distanza <= 30;
-
-      });
-
-    if (!duplicato) {
-
-      risultati.push(
-        ristorante
-      );
-
-    }
-
-  });
-
-  return risultati;
-
-}
-
-
-// =====================================================
-// DISTANZA TRA COORDINATE
-// =====================================================
-
-function distanzaTraCoordinate(
-
-  lat1,
-  lon1,
-  lat2,
-  lon2
-
-) {
-
-  const R = 6371000;
-
-  const rad =
-    Math.PI / 180;
-
-  const dLat =
-    (lat2 - lat1) * rad;
-
-  const dLon =
-    (lon2 - lon1) * rad;
-
-  const a =
-
-    Math.sin(dLat / 2) ** 2
-
-    +
-
-    Math.cos(lat1 * rad) *
-
-    Math.cos(lat2 * rad) *
-
-    Math.sin(dLon / 2) ** 2;
-
-  return (
-
-    2 *
-
-    R *
-
-    Math.atan2(
-
-      Math.sqrt(a),
-
-      Math.sqrt(1 - a)
-
-    )
-
-  );
-
-}
-
-
-// =====================================================
-// STATO PARCHEGGIO
-// =====================================================
-
-function descrizioneParcheggio(
-  ristorante
-) {
-
-  const parcheggio =
-    ristorante.parcheggio;
-
-  if (!parcheggio) {
-
-    return "🅿️ Parcheggio: da verificare";
-
-  }
-
-  if (
-    parcheggio.presente !== true
-  ) {
-
-    return "🅿️ Parcheggio: non verificato";
-
-  }
-
-  if (
-    String(
-      parcheggio.accesso || ""
-    ).toLowerCase() === "private"
-  ) {
-
-    return (
-      "⚠️ Parcheggio privato · " +
-      formattaDistanzaRistorante(
-        parcheggio.distanza_m
-      )
-    );
-
-  }
-
-  if (
-    typeof parcheggio.distanza_m === "number"
-  ) {
-
-    return (
-      "🅿️ Parcheggio · " +
-      formattaDistanzaRistorante(
-        parcheggio.distanza_m
-      )
-    );
-
-  }
-
-  return "🅿️ Parcheggio presente";
-
-}
-
-
-// =====================================================
-// STATO MEZZO
-// =====================================================
-
-function descrizioneMezzo(
-  ristorante
-) {
-
-  const mezzo =
-    ristorante.mezzi_voluminosi;
-
-  if (!mezzo) {
-
-    return "🚐 Mezzo: da verificare";
-
-  }
-
-  if (
-    mezzo.stato === "compatibile"
-  ) {
-
-    return "🟢 Mezzo: compatibile";
-
-  }
-
-  if (
-    mezzo.stato === "non_compatibile"
-  ) {
-
-    return "🔴 Mezzo: non compatibile";
-
-  }
-
-  return "🟡 Mezzo: da verificare";
-
-}
-
-
-// =====================================================
-// TROVA RISTORANTI DELL'USCITA
-// =====================================================
-
-function trovaRistorantiUscita(
-  uscita
-) {
-
-  if (!uscita) {
-
-    return [];
-
-  }
-
-  const trovati =
-    ristorantiItaliani.filter(
-      function(ristorante) {
-
-        return (
-
-          ristorante.uscita &&
-
-          ristorante.uscita.id ===
-          uscita.id &&
-
-          typeof ristorante.uscita.distanza_m ===
-          "number" &&
-
-          ristorante.uscita.distanza_m <=
-          RISTORANTI_CONFIG.distanzaMassima
-
-        );
-
-      }
-    );
-
-  return deduplicaRistoranti(
-    trovati
-  ).sort(
-    function(a, b) {
-
-      return (
-        a.uscita.distanza_m -
-        b.uscita.distanza_m
-      );
-
-    }
-  );
-
-}
-
-
-// =====================================================
-// CREA HTML RISTORANTE
-// =====================================================
-
-function creaRistoranteHTML(
-  ristorante
-) {
-
-  const nome =
-    ristorante.nome ||
-    "Ristorante";
-
-  const distanza =
-    formattaDistanzaRistorante(
-      ristorante.uscita.distanza_m
-    );
-
-  return `
-
-    <div
-      style="
-        border:1px solid #ddd;
-        border-radius:10px;
-        padding:10px;
-        margin-top:8px;
-        background:white;
-      "
-    >
-
-      <strong>
-        ${nome}
-      </strong>
-
-      <div style="margin-top:5px;">
-        📍 ${distanza} dall'uscita
-      </div>
-
-      <div style="margin-top:4px;">
-        ${descrizioneParcheggio(
-          ristorante
-        )}
-      </div>
-
-      <div style="margin-top:4px;">
-        ${descrizioneMezzo(
-          ristorante
-        )}
-      </div>
-
-      <button
-        type="button"
-        data-naviga-ristorante="
-          ${ristorante.id}
-        "
-        style="
-          width:100%;
-          margin-top:8px;
-          padding:8px;
-          border:0;
-          border-radius:8px;
-          cursor:pointer;
-        "
-      >
-        🧭 NAVIGA
-      </button>
-
-    </div>
-
-  `;
-
-}
-
-
-// =====================================================
-// MOSTRA RISTORANTI
-// =====================================================
-
-function mostraRistorantiUscita(
-  uscita,
-  mostraTutti
-) {
-
-  const ristoranti =
-    trovaRistorantiUscita(
-      uscita
-    );
-
-  const visibili =
-    mostraTutti
-      ? ristoranti
-      : ristoranti.slice(
-          0,
-          RISTORANTI_CONFIG.risultatiIniziali
-        );
-
-
-  let html = `
-
-    <div
-      style="
-        min-width:260px;
-        max-width:340px;
-      "
-    >
-
-      <strong>
-        🍝 RISTORANTI
-      </strong>
-
-      <div
-        style="
-          margin-top:4px;
-          font-size:12px;
-        "
-      >
-        ${uscita.nome || "Uscita"}
-      </div>
-
-  `;
-
-
-  if (
-    ristoranti.length === 0
-  ) {
-
-    html += `
-
-      <div
-        style="
-          margin-top:12px;
-        "
-      >
-        Nessun ristorante trovato
-        entro 2,1 km.
-      </div>
-
-    `;
-
-  }
-
-  else {
-
-    visibili.forEach(
-      function(ristorante) {
-
-        html +=
-          creaRistoranteHTML(
-            ristorante
-          );
-
-      }
-    );
-
-
-    if (
-      ristoranti.length > 5
-    ) {
-
-      html += `
-
-        <button
-          type="button"
-          data-toggle-ristoranti="
-            ${uscita.id}
-          "
-          style="
-            width:100%;
-            margin-top:10px;
-            padding:9px;
-            border:0;
-            border-radius:8px;
-            cursor:pointer;
-          "
-        >
-
-          ${
-            mostraTutti
-              ? "MOSTRA SOLO I 5 PRINCIPALI"
-              : "MOSTRA TUTTI (" +
-                ristoranti.length +
-                ")"
-          }
-
-        </button>
-
-      `;
-
-    }
-
-  }
-
-
-  html += `
-
-    </div>
-
-  `;
-
-
-  return html;
-
-}
-
-
-// =====================================================
-// AGGIUNGE IL PULSANTE AL POPUP DELL'USCITA
-// =====================================================
-
-if (
-  typeof map !== "undefined"
-) {
-
-  map.on(
-    "popupopen",
-    function(event) {
-
-      const popup =
-        event.popup;
-
-      const source =
-        popup._source;
-
-      if (!source) {
-
-        return;
-
-      }
-
-      const latlng =
-        popup.getLatLng();
-
-      if (!latlng) {
-
-        return;
-
-      }
-
-      const uscita =
-        usciteItaliane.find(
-          function(item) {
-
-            return (
-
-              typeof item.lat === "number" &&
-
-              typeof item.lon === "number" &&
-
-              distanzaTraCoordinate(
-                item.lat,
-                item.lon,
-                latlng.lat,
-                latlng.lng
-              ) < 50
-
-            );
-
-          }
-        );
-
-
-      if (!uscita) {
-
-        return;
-
-      }
-
-
-      // Evita di aggiungere due volte
-      // il pulsante.
-
-      const elemento =
-        popup.getElement();
-
-      if (!elemento) {
-
-        return;
-
-      }
-
-
-      if (
-        elemento.querySelector(
-          "[data-mostra-ristoranti]"
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      const contenitore =
-        elemento.querySelector(
-          ".leaflet-popup-content"
-        );
-
-      if (!contenitore) {
-
-        return;
-
-      }
-
-
-      const pulsante =
-        document.createElement(
-          "button"
-        );
-
-
-      pulsante.type =
-        "button";
-
-
-      pulsante.textContent =
-        "🍝 MOSTRA RISTORANTI";
-
-
-      pulsante.setAttribute(
-        "data-mostra-ristoranti",
-        uscita.id
-      );
-
-
-      pulsante.style.width =
-        "100%";
-
-      pulsante.style.marginTop =
-        "10px";
-
-      pulsante.style.padding =
-        "9px";
-
-      pulsante.style.border =
-        "0";
-
-      pulsante.style.borderRadius =
-        "8px";
-
-      pulsante.style.cursor =
-        "pointer";
-
-
-      contenitore.appendChild(
-        pulsante
-      );
-
-
-      pulsante.addEventListener(
-        "click",
-        function() {
-
-          popup.setContent(
-            mostraRistorantiUscita(
-              uscita,
-              false
-            )
-          );
-
-        }
-      );
-
-    }
-  );
-
-}
-
-
-// =====================================================
-// MOSTRA TUTTI / NAVIGAZIONE
-// =====================================================
-
-document.addEventListener(
-  "click",
-  function(event) {
-
-    const toggle =
-      event.target.closest(
-        "[data-toggle-ristoranti]"
-      );
-
-
-    if (toggle) {
-
-      const uscitaId =
-        toggle.getAttribute(
-          "data-toggle-ristoranti"
-        );
-
-
-      const uscita =
-        usciteItaliane.find(
-          function(item) {
-
-            return (
-              item.id ===
-              uscitaId
-            );
-
-          }
-        );
-
-
-      if (!uscita) {
-
-        return;
-
-      }
-
-
-      const ristoranti =
-        trovaRistorantiUscita(
-          uscita
-        );
-
-
-      const tuttiVisibili =
-        toggle.textContent
-          .includes(
-            "SOLO I 5"
-          );
-
-
-      const popup =
-        toggle.closest(
-          ".leaflet-popup"
-        );
-
-
-      if (!popup) {
-
-        return;
-
-      }
-
-
-      // Recuperiamo il popup Leaflet
-      // dalla mappa.
-
-      const popupElement =
-        map._popup;
-
-
-      if (!popupElement) {
-
-        return;
-
-      }
-
-
-      popupElement.setContent(
-        mostraRistorantiUscita(
-          uscita,
-          !tuttiVisibili
-        )
-      );
-
-
-      return;
-
-    }
-
-
-    const naviga =
-      event.target.closest(
-        "[data-naviga-ristorante]"
-      );
-
-
-    if (naviga) {
-
-      const id =
-        naviga.getAttribute(
-          "data-naviga-ristorante"
-        );
-
-
-      const ristorante =
-        ristorantiItaliani.find(
-          function(item) {
-
-            return (
-              item.id === id
-            );
-
-          }
-        );
-
-
-      if (!ristorante) {
-
-        return;
-
-      }
-
-
-      console.log(
-        "RISTORANTE SELEZIONATO:",
-        ristorante
-      );
-
-
-      alert(
-
-        "Hai selezionato:\n\n" +
-
-        ristorante.nome +
-
-        "\n\nLa navigazione uscita → ristorante verrà collegata nel prossimo passaggio."
-
-      );
-
-    }
-
-  }
-);
-
-
-// =====================================================
-// FINE INTEGRAZIONE RISTORANTI
-// =====================================================
-
-console.log(
-  "1 KM E SI MANGIA - modulo ristoranti pronto"
-);// =====================================================
-// CORREZIONE POPUP RISTORANTI
-// - niente spostamento della mappa
-// - lista scrollabile
-// - mantiene il popup attuale
-// =====================================================
-
-let popupRistorantiAttivo = null;
-
-
-// Memorizza sempre il popup realmente aperto
-if (typeof map !== "undefined") {
-
-  map.on("popupopen", function (event) {
-
-    popupRistorantiAttivo = event.popup;
-
-  });
-
-  map.on("popupclose", function (event) {
-
-    if (
-      popupRistorantiAttivo === event.popup
-    ) {
-
-      popupRistorantiAttivo = null;
-
-    }
-
-  });
-
-}
-
-
-// =====================================================
-// FORMATTA IL POPUP RISTORANTI
-// =====================================================
-
-function aggiornaPopupRistorantiCorretto(
-  uscita,
-  mostraTutti
-) {
-
-  if (
-    !popupRistorantiAttivo ||
-    !uscita
-  ) {
-
-    return;
-
-  }
-
-  const popup =
-    popupRistorantiAttivo;
-
-
-  // Fondamentale:
-  // impedisce a Leaflet di spostare
-  // automaticamente la mappa.
-
-  popup.options.autoPan = false;
-
-
-  popup.setContent(
-    mostraRistorantiUscita(
-      uscita,
-      mostraTutti
-    )
-  );
-
-
-  popup.update();
-
-
-  // Rende il contenuto compatto
-  // e scrollabile.
-
-  setTimeout(function () {
-
-    const elemento =
-      popup.getElement();
-
-    if (!elemento) {
-
-      return;
-
-    }
-
-
-    const contenitore =
-      elemento.querySelector(
-        ".leaflet-popup-content"
-      );
-
-    if (contenitore) {
-
-      contenitore.style.maxHeight =
-        "55vh";
-
-      contenitore.style.overflowY =
-        "auto";
-
-      contenitore.style.overflowX =
-        "hidden";
-
-      contenitore.style.paddingRight =
-        "4px";
-
-    }
-
-
-    const lista =
-      elemento.querySelector(
-        ".restaurants-popup"
-      );
-
-    if (lista) {
-
-      lista.style.maxHeight =
-        "52vh";
-
-      lista.style.overflowY =
-        "auto";
-
-      lista.style.overflowX =
-        "hidden";
-
-    }
-
-  }, 0);
-
-}
-
-
-// =====================================================
-// INTERCETTA I CLICK PRIMA DEL VECCHIO CODICE
-// =====================================================
-
-document.addEventListener(
-  "click",
-  function (event) {
-
-
-    // -----------------------------------------------
-    // MOSTRA RISTORANTI
-    // -----------------------------------------------
-
-    const mostra =
-      event.target.closest(
-        "[data-mostra-ristoranti]"
-      );
-
-
-    if (mostra) {
-
-      event.preventDefault();
-
-      event.stopImmediatePropagation();
-
-
-      const uscitaId =
-        mostra.getAttribute(
-          "data-mostra-ristoranti"
-        );
-
-
-      const uscita =
-        usciteItaliane.find(
-          function (item) {
-
-            return (
-              item.id ===
-              uscitaId
-            );
-
-          }
-        );
-
-
-      if (!uscita) {
-
-        return;
-
-      }
-
-
-      aggiornaPopupRistorantiCorretto(
-        uscita,
-        false
-      );
-
-
-      return;
-
-    }
-
-
-    // -----------------------------------------------
-    // MOSTRA TUTTI
-    // -----------------------------------------------
-
-    const toggle =
-      event.target.closest(
-        "[data-toggle-ristoranti]"
-      );
-
-
-    if (toggle) {
-
-      event.preventDefault();
-
-      event.stopImmediatePropagation();
-
-
-      const uscitaId =
-        toggle.getAttribute(
-          "data-toggle-ristoranti"
-        );
-
-
-      const uscita =
-        usciteItaliane.find(
-          function (item) {
-
-            return (
-              item.id ===
-              uscitaId
-            );
-
-          }
-        );
-
-
-      if (!uscita) {
-
-        return;
-
-      }
-
-
-      const mostraSolo5 =
-        toggle.textContent
-          .includes(
-            "SOLO I 5"
-          );
-
-
-      aggiornaPopupRistorantiCorretto(
-        uscita,
-        mostraSolo5
-      );
-
-
-      return;
-
-    }
-
-
-    // -----------------------------------------------
-    // NAVIGA
-    // -----------------------------------------------
-
-    const naviga =
-      event.target.closest(
-        "[data-naviga-ristorante]"
-      );
-
-
-    if (naviga) {
-
-      event.preventDefault();
-
-      event.stopImmediatePropagation();
-
-
-      const id =
-        naviga.getAttribute(
-          "data-naviga-ristorante"
-        );
-
-
-      const ristorante =
-        ristorantiItaliani.find(
-          function (item) {
-
-            return (
-              item.id === id
-            );
-
-          }
-        );
-
-
-      if (!ristorante) {
-
-        return;
-
-      }
-
-
-      console.log(
-        "RISTORANTE SELEZIONATO:",
-        ristorante
-      );
-
-
-      alert(
-        "Hai selezionato:\n\n" +
-        ristorante.nome +
-        "\n\nLa navigazione verrà collegata nel prossimo passaggio."
-      );
-
-
-      return;
-
-    }
-
-
-  },
-  true
-);// =====================================================
-// PARCHEGGI - VISUALIZZAZIONE DEFINITIVA
-// =====================================================
-
-function statoParcheggioDefinitivo(ristorante) {
-
-  const p = ristorante?.parcheggio;
-
-  if (!p) {
-    return {
-      icona: "🟡",
-      testo: "Parcheggio da verificare",
-      classe: "da-verificare"
-    };
-  }
-
-  if (p.accesso) {
-
-    const accesso =
-      String(p.accesso).toLowerCase();
-
-    if (
-      accesso === "private" ||
-      accesso === "no"
-    ) {
-
-      return {
-        icona: "⚠️",
-        testo: "Parcheggio privato",
-        classe: "privato"
-      };
-
-    }
-
-  }
-
-  if (p.presente === true) {
-
-    if (
-      typeof p.distanza_m === "number"
-    ) {
-
-      return {
-        icona: "🟢",
-        testo:
-          "Parcheggio disponibile · " +
-          formattaDistanzaRistorante(
-            p.distanza_m
-          ),
-        classe: "disponibile"
-      };
-
-    }
-
-    return {
-      icona: "🟢",
-      testo: "Parcheggio disponibile",
-      classe: "disponibile"
-    };
-
-  }
-
-  return {
-    icona: "❌",
-    testo: "Nessun parcheggio rilevato",
-    classe: "assente"
-  };
-
-}
-
-
-// =====================================================
-// AGGIORNA LE SCHEDE DEI RISTORANTI
-// =====================================================
-
-function aggiornaStatoParcheggiPopup() {
-
-  const popup =
-    document.querySelector(
-      ".leaflet-popup"
-    );
-
-  if (!popup) {
-    return;
-  }
-
-  const contenitore =
-    popup.querySelector(
-      ".leaflet-popup-content"
-    );
-
-  if (!contenitore) {
-    return;
-  }
-
-  const pulsanti =
-    contenitore.querySelectorAll(
-      "[data-naviga-ristorante]"
-    );
-
-  pulsanti.forEach(
-    function(pulsante) {
-
-      const id =
-        pulsante.getAttribute(
-          "data-naviga-ristorante"
-        );
-
-      const ristorante =
-        ristorantiItaliani.find(
-          function(item) {
-            return item.id === id;
-          }
-        );
-
-      if (!ristorante) {
-        return;
-      }
-
-      const stato =
-        statoParcheggioDefinitivo(
-          ristorante
-        );
-
-      const card =
-        pulsante.closest(
-          "div"
-        );
-
-      if (!card) {
-        return;
-      }
-
-      const righe =
-        card.querySelectorAll(
-          "div"
-        );
-
-      // Cerca la riga che contiene
-      // il vecchio testo del parcheggio.
-
-      righe.forEach(
-        function(riga) {
-
-          const testo =
-            riga.textContent || "";
-
-          if (
-            testo.includes("Parcheggio")
-          ) {
-
-            riga.innerHTML =
-              stato.icona +
-              " " +
-              stato.testo;
-
-            riga.setAttribute(
-              "data-parcheggio-stato",
-              stato.classe
-            );
-
-          }
-
-        }
-      );
-
-    }
-  );
-
-}
-
-
-// =====================================================
-// AGGIORNA DOPO L'APERTURA DEL POPUP
-// =====================================================
-
-if (
-  typeof map !== "undefined"
-) {
-
-  map.on(
-    "popupopen",
-    function() {
-
-      setTimeout(
-        aggiornaStatoParcheggiPopup,
-        50
-      );
-
-    }
-  );
-
-}
-
-
-// =====================================================
-// FINE PARCHEGGI
-// =====================================================
-
-console.log(
-  "Modulo parcheggi pronto"
-);
+console.log("=================================");
