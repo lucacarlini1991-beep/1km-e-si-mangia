@@ -1,12 +1,13 @@
 {
   "name": "1km-e-si-mangia",
   "version": "1.0.0",
-  "description": "[Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/lucacarlini1991-beep/1km-e-si-mangia)",
+  "description": "Edit in StackBlitz",
   "main": "build-database.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "vite --host 0.0.0.0",
-    "dev": "vite --host 0.0.0.0"
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",
