@@ -180,53 +180,130 @@ function creaPopupRistorante(ristorante) {
       "Ristorante"
     );
 
+  const cucina =
+    ristorante.cucina
+      ? `
+        <div style="
+          font-size:13px;
+          color:#555;
+          margin-top:4px;
+        ">
+          🍽️ ${escapeHtml(ristorante.cucina)}
+        </div>
+      `
+      : "";
+
   const distanza =
     Number.isFinite(
       Number(
         ristorante?.uscita?.distanza_m
       )
     )
-      ? `<small>📍 ${
-          Math.round(
+      ? `
+        <div style="
+          font-size:13px;
+          color:#555;
+          margin-top:6px;
+        ">
+          📍 ${Math.round(
             Number(
               ristorante.uscita.distanza_m
             )
-          )
-        } m dall'uscita</small>`
+          )} m dall'uscita
+        </div>
+      `
       : "";
 
   const parcheggio =
     ristorante.parcheggio?.presente === true
-      ? `<small>🅿️ Parcheggio ${
-          ristorante.parcheggio.distanza_m != null
-            ? Math.round(
-                Number(
-                  ristorante.parcheggio.distanza_m
-                )
-              ) + " m"
-            : "presente"
-        }</small>`
-      : `<small>🅿️ Parcheggio da verificare</small>`;
+      ? `
+        <div style="
+          font-size:13px;
+          color:#555;
+          margin-top:4px;
+        ">
+          🅿️ Parcheggio ${
+            ristorante.parcheggio.distanza_m != null
+              ? Math.round(
+                  Number(
+                    ristorante.parcheggio.distanza_m
+                  )
+                ) + " m"
+              : "presente"
+          }
+        </div>
+      `
+      : `
+        <div style="
+          font-size:13px;
+          color:#777;
+          margin-top:4px;
+        ">
+          🅿️ Parcheggio da verificare
+        </div>
+      `;
+
+  const telefono =
+    ristorante.telefono
+      ? `
+        <div style="
+          font-size:13px;
+          color:#555;
+          margin-top:4px;
+        ">
+          📞 ${escapeHtml(ristorante.telefono)}
+        </div>
+      `
+      : "";
+
+  const navigazione =
+    typeof ristorante.lat === "number" &&
+    typeof ristorante.lon === "number"
+      ? `
+        <a
+          href="https://www.google.com/maps/dir/?api=1&destination=${ristorante.lat},${ristorante.lon}"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="
+            display:block;
+            width:100%;
+            box-sizing:border-box;
+            margin-top:12px;
+            padding:10px 12px;
+            border-radius:10px;
+            background:#075c3b;
+            color:#fff;
+            text-align:center;
+            text-decoration:none;
+            font-weight:700;
+          "
+        >
+          🧭 NAVIGA
+        </a>
+      `
+      : "";
 
   return `
-    <div style="min-width:190px;line-height:1.4">
-      <strong>${nome}</strong>
-      ${
-        ristorante.cucina
-          ? `<small>🍽️ ${escapeHtml(
-              ristorante.cucina
-            )}</small>`
-          : ""
-      }
+    <div style="
+      min-width:220px;
+      max-width:280px;
+      line-height:1.35;
+    ">
+
+      <strong style="
+        display:block;
+        font-size:16px;
+        color:#073d2b;
+      ">
+        ${nome}
+      </strong>
+
+      ${cucina}
       ${distanza}
       ${parcheggio}
-      ${
-        ristorante.telefono
-          ? `<small>📞 ${escapeHtml(
-              ristorante.telefono
-            )}</small>`
-          : ""
-      }
+      ${telefono}
+      ${navigazione}
+
     </div>
   `;
 
