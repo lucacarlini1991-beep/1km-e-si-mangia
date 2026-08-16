@@ -1,9 +1,43 @@
 <!doctype html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Come funziona | 1 KM E SI MANGIA</title><style>
   *{box-sizing:border-box}html,body{margin:0;font-family:Arial,sans-serif;color:#004f3d;background:#fff}.topbar{height:76px;background:#006044;display:flex;align-items:center;justify-content:space-between;padding:0 6%}.logo-link img{width:145px;height:62px;object-fit:contain}.menu-button,.menu-close{border:0;background:transparent;color:#fff;cursor:pointer}.menu-button{font-size:30px}.mobile-menu{position:fixed;top:0;right:0;width:min(430px,92vw);height:100vh;background:#004f3d;z-index:10001;transform:translateX(100%);transition:.25s;overflow:auto}.mobile-menu.open{transform:translateX(0)}.mobile-menu-inner{padding:28px 30px}.menu-close{float:right;font-size:42px}.mobile-menu-title{padding-top:25px;margin-bottom:25px}.mobile-menu-title strong{display:block;color:#fff;font-size:30px}.mobile-menu-title span{color:#f2a51a;font-weight:bold;letter-spacing:4px}.menu-link{display:block;padding:22px 0;color:#fff;text-decoration:none;border-bottom:1px solid #ffffff2e}.menu-link strong,.menu-link span{display:block}.menu-link strong{font-size:19px;margin-bottom:6px}.menu-link span{color:#a9c0b5;font-size:14px}.menu-overlay{position:fixed;inset:0;background:#0008;z-index:10000;opacity:0;visibility:hidden}.menu-overlay.open{opacity:1;visibility:visible}.page{max-width:1120px;margin:auto;padding:70px 30px 90px}.intro{text-align:center;margin-bottom:55px}.eyebrow{color:#f5a400;font-size:14px;font-weight:800;letter-spacing:4px;margin-bottom:12px}h1{margin:0;font-size:clamp(38px,5vw,64px);line-height:.95;font-weight:900}.intro p{max-width:700px;margin:22px auto;color:#536d66;font-size:18px;line-height:1.6}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.step{background:#f3f6f3;border:1px solid #dce5df;border-radius:5px;min-height:350px;padding:42px 30px;text-align:center;display:flex;flex-direction:column;align-items:center}.step:nth-child(4){grid-column:2}.step-number{font-size:14px;margin-bottom:8px}.step-icon{width:66px;height:66px;border-radius:50%;background:#006044;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:18px}.step h2{margin:0 0 24px;font-size:27px;line-height:1.05;font-weight:900}.step p{margin:0;max-width:280px;color:#60746e;font-size:16px;line-height:1.55}.range{text-align:center;margin:75px auto 0;max-width:750px}.range h2{margin:0;font-size:42px}.range p{margin:20px 0;color:#60746e;font-size:17px;line-height:1.6}.advertising{margin:65px auto 0;max-width:728px;height:110px;border:1px solid #dfe5e1;background:#fafcfb;display:flex;align-items:center;justify-content:center;color:#b1bdb8;font-size:11px;letter-spacing:3px}footer{background:#004f3d;color:#fff;text-align:center;padding:55px 20px}footer strong{display:block;font-size:22px;margin-bottom:18px}footer p{margin:0;color:#c8ddd6;line-height:1.8}@media(max-width:800px){.topbar{height:70px;padding:0 20px}.logo-link img{width:125px;height:56px}.page{padding:50px 18px 70px}.steps{grid-template-columns:1fr;gap:18px}.step{min-height:auto}.step:nth-child(4){grid-column:auto}.range{margin-top:55px}.range h2{font-size:34px}}
-  </style></head><body>
-  <header class="topbar"><a href="index.html" class="logo-link"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA"></a><button class="menu-button" id="menuButton" type="button">☰</button></header>
+  
+/* === LOGO ORIGINALE 1 KM E SI MANGIA === */
+.logo-link{
+  display:flex !important;
+  align-items:center !important;
+  text-decoration:none !important;
+  line-height:0 !important;
+}
+.site-logo{
+  width:108px !important;
+  height:72px !important;
+  object-fit:contain !important;
+  display:block !important;
+}
+.mobile-menu-logo{
+  display:block !important;
+  width:150px !important;
+  height:auto !important;
+  margin:10px 0 0 !important;
+}
+@media (max-width:750px){
+  .site-logo{
+    width:82px !important;
+    height:58px !important;
+  }
+  .mobile-menu-logo{
+    width:135px !important;
+  }
+}
+
+</style></head><body>
+  <header class="topbar"><a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
+  <img src="logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo">
+</a><button class="menu-button" id="menuButton" type="button">☰</button></header>
   <div class="menu-overlay" id="menuOverlay"></div>
-  <nav class="mobile-menu" id="mobileMenu"><div class="mobile-menu-inner"><button class="menu-close" id="menuClose" type="button">×</button><div class="mobile-menu-title"><strong>1 KM</strong><span>E SI MANGIA</span></div>
+  <nav class="mobile-menu" id="mobileMenu"><div class="mobile-menu-inner"><button class="menu-close" id="menuClose" type="button">×</button><div class="mobile-menu-title">
+  <img src="logo-definitivo.png" alt="1 KM E SI MANGIA" class="mobile-menu-logo">
+</div>
   <a href="index.html" class="menu-link"><strong>HOME</strong><span>La nostra idea</span></a>
   <a href="uscite.html" class="menu-link"><strong>ESPLORA LE USCITE</strong><span>Trova l'uscita più vicina</span></a>
   <a href="come-funziona.html" class="menu-link"><strong>COME FUNZIONA</strong><span>Scopri il nostro metodo</span></a>

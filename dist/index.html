@@ -32,62 +32,45 @@
       .hero-buttons{flex-direction:column}
       .hero-buttons a{width:100%;box-sizing:border-box}
     }
-  </style>
+  
+/* === LOGO ORIGINALE 1 KM E SI MANGIA === */
+.logo-link{
+  display:flex !important;
+  align-items:center !important;
+  text-decoration:none !important;
+  line-height:0 !important;
+}
+.site-logo{
+  width:108px !important;
+  height:72px !important;
+  object-fit:contain !important;
+  display:block !important;
+}
+.mobile-menu-logo{
+  display:block !important;
+  width:150px !important;
+  height:auto !important;
+  margin:10px 0 0 !important;
+}
+@media (max-width:750px){
+  .site-logo{
+    width:82px !important;
+    height:58px !important;
+  }
+  .mobile-menu-logo{
+    width:135px !important;
+  }
+}
+
+</style>
   <link rel="stylesheet" crossorigin href="/assets/index-LUp3GScG.css">
 </head>
 <body>
 
 <header class="topbar">
-  <div class="logo">
-    <a href="index.html" aria-label="1 KM E SI MANGIA">
-      <img src="/assets/logo-definitivo-Cin6qIaL.png" alt="1 KM E SI MANGIA" class="site-logo">
-    </a>
-  </div>
-
-  <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
-</header>
-
-<nav class="mobile-menu" id="mobileMenu" aria-hidden="true">
-  <div class="mobile-menu-inner">
-    <button class="menu-close" id="menuClose" type="button" aria-label="Chiudi menu">×</button>
-
-    <div class="mobile-menu-title">
-      <strong>1 KM</strong>
-      <span>E SI MANGIA</span>
-    </div>
-
-    <div class="menu-links">
-      <a href="index.html" class="menu-link">
-        <strong>HOME</strong>
-        <span>La nostra idea</span>
-      </a>
-
-      <a href="uscite.html" class="menu-link">
-        <strong>ESPLORA LE USCITE</strong>
-        <span>Trova l'uscita più vicina</span>
-      </a>
-
-      <a href="come-funziona.html" class="menu-link">
-        <strong>COME FUNZIONA</strong>
-        <span>Scopri come utilizzare il servizio</span>
-      </a>
-
-      <a href="distanze.html" class="menu-link">
-        <strong>LE DISTANZE</strong>
-        <span>Quanto ti allontani dall'autostrada</span>
-      </a>
-
-      <a href="parcheggi.html" class="menu-link">
-        <strong>🚛 PARCHEGGI MEZZI PESANTI</strong>
-        <span>Trova parcheggi per camion e mezzi pesanti</span>
-      </a>
-
-      <a href="contatti.html" class="menu-link">
-        <strong>CONTATTI</strong>
-        <span>1 KM E SI MANGIA</span>
-      </a>
-    </div>
-  </div>
+  <a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
+  <img src="logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo">
+</a>
 </nav>
 
 <main id="home">

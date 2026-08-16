@@ -59,18 +59,52 @@ footer p{margin:0;color:#c8ddd6;line-height:1.8}
 .explanation{margin-top:48px}
 .advertising{height:90px;margin-top:45px}
 }
+
+/* === LOGO ORIGINALE 1 KM E SI MANGIA === */
+.logo-link{
+  display:flex !important;
+  align-items:center !important;
+  text-decoration:none !important;
+  line-height:0 !important;
+}
+.site-logo{
+  width:108px !important;
+  height:72px !important;
+  object-fit:contain !important;
+  display:block !important;
+}
+.mobile-menu-logo{
+  display:block !important;
+  width:150px !important;
+  height:auto !important;
+  margin:10px 0 0 !important;
+}
+@media (max-width:750px){
+  .site-logo{
+    width:82px !important;
+    height:58px !important;
+  }
+  .mobile-menu-logo{
+    width:135px !important;
+  }
+}
+
 </style>
 </head>
 <body>
 <header class="topbar">
-<a href="index.html" class="logo-link"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA"></a>
+<a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
+  <img src="logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo">
+</a>
 <input class="menu-toggle" type="checkbox" id="menuToggle">
 <label class="menu-button" for="menuToggle" aria-label="Apri menu">☰</label>
 <label class="menu-overlay" for="menuToggle"></label>
 <nav class="mobile-menu">
 <div class="mobile-menu-inner">
 <label class="menu-close" for="menuToggle" aria-label="Chiudi menu">×</label>
-<div class="mobile-menu-title"><strong>1 KM</strong><span>E SI MANGIA</span></div>
+<div class="mobile-menu-title">
+  <img src="logo-definitivo.png" alt="1 KM E SI MANGIA" class="mobile-menu-logo">
+</div>
 <a href="index.html" class="menu-link"><strong>HOME</strong><span>La nostra idea</span></a>
 <a href="uscite.html" class="menu-link"><strong>ESPLORA LE USCITE</strong><span>Trova l'uscita più vicina</span></a>
 <a href="come-funziona.html" class="menu-link"><strong>COME FUNZIONA</strong><span>Scopri il nostro metodo</span></a>
