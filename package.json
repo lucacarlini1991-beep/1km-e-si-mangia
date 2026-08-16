@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "vite --host 0.0.0.0",
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build && cp script.js dist/script.js && cp navigazione.js dist/navigazione.js && cp collega_navigazione.js dist/collega_navigazione.js && cp styles.css dist/styles.css && cp ristoranti.json dist/ristoranti.json && cp uscite.json dist/uscite.json && cp parcheggi.html dist/parcheggi.html"
+    "build": "vite build && cp script.js dist/script.js && cp navigazione.js dist/navigazione.js && cp collega_navigazione.js dist/collega_navigazione.js && cp styles.css dist/styles.css && cp ristoranti.json dist/ristoranti.json && cp uscite.json dist/uscite.json && cp parcheggi.html dist/parcheggi.html && cp contatti.html dist/contatti.html && cp distanze.html dist/distanze.html && cp come-funziona.html dist/come-funziona.html"
   },
   "keywords": [],
   "author": "",
