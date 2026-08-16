@@ -1,432 +1,395 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Come funziona | 1 KM E SI MANGIA</title>
 
-  <!-- FONT -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #004f3d;
+      background: #ffffff;
+    }
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
+    body {
+      min-height: 100vh;
+    }
 
-  <!-- CSS DEL PROGETTO -->
-  <link
-    rel="stylesheet"
-    href="styles.css"
-  >
+    /* HEADER */
+    .topbar {
+      height: 76px;
+      background: #006044;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6%;
+    }
 
+    .logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .logo-link img {
+      width: 145px;
+      height: 62px;
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    .menu-button {
+      color: white;
+      font-size: 30px;
+      font-weight: bold;
+      text-decoration: none;
+      line-height: 1;
+    }
+
+    /* CONTENUTO */
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 70px 30px 90px;
+    }
+
+    .intro {
+      text-align: center;
+      margin-bottom: 55px;
+    }
+
+    .eyebrow {
+      color: #f5a400;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      color: #004f3d;
+      font-size: clamp(38px, 5vw, 64px);
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -2px;
+    }
+
+    .intro p {
+      max-width: 700px;
+      margin: 22px auto 0;
+      color: #536d66;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* SCHEDE */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .step {
+      background: #f3f6f3;
+      border: 1px solid #dce5df;
+      border-radius: 5px;
+      min-height: 350px;
+      padding: 42px 30px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .step-number {
+      font-size: 14px;
+      color: #004f3d;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .step-icon {
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      background: #006044;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      margin-bottom: 18px;
+    }
+
+    .step h2 {
+      margin: 0 0 24px;
+      color: #004f3d;
+      font-size: 27px;
+      line-height: 1.05;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .step p {
+      margin: 0;
+      max-width: 280px;
+      color: #60746e;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    /* QUARTA SCHEDA CENTRATA */
+    .step:nth-child(4) {
+      grid-column: 2;
+    }
+
+    /* RAGGIO */
+    .range {
+      text-align: center;
+      margin: 75px auto 0;
+      max-width: 750px;
+    }
+
+    .range .eyebrow {
+      margin-bottom: 10px;
+    }
+
+    .range h2 {
+      margin: 0;
+      color: #004f3d;
+      font-size: 42px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .range p {
+      margin: 20px 0 0;
+      color: #60746e;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    /* PUBBLICITÀ */
+    .advertising {
+      margin: 65px auto 0;
+      max-width: 728px;
+      height: 110px;
+      border: 1px solid #dfe5e1;
+      background: #fafcfb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b1bdb8;
+      font-size: 11px;
+      letter-spacing: 3px;
+    }
+
+    /* FOOTER */
+    footer {
+      background: #004f3d;
+      color: white;
+      text-align: center;
+      padding: 55px 20px;
+    }
+
+    footer strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+
+    footer p {
+      margin: 0;
+      color: #c8ddd6;
+      line-height: 1.8;
+    }
+
+    /* MOBILE */
+    @media (max-width: 800px) {
+      .topbar {
+        height: 70px;
+        padding: 0 20px;
+      }
+
+      .logo-link img {
+        width: 125px;
+        height: 56px;
+      }
+
+      .page {
+        padding: 50px 18px 70px;
+      }
+
+      .intro {
+        margin-bottom: 38px;
+      }
+
+      .intro p {
+        font-size: 16px;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+
+      .step {
+        min-height: auto;
+        padding: 35px 25px;
+      }
+
+      .step:nth-child(4) {
+        grid-column: auto;
+      }
+
+      .range {
+        margin-top: 55px;
+      }
+
+      .range h2 {
+        font-size: 34px;
+      }
+
+      .advertising {
+        margin-top: 50px;
+        height: 90px;
+      }
+    }
+  </style>
 </head>
-
 
 <body>
 
-
-  <!-- =====================================================
-       HEADER
-       ===================================================== -->
-
   <header class="topbar">
 
-    <div class="logo">
+    <a href="index.html" class="logo-link">
+      <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA">
+    </a>
 
-      <div class="logo-pin">
-
-        <svg
-          viewBox="0 0 48 55"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-
-          <path
-            d="M24 2
-               C12 2 4 11 4 22
-               C4 37 24 53 24 53
-               C24 53 44 37 44 22
-               C44 11 36 2 24 2Z"
-            fill="white"
-          />
-
-          <circle
-            cx="24"
-            cy="21"
-            r="11"
-            fill="none"
-            stroke="#075c3b"
-            stroke-width="3"
-          />
-
-          <circle
-            cx="24"
-            cy="21"
-            r="5"
-            fill="none"
-            stroke="#075c3b"
-            stroke-width="2"
-          />
-
-        </svg>
-
-      </div>
-
-
-      <div class="logo-text">
-
-        <strong>1 KM</strong>
-
-        <span>E SI MANGIA</span>
-
-      </div>
-
-    </div>
-
-
-    <!-- PULSANTE MENU -->
-
-    <button
-      class="menu-button"
-      id="menuButton"
-      type="button"
-      aria-label="Apri menu"
-      aria-expanded="false"
-    >
+    <a href="#" class="menu-button" aria-label="Apri menu">
       ☰
-    </button>
+    </a>
 
   </header>
 
+  <main class="page">
+
+    <section class="intro">
+
+      <div class="eyebrow">1 KM E SI MANGIA</div>
+
+      <h1>COME FUNZIONA?</h1>
+
+      <p>
+        Esci dall'autostrada, trova dove mangiare,
+        perdi poco tempo e riparti.
+      </p>
+
+    </section>
 
 
-  <!-- =====================================================
-       MENU
-       ===================================================== -->
+    <section class="steps">
 
-  <nav
-    class="mobile-menu"
-    id="mobileMenu"
-    aria-hidden="true"
-  >
+      <article class="step">
 
-    <div class="mobile-menu-inner">
+        <div class="step-number">01</div>
 
-      <button
-        class="menu-close"
-        id="menuClose"
-        type="button"
-        aria-label="Chiudi menu"
-      >
-        ×
-      </button>
+        <div class="step-icon">📍</div>
+
+        <h2>INDICA DOVE SEI</h2>
+
+        <p>
+          Usa la tua posizione per individuare
+          l'uscita autostradale più vicina.
+        </p>
+
+      </article>
 
 
-      <div class="mobile-menu-title">
+      <article class="step">
 
-        <strong>1 KM</strong>
+        <div class="step-number">02</div>
 
-        <span>E SI MANGIA</span>
+        <div class="step-icon">🛣️</div>
 
-      </div>
+        <h2>SCEGLI L'USCITA</h2>
 
+        <p>
+          Individua l'uscita autostradale e scopri
+          cosa puoi trovare nelle sue vicinanze.
+        </p>
 
-      <div class="menu-links">
-
-
-        <a
-          href="index.html"
-          class="menu-link"
-        >
-
-          <strong>HOME</strong>
-
-          <span>
-            La nostra idea
-          </span>
-
-        </a>
+      </article>
 
 
-        <a
-          href="index.html#mapSection"
-          class="menu-link"
-        >
+      <article class="step">
 
-          <strong>ESPLORA LE USCITE</strong>
+        <div class="step-number">03</div>
 
-          <span>
-            Trova l'uscita più vicina
-          </span>
+        <div class="step-icon">🍝</div>
 
-        </a>
+        <h2>SCEGLI DOVE MANGIARE</h2>
 
+        <p>
+          Trova ristoranti, trattorie e pizzerie
+          entro il nostro raggio di ricerca.
+        </p>
 
-        <a
-          href="parcheggi.html"
-          class="menu-link"
-        >
-
-          <strong>🚛 PARCHEGGI MEZZI PESANTI</strong>
-
-          <span>
-            Trova parcheggi per camion e mezzi pesanti
-          </span>
-
-        </a>
+      </article>
 
 
-        <a
-          href="come-funziona.html"
-          class="menu-link"
-        >
+      <article class="step">
 
-          <strong>COME FUNZIONA</strong>
+        <div class="step-number">04</div>
 
-          <span>
-            Scopri come utilizzare il servizio
-          </span>
+        <div class="step-icon">🚗</div>
 
-        </a>
+        <h2>MANGIA E RIPARTI</h2>
 
+        <p>
+          Quando hai finito, puoi tornare rapidamente
+          verso l'autostrada e riprendere il viaggio.
+        </p>
 
-        <a
-          href="index.html#distanze"
-          class="menu-link"
-        >
+      </article>
 
-          <strong>LE DISTANZE</strong>
-
-          <span>
-            Quanto ti allontani dall'autostrada
-          </span>
-
-        </a>
+    </section>
 
 
-        <a
-          href="index.html#footer"
-          class="menu-link"
-        >
+    <section class="range">
 
-          <strong>CONTATTI</strong>
+      <div class="eyebrow">IL NOSTRO RAGGIO</div>
 
-          <span>
-            1 KM E SI MANGIA
-          </span>
+      <h2>MASSIMO 2 KM</h2>
 
-        </a>
+      <p>
+        Cerchiamo i locali nelle vicinanze dell'uscita.
+        Il nostro servizio non ti porta lontano dal percorso.
+      </p>
+
+    </section>
 
 
-      </div>
-
+    <div class="advertising">
+      SPAZIO PUBBLICITARIO
     </div>
-
-  </nav>
-
-
-
-  <!-- =====================================================
-       CONTENUTO
-       ===================================================== -->
-
-  <main>
-
-    <section class="how-it-works">
-
-      <div class="map-header">
-
-        <div class="map-label">
-          1 KM E SI MANGIA
-        </div>
-
-        <h1>
-          COME FUNZIONA?
-        </h1>
-
-        <p>
-          Esci dall'autostrada, trova dove mangiare,
-          perdi poco tempo e riparti.
-        </p>
-
-      </div>
-
-
-      <div class="steps">
-
-
-        <!-- STEP 01 -->
-
-        <article class="step">
-
-          <div class="step-icon">
-            📍
-          </div>
-
-          <div class="step-number">
-            01
-          </div>
-
-          <h2>
-            INDICA DOVE SEI
-          </h2>
-
-          <p>
-            Usa la tua posizione per individuare
-            l'uscita autostradale più vicina.
-          </p>
-
-        </article>
-
-
-        <!-- STEP 02 -->
-
-        <article class="step">
-
-          <div class="step-icon">
-            🛣️
-          </div>
-
-          <div class="step-number">
-            02
-          </div>
-
-          <h2>
-            SCEGLI L'USCITA
-          </h2>
-
-          <p>
-            Individua l'uscita autostradale e scopri
-            cosa puoi trovare nelle sue vicinanze.
-          </p>
-
-        </article>
-
-
-        <!-- STEP 03 -->
-
-        <article class="step">
-
-          <div class="step-icon">
-            🍝
-          </div>
-
-          <div class="step-number">
-            03
-          </div>
-
-          <h2>
-            SCEGLI DOVE MANGIARE
-          </h2>
-
-          <p>
-            Trova ristoranti, trattorie e pizzerie
-            entro il nostro raggio di ricerca.
-          </p>
-
-        </article>
-
-
-        <!-- STEP 04 -->
-
-        <article class="step">
-
-          <div class="step-icon">
-            🚗
-          </div>
-
-          <div class="step-number">
-            04
-          </div>
-
-          <h2>
-            MANGIA E RIPARTI
-          </h2>
-
-          <p>
-            Quando hai finito, puoi tornare rapidamente
-            verso l'autostrada e riprendere il viaggio.
-          </p>
-
-        </article>
-
-
-      </div>
-
-
-      <!-- =================================================
-           DISTANZA MASSIMA
-           ================================================= -->
-
-      <div class="map-header">
-
-        <div class="map-label">
-          IL NOSTRO RAGGIO
-        </div>
-
-        <h2>
-          MASSIMO 2 KM
-        </h2>
-
-        <p>
-          Cerchiamo i locali nelle vicinanze dell'uscita.
-          Il nostro servizio non ti porta lontano dal percorso.
-        </p>
-
-      </div>
-
-
-    </section>
-
-
-    <!-- PUBBLICITÀ -->
-
-    <section
-      class="ad-space"
-      aria-label="Spazio pubblicitario"
-    >
-
-      <div class="ad-box">
-
-        <span class="ad-label">
-          PUBBLICITÀ
-        </span>
-
-        <span class="ad-placeholder">
-          SPAZIO PUBBLICITARIO
-        </span>
-
-      </div>
-
-    </section>
-
 
   </main>
 
 
+  <footer>
 
-  <!-- =====================================================
-       FOOTER
-       ===================================================== -->
-
-  <footer id="footer">
-
-    <strong>
-      1 KM E SI MANGIA
-    </strong>
+    <strong>1 KM E SI MANGIA</strong>
 
     <p>
       Mangia bene.<br>
@@ -437,11 +400,8 @@
   </footer>
 
 
-
   <!-- MENU -->
-
   <script src="menu.js"></script>
 
 </body>
-
 </html>
