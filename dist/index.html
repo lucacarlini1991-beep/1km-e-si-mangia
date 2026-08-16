@@ -3,107 +3,592 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>1 KM E SI MANGIA</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    /* HOME PULITA */
-    .site-logo{display:block;width:auto;height:86px;max-width:190px;object-fit:contain}
-    .logo a{display:flex;align-items:center;text-decoration:none}
-    .hero-home{min-height:calc(100vh - 110px);display:flex;align-items:center;justify-content:center;padding:55px 24px 70px}
-    .hero-home .hero-content{width:min(1200px,100%);border:1px solid rgba(255,255,255,.8);padding:78px 66px;box-sizing:border-box}
-    .hero-home h1{margin:28px 0 28px;font-size:clamp(58px,8vw,104px);line-height:.9;letter-spacing:-2px}
-    .hero-home .description{max-width:760px;font-size:22px;line-height:1.45;margin-bottom:36px}
-    .hero-buttons{display:flex;flex-wrap:wrap;gap:12px}
-    .hero-buttons a{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 28px;text-decoration:none;font-weight:700;border:1px solid white}
-    .hero-buttons .primary{background:#f5a719;color:#073f2e;border-color:#f5a719}
-    .hero-buttons .secondary{color:white;background:transparent}
-    .home-ad{padding:0 24px 45px;background:#fff}
-    .home-ad .ad-box{max-width:728px;margin:0 auto;min-height:90px;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;position:relative;color:#aaa}
-    .home-ad .ad-label{position:absolute;left:8px;top:6px;font-size:9px;letter-spacing:2px}
-    .home-ad .ad-placeholder{font-size:12px;letter-spacing:2px}
-    @media(max-width:750px){
-      .site-logo{height:72px;max-width:155px}
-      .hero-home{min-height:auto;padding:35px 16px 50px}
-      .hero-home .hero-content{padding:48px 25px}
-      .hero-home h1{font-size:58px;letter-spacing:-1px}
-      .hero-home .description{font-size:18px}
-      .hero-buttons{flex-direction:column}
-      .hero-buttons a{width:100%;box-sizing:border-box}
-    }
-  
-/* === LOGO ORIGINALE 1 KM E SI MANGIA === */
-.logo-link{
-  display:flex !important;
-  align-items:center !important;
-  text-decoration:none !important;
-  line-height:0 !important;
-}
-.site-logo{
-  width:108px !important;
-  height:72px !important;
-  object-fit:contain !important;
-  display:block !important;
-}
-.mobile-menu-logo{
-  display:block !important;
-  width:150px !important;
-  height:auto !important;
-  margin:10px 0 0 !important;
-}
-@media (max-width:750px){
-  .site-logo{
-    width:82px !important;
-    height:58px !important;
-  }
-  .mobile-menu-logo{
-    width:135px !important;
-  }
-}
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 
-</style>
+  <style>
+    :root {
+      --verde: #05633f;
+      --verde-scuro: #004d36;
+      --verde-chiaro: #0c7450;
+      --arancio: #f5a719;
+      --bianco: #ffffff;
+      --testo: #073f2e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: "Roboto Condensed", Arial, sans-serif;
+      background: #f5f7f6;
+      color: var(--testo);
+    }
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    .topbar {
+      width: 100%;
+      height: 96px;
+      background: var(--verde);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6%;
+      position: relative;
+      z-index: 1000;
+    }
+
+    .logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      height: 100%;
+    }
+
+    .site-logo {
+      display: block;
+      width: 115px;
+      height: 82px;
+      object-fit: contain;
+    }
+
+    .menu-button {
+      width: 52px;
+      height: 52px;
+      border: 0;
+      background: transparent;
+      color: white;
+      font-size: 34px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .menu-button:hover {
+      opacity: .85;
+    }
+
+    /* =========================
+       MENU
+    ========================= */
+
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 58, 40, .96);
+      z-index: 2000;
+      display: none;
+      overflow-y: auto;
+    }
+
+    .menu-overlay.open {
+      display: block;
+    }
+
+    .menu-inner {
+      width: min(900px, 92%);
+      margin: 0 auto;
+      padding: 30px 0 60px;
+    }
+
+    .menu-top {
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+    }
+
+    .menu-logo {
+      width: 110px;
+      height: 75px;
+      object-fit: contain;
+    }
+
+    .menu-close {
+      border: 0;
+      background: transparent;
+      color: white;
+      font-size: 42px;
+      cursor: pointer;
+    }
+
+    .menu-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .menu-links a {
+      display: block;
+      padding: 20px 24px;
+      border: 1px solid rgba(255,255,255,.7);
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .menu-links a:hover {
+      background: var(--arancio);
+      color: var(--verde-scuro);
+      border-color: var(--arancio);
+    }
+
+    /* =========================
+       HOME
+    ========================= */
+
+    .home {
+      background: var(--verde);
+      min-height: calc(100vh - 96px);
+      padding: 54px 24px 50px;
+    }
+
+    .hero-home {
+      width: min(1200px, 100%);
+      min-height: 590px;
+      margin: 0 auto;
+      border: 1px solid rgba(255,255,255,.8);
+      padding: 75px 65px;
+      display: flex;
+      align-items: center;
+      background:
+        radial-gradient(
+          circle at 90% 85%,
+          rgba(255,255,255,.08),
+          transparent 25%
+        );
+    }
+
+    .hero-content {
+      width: 100%;
+    }
+
+    .small-title {
+      color: var(--arancio);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      margin-bottom: 28px;
+      text-transform: uppercase;
+    }
+
+    .hero-home h1 {
+      margin: 0 0 35px;
+      color: white;
+      font-size: clamp(58px, 8vw, 104px);
+      line-height: .88;
+      letter-spacing: -2px;
+      font-weight: 800;
+    }
+
+    .description {
+      max-width: 760px;
+      color: white;
+      font-size: 22px;
+      line-height: 1.45;
+      margin-bottom: 36px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .hero-buttons a {
+      min-height: 56px;
+      padding: 0 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 17px;
+      font-weight: 800;
+      border: 1px solid white;
+    }
+
+    .hero-buttons .primary {
+      background: var(--arancio);
+      color: var(--verde-scuro);
+      border-color: var(--arancio);
+    }
+
+    .hero-buttons .secondary {
+      background: transparent;
+      color: white;
+    }
+
+    .hero-buttons a:hover {
+      transform: translateY(-1px);
+    }
+
+    /* =========================
+       PUBBLICITÀ
+    ========================= */
+
+    .home-ad {
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      padding: 25px 24px 0;
+      background: white;
+    }
+
+    .ad-box {
+      width: min(728px, 100%);
+      height: 110px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+    }
+
+    .ad-label {
+      position: absolute;
+      left: 8px;
+      top: 7px;
+      font-size: 9px;
+      letter-spacing: 2px;
+    }
+
+    .ad-placeholder {
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+      background: var(--verde-scuro);
+      color: white;
+      text-align: center;
+      padding: 42px 20px;
+    }
+
+    footer strong {
+      font-size: 24px;
+    }
+
+    footer p {
+      margin: 14px 0 0;
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 750px) {
+
+      .topbar {
+        height: 82px;
+        padding: 0 18px;
+      }
+
+      .site-logo {
+        width: 82px;
+        height: 65px;
+      }
+
+      .menu-button {
+        width: 46px;
+        height: 46px;
+        font-size: 31px;
+      }
+
+      .home {
+        min-height: auto;
+        padding: 28px 12px 30px;
+      }
+
+      .hero-home {
+        min-height: auto;
+        padding: 45px 24px 50px;
+      }
+
+      .small-title {
+        font-size: 13px;
+        letter-spacing: 2.5px;
+        line-height: 1.4;
+      }
+
+      .hero-home h1 {
+        font-size: 58px;
+        line-height: .9;
+        letter-spacing: -1px;
+        margin-bottom: 28px;
+      }
+
+      .description {
+        font-size: 18px;
+        line-height: 1.4;
+        margin-bottom: 28px;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+      }
+
+      .hero-buttons a {
+        width: 100%;
+        min-height: 55px;
+      }
+
+      .home-ad {
+        padding: 18px 12px 30px;
+      }
+
+      .menu-inner {
+        width: 90%;
+      }
+
+      .menu-links a {
+        font-size: 20px;
+        padding: 17px 20px;
+      }
+    }
+  </style>
   <link rel="stylesheet" crossorigin href="/assets/index-LUp3GScG.css">
 </head>
+
 <body>
 
-<header class="topbar">
-  <a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
-  <img src="logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo">
-</a>
-</nav>
+  <!-- =========================
+       HEADER
+  ========================= -->
 
-<main id="home">
-  <section class="hero hero-home">
-    <div class="hero-content">
-      <div class="small-title">IL TUO PROSSIMO RISTORANTE È PIÙ VICINO DI QUANTO PENSI</div>
+  <header class="topbar">
 
-      <h1>ESCI.<br>MANGIA.<br>RIPARTI.</h1>
+    <a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
+      <img
+        src="/assets/logo-definitivo-Cin6qIaL.png"
+        alt="1 KM E SI MANGIA"
+        class="site-logo"
+      >
+    </a>
 
-      <div class="description">
-        Trova ristoranti, trattorie e pizzerie a pochi minuti dall'uscita autostradale.
+    <button
+      type="button"
+      class="menu-button"
+      id="menuButton"
+      aria-label="Apri menu"
+      aria-expanded="false"
+    >
+      ☰
+    </button>
+
+  </header>
+
+
+  <!-- =========================
+       MENU
+  ========================= -->
+
+  <div class="menu-overlay" id="menuOverlay">
+
+    <div class="menu-inner">
+
+      <div class="menu-top">
+
+        <a href="index.html">
+          <img
+            src="/assets/logo-definitivo-Cin6qIaL.png"
+            alt="1 KM E SI MANGIA"
+            class="menu-logo"
+          >
+        </a>
+
+        <button
+          type="button"
+          class="menu-close"
+          id="menuClose"
+          aria-label="Chiudi menu"
+        >
+          ×
+        </button>
+
       </div>
 
-      <div class="hero-buttons">
-        <a class="primary" href="uscite.html">📍 USA LA MIA POSIZIONE</a>
-        <a class="secondary" href="uscite.html">🗺️ ESPLORA LE USCITE</a>
+      <nav class="menu-links">
+
+        <a href="index.html">🏠 HOME</a>
+
+        <a href="uscite.html">🗺️ ESPLORA LE USCITE</a>
+
+        <a href="come-funziona.html">❓ COME FUNZIONA</a>
+
+        <a href="distanze.html">📍 LE DISTANZE</a>
+
+        <a href="parcheggi.html">🚛 PARCHEGGI MEZZI PESANTI</a>
+
+        <a href="contatti.html">✉️ CONTATTI</a>
+
+      </nav>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       HOME
+  ========================= -->
+
+  <main>
+
+    <section class="home">
+
+      <div class="hero-home">
+
+        <div class="hero-content">
+
+          <div class="small-title">
+            IL TUO PROSSIMO RISTORANTE È PIÙ VICINO DI QUANTO PENSI
+          </div>
+
+          <h1>
+            ESCI.<br>
+            MANGIA.<br>
+            RIPARTI.
+          </h1>
+
+          <div class="description">
+            Trova ristoranti, trattorie e pizzerie a pochi minuti
+            dall'uscita autostradale.
+          </div>
+
+          <div class="hero-buttons">
+
+            <a
+              class="primary"
+              href="uscite.html"
+            >
+              📍 USA LA MIA POSIZIONE
+            </a>
+
+            <a
+              class="secondary"
+              href="uscite.html"
+            >
+              🗺️ ESPLORA LE USCITE
+            </a>
+
+          </div>
+
+        </div>
+
       </div>
-    </div>
-  </section>
 
-  <section class="home-ad" aria-label="Spazio pubblicitario">
-    <div class="ad-box">
-      <span class="ad-label">PUBBLICITÀ</span>
-      <span class="ad-placeholder">SPAZIO PUBBLICITARIO</span>
-    </div>
-  </section>
-</main>
+    </section>
 
-<footer id="footer">
-  <strong>1 KM E SI MANGIA</strong>
-  <p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p>
-</footer>
 
-<script src="menu.js"></script>
+    <!-- PUBBLICITÀ -->
+
+    <section class="home-ad" aria-label="Spazio pubblicitario">
+
+      <div class="ad-box">
+
+        <span class="ad-label">
+          PUBBLICITÀ
+        </span>
+
+        <span class="ad-placeholder">
+          SPAZIO PUBBLICITARIO
+        </span>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =========================
+       FOOTER
+  ========================= -->
+
+  <footer>
+
+    <strong>
+      1 KM E SI MANGIA
+    </strong>
+
+    <p>
+      Mangia bene.<br>
+      Perdi poco tempo.<br>
+      Riparti.
+    </p>
+
+  </footer>
+
+
+  <!-- =========================
+       MENU JAVASCRIPT
+  ========================= -->
+
+  <script>
+
+    const menuButton = document.getElementById("menuButton");
+    const menuOverlay = document.getElementById("menuOverlay");
+    const menuClose = document.getElementById("menuClose");
+
+    function openMenu() {
+      menuOverlay.classList.add("open");
+      menuButton.setAttribute("aria-expanded", "true");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeMenu() {
+      menuOverlay.classList.remove("open");
+      menuButton.setAttribute("aria-expanded", "false");
+      document.body.style.overflow = "";
+    }
+
+    menuButton.addEventListener("click", openMenu);
+
+    menuClose.addEventListener("click", closeMenu);
+
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    });
+
+    document.querySelectorAll(".menu-links a").forEach(function(link) {
+      link.addEventListener("click", function() {
+        closeMenu();
+      });
+    });
+
+  </script>
+
 </body>
 </html>
