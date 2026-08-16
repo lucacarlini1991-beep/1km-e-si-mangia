@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "vite --host 0.0.0.0",
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build && cp script.js dist/script.js && cp menu.js dist/menu.js && cp navigazione.js dist/navigazione.js && cp collega_navigazione.js dist/collega_navigazione.js && cp styles.css dist/styles.css && cp ristoranti.json dist/ristoranti.json && cp parcheggi.html dist/parcheggi.html && cp contatti.html dist/contatti.html && cp distanze.html dist/distanze.html && cp come-funziona.html dist/come-funziona.html && cp uscite.html dist/uscite.html && mkdir -p dist/assets && cp assets/logo-definitivo.png dist/assets/logo-definitivo.png"
+    "build": "vite build && cp script.js dist/script.js && cp menu.js dist/menu.js && cp navigazione.js dist/navigazione.js && cp collega_navigazione.js dist/collega_navigazione.js && cp styles.css dist/styles.css && cp ristoranti.json dist/ristoranti.json && cp parcheggi.html dist/parcheggi.html && cp contatti.html dist/contatti.html && cp distanze.html dist/distanze.html && cp come-funziona.html dist/come-funziona.html && cp uscite.html dist/uscite.html && cp fonti.html dist/fonti.html && mkdir -p dist/assets && cp assets/logo-definitivo.png dist/assets/logo-definitivo.png"
   },
   "keywords": [],
   "author": "",
