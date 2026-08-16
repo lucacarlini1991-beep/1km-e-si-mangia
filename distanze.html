@@ -1,321 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Distanze | 1 KM E SI MANGIA</title>
-
-  <style>
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #004f3d;
-      background: #fff;
-    }
-
-    .topbar {
-      height: 76px;
-      background: #006044;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 6%;
-    }
-
-    .logo-link {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-    }
-
-    .logo-link img {
-      width: 145px;
-      height: 62px;
-      object-fit: contain;
-    }
-
-    .menu-button {
-      color: #fff;
-      font-size: 30px;
-      font-weight: bold;
-      text-decoration: none;
-      line-height: 1;
-    }
-
-    .page {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 70px 30px 85px;
-    }
-
-    .intro {
-      text-align: center;
-      margin-bottom: 52px;
-    }
-
-    .eyebrow {
-      color: #f5a400;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      margin-bottom: 12px;
-    }
-
-    h1 {
-      margin: 0;
-      color: #004f3d;
-      font-size: clamp(40px, 5vw, 64px);
-      line-height: .95;
-      font-weight: 900;
-      letter-spacing: -2px;
-    }
-
-    .intro p {
-      max-width: 700px;
-      margin: 20px auto 0;
-      color: #60746e;
-      font-size: 18px;
-      line-height: 1.6;
-    }
-
-    .distance-list {
-      display: grid;
-      gap: 18px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .distance-card {
-      border-radius: 5px;
-      padding: 28px 35px;
-      min-height: 125px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 30px;
-      color: #fff;
-    }
-
-    .distance-card.green { background: #087b57; }
-    .distance-card.orange { background: #f0a000; color: #17352d; }
-    .distance-card.red { background: #c63d32; }
-
-    .distance-main {
-      text-align: left;
-    }
-
-    .distance-main h2 {
-      margin: 0 0 7px;
-      font-size: 34px;
-      font-weight: 900;
-      line-height: 1;
-    }
-
-    .distance-main p {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .distance-icon {
-      width: 58px;
-      height: 58px;
-      border: 2px solid currentColor;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 27px;
-      flex: 0 0 auto;
-    }
-
-    .explanation {
-      max-width: 800px;
-      margin: 58px auto 0;
-      text-align: center;
-    }
-
-    .explanation h2 {
-      margin: 0 0 18px;
-      color: #004f3d;
-      font-size: 32px;
-      font-weight: 900;
-      text-transform: uppercase;
-    }
-
-    .explanation p {
-      margin: 0;
-      color: #60746e;
-      font-size: 17px;
-      line-height: 1.65;
-    }
-
-    .advertising {
-      max-width: 728px;
-      height: 110px;
-      margin: 55px auto 0;
-      border: 1px solid #dfe5e1;
-      background: #fafcfb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #b1bdb8;
-      font-size: 11px;
-      letter-spacing: 3px;
-    }
-
-    footer {
-      background: #004f3d;
-      color: #fff;
-      text-align: center;
-      padding: 55px 20px;
-    }
-
-    footer strong {
-      display: block;
-      font-size: 22px;
-      margin-bottom: 18px;
-    }
-
-    footer p {
-      margin: 0;
-      color: #c8ddd6;
-      line-height: 1.8;
-    }
-
-    @media (max-width: 700px) {
-      .topbar {
-        height: 70px;
-        padding: 0 20px;
-      }
-
-      .logo-link img {
-        width: 125px;
-        height: 56px;
-      }
-
-      .page {
-        padding: 50px 18px 65px;
-      }
-
-      .intro {
-        margin-bottom: 38px;
-      }
-
-      .intro p {
-        font-size: 16px;
-      }
-
-      .distance-card {
-        padding: 24px 22px;
-        min-height: 110px;
-      }
-
-      .distance-main h2 {
-        font-size: 29px;
-      }
-
-      .distance-main p {
-        font-size: 12px;
-      }
-
-      .distance-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 23px;
-      }
-
-      .explanation {
-        margin-top: 48px;
-      }
-
-      .advertising {
-        height: 90px;
-        margin-top: 45px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Distanze | 1 KM E SI MANGIA</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#004f3d;background:#fff}
+body{overflow-x:hidden}
+.topbar{height:76px;background:#006044;display:flex;align-items:center;justify-content:space-between;padding:0 6%}
+.logo-link{display:flex;align-items:center;text-decoration:none}
+.logo-link img{width:145px;height:62px;object-fit:contain}
+.menu-toggle{display:none}
+.menu-button{color:#fff;font-size:31px;font-weight:bold;cursor:pointer;user-select:none;padding:10px 4px;line-height:1}
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;z-index:9998;transition:.2s}
+.mobile-menu{position:fixed;top:0;right:0;width:min(430px,92vw);height:100vh;background:#004f3d;z-index:9999;transform:translateX(100%);transition:transform .25s ease;overflow-y:auto;box-shadow:-10px 0 35px rgba(0,0,0,.25)}
+.mobile-menu-inner{padding:25px 30px 45px}
+.menu-close{display:block;text-align:right;color:#fff;font-size:42px;line-height:1;margin-bottom:5px;cursor:pointer}
+.mobile-menu-title{padding-top:5px;margin-bottom:20px}
+.mobile-menu-title strong{display:block;color:#fff;font-size:30px}
+.mobile-menu-title span{color:#f2a51a;font-size:14px;font-weight:bold;letter-spacing:4px}
+.menu-link{display:block;padding:21px 0;color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.18)}
+.menu-link strong{display:block;font-size:19px;margin-bottom:6px}
+.menu-link span{color:#a9c0b5;font-size:14px}
+.menu-toggle:checked~.menu-overlay{opacity:1;visibility:visible}
+.menu-toggle:checked~.mobile-menu{transform:translateX(0)}
+.page{max-width:1120px;margin:0 auto;padding:70px 30px 90px}
+.intro{text-align:center;margin-bottom:55px}
+.eyebrow{color:#f5a400;font-size:14px;font-weight:800;letter-spacing:4px;margin-bottom:12px}
+h1{margin:0;color:#004f3d;font-size:clamp(38px,5vw,64px);line-height:.95;font-weight:900;letter-spacing:-2px}
+.intro p{max-width:700px;margin:22px auto 0;color:#536d66;font-size:18px;line-height:1.6}
+.distance-list{display:grid;gap:18px;max-width:900px;margin:0 auto}
+.distance-card{border-radius:5px;padding:28px 35px;min-height:125px;display:flex;align-items:center;justify-content:space-between;gap:30px;color:#fff}
+.distance-card.green{background:#087b57}
+.distance-card.orange{background:#f0a000;color:#17352d}
+.distance-card.red{background:#c63d32}
+.distance-main{text-align:left}
+.distance-main h2{margin:0 0 7px;font-size:34px;font-weight:900;line-height:1}
+.distance-main p{margin:0;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.distance-icon{width:58px;height:58px;border:2px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:27px;flex:0 0 auto}
+.explanation{max-width:800px;margin:58px auto 0;text-align:center}
+.explanation h2{margin:0 0 18px;color:#004f3d;font-size:32px;font-weight:900;text-transform:uppercase}
+.explanation p{margin:0;color:#60746e;font-size:17px;line-height:1.65}
+.advertising{margin:65px auto 0;max-width:728px;height:110px;border:1px solid #dfe5e1;background:#fafcfb;display:flex;align-items:center;justify-content:center;color:#b1bdb8;font-size:11px;letter-spacing:3px}
+footer{background:#004f3d;color:#fff;text-align:center;padding:55px 20px}
+footer strong{display:block;font-size:22px;margin-bottom:18px}
+footer p{margin:0;color:#c8ddd6;line-height:1.8}
+@media(max-width:800px){
+.topbar{height:70px;padding:0 20px}
+.logo-link img{width:125px;height:56px}
+.page{padding:50px 18px 70px}
+.intro{margin-bottom:38px}
+.intro p{font-size:16px}
+.distance-card{padding:24px 22px;min-height:110px}
+.distance-main h2{font-size:29px}
+.distance-main p{font-size:12px}
+.distance-icon{width:50px;height:50px;font-size:23px}
+.explanation{margin-top:48px}
+.advertising{height:90px;margin-top:45px}
+}
+</style>
 </head>
-
 <body>
+<header class="topbar">
+<a href="index.html" class="logo-link"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA"></a>
+<input class="menu-toggle" type="checkbox" id="menuToggle">
+<label class="menu-button" for="menuToggle" aria-label="Apri menu">☰</label>
+<label class="menu-overlay" for="menuToggle"></label>
+<nav class="mobile-menu">
+<div class="mobile-menu-inner">
+<label class="menu-close" for="menuToggle" aria-label="Chiudi menu">×</label>
+<div class="mobile-menu-title"><strong>1 KM</strong><span>E SI MANGIA</span></div>
+<a href="index.html" class="menu-link"><strong>HOME</strong><span>La nostra idea</span></a>
+<a href="uscite.html" class="menu-link"><strong>ESPLORA LE USCITE</strong><span>Trova l'uscita più vicina</span></a>
+<a href="come-funziona.html" class="menu-link"><strong>COME FUNZIONA</strong><span>Scopri il nostro metodo</span></a>
+<a href="distanze.html" class="menu-link"><strong>LE DISTANZE</strong><span>Quanto ti allontani dall'uscita</span></a>
+<a href="parcheggi.html" class="menu-link"><strong>🚛 PARCHEGGI MEZZI PESANTI</strong><span>Trova parcheggi per camion e mezzi pesanti</span></a>
+<a href="contatti.html" class="menu-link"><strong>CONTATTI</strong><span>Scrivici</span></a>
+</div>
+</nav>
+</header>
 
-  <header class="topbar">
-    <a href="index.html" class="logo-link">
-      <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA">
-    </a>
+<main class="page">
+<section class="intro">
+<div class="eyebrow">1 KM E SI MANGIA</div>
+<h1>QUANTO TI ALLONTANI?</h1>
+<p>Più sei vicino all'uscita, meno perdi tempo. Cerchiamo per te i locali entro 2 km stradali dall'uscita.</p>
+</section>
 
-    <a href="#" class="menu-button" aria-label="Apri menu">☰</a>
-  </header>
+<section class="distance-list">
+<article class="distance-card green"><div class="distance-main"><h2>1 KM</h2><p>Praticamente all'uscita</p></div><div class="distance-icon">📍</div></article>
+<article class="distance-card orange"><div class="distance-main"><h2>2 KM</h2><p>Pochi minuti di strada</p></div><div class="distance-icon">🚗</div></article>
+<article class="distance-card red"><div class="distance-main"><h2>PIÙ DI 2 KM</h2><p>Guida ancora un po' fino alla prossima uscita</p></div><div class="distance-icon">🛣️</div></article>
+</section>
 
-  <main class="page">
+<section class="explanation">
+<h2>Il nostro obiettivo</h2>
+<p>Farti mangiare bene senza trasformare una sosta in una deviazione. Il servizio privilegia le attività entro 2 km stradali dall'uscita. Se un locale è più lontano, conviene proseguire fino alla prossima uscita.</p>
+</section>
 
-    <section class="intro">
-      <div class="eyebrow">1 KM E SI MANGIA</div>
-      <h1>QUANTO TI ALLONTANI?</h1>
-      <p>
-        Più sei vicino all'uscita, meno perdi tempo.
-        Cerchiamo per te i locali entro 2 km stradali dall'uscita.
-      </p>
-    </section>
+<div class="advertising">SPAZIO PUBBLICITARIO</div>
+</main>
 
-    <section class="distance-list">
-
-      <article class="distance-card green">
-        <div class="distance-main">
-          <h2>1 KM</h2>
-          <p>Praticamente all'uscita</p>
-        </div>
-        <div class="distance-icon">📍</div>
-      </article>
-
-      <article class="distance-card orange">
-        <div class="distance-main">
-          <h2>2 KM</h2>
-          <p>Pochi minuti di strada</p>
-        </div>
-        <div class="distance-icon">🚗</div>
-      </article>
-
-      <article class="distance-card red">
-        <div class="distance-main">
-          <h2>PIÙ DI 2 KM</h2>
-          <p>Guida ancora un po' fino alla prossima uscita</p>
-        </div>
-        <div class="distance-icon">🛣️</div>
-      </article>
-
-    </section>
-
-    <section class="explanation">
-      <h2>Il nostro obiettivo</h2>
-      <p>
-        Farti mangiare bene senza trasformare una sosta in una deviazione.
-        Il servizio privilegia le attività entro 2 km stradali dall'uscita.
-        Se un locale è più lontano, conviene proseguire fino alla prossima uscita.
-      </p>
-    </section>
-
-    <div class="advertising">
-      SPAZIO PUBBLICITARIO
-    </div>
-
-  </main>
-
-  <footer>
-    <strong>1 KM E SI MANGIA</strong>
-    <p>
-      Mangia bene.<br>
-      Perdi poco tempo.<br>
-      Riparti.
-    </p>
-  </footer>
-
-  <script src="menu.js"></script>
-
+<footer><strong>1 KM E SI MANGIA</strong><p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p></footer>
 </body>
 </html>
