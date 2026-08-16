@@ -1,169 +1,49 @@
-// =====================================================
-// 1 KM E SI MANGIA
-// MENU MOBILE - SCRIPT INDIPENDENTE
-// =====================================================
-
 (function () {
+  function initMenu() {
+    const menuButton = document.querySelector(".menu-button");
+    const mobileMenu = document.getElementById("mobileMenu");
+    const menuClose = document.getElementById("menuClose");
 
-    function initMenu() {
-  
-      const menuButton = document.querySelector(".menu-button");
-      const mobileMenu = document.getElementById("mobileMenu");
-      const menuClose = document.getElementById("menuClose");
-  
-      if (!mobileMenu) {
-        console.warn("MENU: #mobileMenu non trovato");
-        return;
-      }
-  
-      console.log("MENU: inizializzato");
-  
-  
-      // =================================================
-      // APERTURA
-      // =================================================
-  
-      if (menuButton) {
-  
-        menuButton.addEventListener("click", function (event) {
-  
-          event.preventDefault();
-          event.stopPropagation();
-  
-          mobileMenu.style.display = "block";
-          mobileMenu.style.visibility = "visible";
-          mobileMenu.style.opacity = "1";
-          mobileMenu.style.transform = "translateX(0)";
-          mobileMenu.style.pointerEvents = "auto";
-  
-          document.body.style.overflow = "hidden";
-  
-          mobileMenu.setAttribute(
-            "aria-hidden",
-            "false"
-          );
-  
-        });
-  
-      }
-  
-  
-      // =================================================
-      // CHIUSURA
-      // =================================================
-  
-      function closeMenu() {
-  
-        mobileMenu.style.opacity = "0";
-        mobileMenu.style.transform = "translateX(100%)";
-        mobileMenu.style.pointerEvents = "none";
-  
-        document.body.style.overflow = "";
-  
-        mobileMenu.setAttribute(
-          "aria-hidden",
-          "true"
-        );
-  
-      }
-  
-  
-      // =================================================
-      // PULSANTE X
-      // =================================================
-  
-      if (menuClose) {
-  
-        menuClose.addEventListener(
-          "click",
-          function (event) {
-  
-            event.preventDefault();
-            event.stopPropagation();
-  
-            closeMenu();
-  
-          }
-        );
-  
-      }
-  
-  
-      // =================================================
-      // CLICK FUORI DAL MENU
-      // =================================================
-  
-      mobileMenu.addEventListener(
-        "click",
-        function (event) {
-  
-          if (event.target === mobileMenu) {
-  
-            closeMenu();
-  
-          }
-  
-        }
-      );
-  
-  
-      // =================================================
-      // ESC
-      // =================================================
-  
-      document.addEventListener(
-        "keydown",
-        function (event) {
-  
-          if (event.key === "Escape") {
-  
-            closeMenu();
-  
-          }
-  
-        }
-      );
-  
-  
-      // =================================================
-      // LINK DEL MENU
-      // =================================================
-  
-      const links =
-        mobileMenu.querySelectorAll(".menu-link");
-  
-      links.forEach(function (link) {
-  
-        link.addEventListener(
-          "click",
-          function () {
-  
-            closeMenu();
-  
-          }
-        );
-  
+    if (!menuButton || !mobileMenu || !menuClose) {
+      console.warn("MENU: elementi non trovati");
+      return;
+    }
+
+    function openMenu() {
+      mobileMenu.style.visibility = "visible";
+      mobileMenu.style.opacity = "1";
+      mobileMenu.style.transform = "translateX(0)";
+      mobileMenu.style.pointerEvents = "auto";
+      mobileMenu.setAttribute("aria-hidden", "false");
+    }
+
+    function closeMenu() {
+      mobileMenu.style.visibility = "hidden";
+      mobileMenu.style.opacity = "0";
+      mobileMenu.style.transform = "translateX(100%)";
+      mobileMenu.style.pointerEvents = "none";
+      mobileMenu.setAttribute("aria-hidden", "true");
+    }
+
+    menuButton.addEventListener("click", openMenu);
+    menuClose.addEventListener("click", closeMenu);
+
+    // IMPORTANTE:
+    // NON blocchiamo i link del menu.
+    // Lasciamo al browser la normale navigazione
+    // verso contatti.html, distanze.html, ecc.
+    const menuLinks = mobileMenu.querySelectorAll("a");
+
+    menuLinks.forEach(function (link) {
+      link.addEventListener("click", function () {
+        closeMenu();
       });
-  
-    }
-  
-  
-    // ===================================================
-    // AVVIO
-    // ===================================================
-  
-    if (document.readyState === "loading") {
-  
-      document.addEventListener(
-        "DOMContentLoaded",
-        initMenu
-      );
-  
-    } else {
-  
-      initMenu();
-  
-    }
-  
-  })();
-  
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMenu);
+  } else {
+    initMenu();
+  }
+})();
