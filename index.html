@@ -1,123 +1,462 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>1 KM E SI MANGIA</title>
 
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-  <!-- =====================================================
-       FONT
-       ===================================================== -->
+    html {
+      scroll-behavior: smooth;
+    }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f3;
+      color: #154b35;
+    }
 
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
+    /* =====================================
+       HEADER
+    ===================================== */
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
+    .topbar {
+      height: 90px;
+      background: #075c3b;
+      color: white;
 
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-  <!-- =====================================================
-       LEAFLET
-       ===================================================== -->
+      padding: 0 6%;
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  >
+      position: relative;
+      z-index: 20;
+    }
 
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
 
-  <!-- =====================================================
-       LEAFLET MARKER CLUSTER
-       ===================================================== -->
+    .logo-pin {
+      width: 42px;
+      height: 52px;
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  >
+      border: 4px solid white;
+      border-radius: 50% 50% 50% 0;
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-  >
+      transform: rotate(-45deg);
 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-  <!-- =====================================================
-       CSS DEL PROGETTO
-       ===================================================== -->
+    .logo-pin::after {
+      content: "";
 
-  <link
-    rel="stylesheet"
-    href="styles.css"
-  >
+      width: 16px;
+      height: 16px;
 
+      border: 4px solid white;
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .logo-text strong {
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+
+    .logo-text span {
+      margin-top: 6px;
+
+      color: #f2a51a;
+
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 4px;
+    }
+
+    .menu-button {
+      border: 0;
+      background: transparent;
+
+      color: white;
+
+      font-size: 32px;
+
+      cursor: pointer;
+    }
+
+    /* =====================================
+       MENU
+    ===================================== */
+
+    .mobile-menu {
+      position: fixed;
+      inset: 0;
+
+      background: #064c32;
+      color: white;
+
+      z-index: 100;
+
+      visibility: hidden;
+      opacity: 0;
+
+      transform: translateX(100%);
+
+      pointer-events: none;
+
+      transition: .25s ease;
+
+      overflow-y: auto;
+    }
+
+    .mobile-menu-inner {
+      max-width: 700px;
+
+      margin-left: auto;
+
+      min-height: 100%;
+
+      padding: 35px 7%;
+    }
+
+    .menu-close {
+      float: right;
+
+      width: 52px;
+      height: 52px;
+
+      border: 2px solid rgba(255,255,255,.6);
+
+      background: transparent;
+
+      color: white;
+
+      font-size: 34px;
+
+      cursor: pointer;
+    }
+
+    .mobile-menu-title {
+      clear: both;
+
+      padding-top: 10px;
+      padding-bottom: 40px;
+
+      border-bottom: 1px solid rgba(255,255,255,.25);
+    }
+
+    .mobile-menu-title strong {
+      display: block;
+
+      font-size: 28px;
+    }
+
+    .mobile-menu-title span {
+      color: #f2a51a;
+
+      font-weight: bold;
+      letter-spacing: 4px;
+    }
+
+    .menu-links {
+      margin-top: 15px;
+    }
+
+    .menu-link {
+      display: block;
+
+      padding: 25px 0;
+
+      color: white;
+
+      text-decoration: none;
+
+      border-bottom: 1px solid rgba(255,255,255,.18);
+    }
+
+    .menu-link strong {
+      display: block;
+
+      margin-bottom: 7px;
+
+      font-size: 21px;
+    }
+
+    .menu-link span {
+      color: #a9c0b5;
+
+      font-size: 15px;
+    }
+
+    /* =====================================
+       HOME HERO
+    ===================================== */
+
+    .home {
+      min-height: calc(100vh - 90px);
+
+      background:
+        linear-gradient(
+          135deg,
+          #075c3b 0%,
+          #0c6845 55%,
+          #2d7258 100%
+        );
+
+      padding: 55px 6% 70px;
+
+      color: white;
+    }
+
+    .home-box {
+      max-width: 1200px;
+
+      min-height: 620px;
+
+      margin: 0 auto;
+
+      border: 2px solid rgba(255,255,255,.75);
+
+      padding: 80px 65px;
+
+      display: flex;
+      align-items: center;
+    }
+
+    .home-content {
+      max-width: 720px;
+    }
+
+    .eyebrow {
+      margin-bottom: 25px;
+
+      color: #f2a51a;
+
+      font-size: 15px;
+      font-weight: bold;
+
+      letter-spacing: 4px;
+    }
+
+    .home h1 {
+      margin: 0;
+
+      color: white;
+
+      font-size: clamp(55px, 8vw, 105px);
+
+      line-height: .88;
+
+      font-weight: 900;
+
+      letter-spacing: -3px;
+    }
+
+    .home-description {
+      max-width: 700px;
+
+      margin: 35px 0 35px;
+
+      color: #edf4f0;
+
+      font-size: 21px;
+
+      line-height: 1.5;
+    }
+
+    .home-buttons {
+      display: flex;
+
+      gap: 12px;
+
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+
+      align-items: center;
+      justify-content: center;
+
+      min-height: 54px;
+
+      padding: 0 25px;
+
+      text-decoration: none;
+
+      font-weight: bold;
+
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #f2a51a;
+
+      color: #102d20;
+    }
+
+    .btn-secondary {
+      border: 2px solid white;
+
+      color: white;
+
+      background: transparent;
+    }
+
+    /* =====================================
+       PUBBLICITÀ
+    ===================================== */
+
+    .advertising {
+      max-width: 1000px;
+
+      height: 120px;
+
+      margin: 25px auto;
+
+      background: white;
+
+      border: 1px solid #dfe5e1;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      color: #a4ada8;
+
+      font-size: 12px;
+
+      letter-spacing: 3px;
+    }
+
+    /* =====================================
+       FOOTER
+    ===================================== */
+
+    footer {
+      background: #064c32;
+
+      color: white;
+
+      text-align: center;
+
+      padding: 45px 20px;
+    }
+
+    footer strong {
+      display: block;
+
+      margin-bottom: 12px;
+
+      font-size: 22px;
+    }
+
+    footer p {
+      margin: 0;
+
+      color: #b9cbc2;
+
+      line-height: 1.6;
+    }
+
+    /* =====================================
+       MOBILE
+    ===================================== */
+
+    @media (max-width: 750px) {
+
+      .topbar {
+        height: 78px;
+
+        padding: 0 20px;
+      }
+
+      .logo-pin {
+        width: 35px;
+        height: 44px;
+      }
+
+      .logo-text strong {
+        font-size: 23px;
+      }
+
+      .logo-text span {
+        font-size: 10px;
+      }
+
+      .home {
+        min-height: calc(100vh - 78px);
+
+        padding: 25px 15px 40px;
+      }
+
+      .home-box {
+        min-height: 650px;
+
+        padding: 55px 25px;
+
+        align-items: flex-start;
+      }
+
+      .home h1 {
+        font-size: clamp(52px, 15vw, 82px);
+
+        letter-spacing: -2px;
+      }
+
+      .home-description {
+        font-size: 18px;
+      }
+
+      .home-buttons {
+        flex-direction: column;
+
+        align-items: stretch;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .advertising {
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+    }
+  </style>
 </head>
-
 
 <body>
 
-
-  <!-- =====================================================
+  <!-- =====================================
        HEADER
-       ===================================================== -->
+  ====================================== -->
 
   <header class="topbar">
 
     <div class="logo">
 
-      <div class="logo-pin">
-
-        <svg
-          viewBox="0 0 48 55"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-
-          <path
-            d="M24 2
-               C12 2 4 11 4 22
-               C4 37 24 53 24 53
-               C24 53 44 37 44 22
-               C44 11 36 2 24 2Z"
-            fill="white"
-          />
-
-          <circle
-            cx="24"
-            cy="21"
-            r="11"
-            fill="none"
-            stroke="#075c3b"
-            stroke-width="3"
-          />
-
-          <circle
-            cx="24"
-            cy="21"
-            r="5"
-            fill="none"
-            stroke="#075c3b"
-            stroke-width="2"
-          />
-
-        </svg>
-
-      </div>
-
+      <div class="logo-pin"></div>
 
       <div class="logo-text">
 
@@ -129,17 +468,10 @@
 
     </div>
 
-
-    <!-- ===================================================
-         PULSANTE MENU
-         =================================================== -->
-
     <button
       class="menu-button"
-      id="menuButton"
       type="button"
       aria-label="Apri menu"
-      aria-expanded="false"
     >
       ☰
     </button>
@@ -147,10 +479,9 @@
   </header>
 
 
-
-  <!-- =====================================================
+  <!-- =====================================
        MENU
-       ===================================================== -->
+  ====================================== -->
 
   <nav
     class="mobile-menu"
@@ -169,7 +500,6 @@
         ×
       </button>
 
-
       <div class="mobile-menu-title">
 
         <strong>1 KM</strong>
@@ -181,85 +511,58 @@
 
       <div class="menu-links">
 
-
         <a
-          href="#home"
+          href="index.html"
           class="menu-link"
         >
-
           <strong>HOME</strong>
-
-          <span>
-            La nostra idea
-          </span>
-
+          <span>La nostra idea</span>
         </a>
 
 
         <a
-          href="#mapSection"
+          href="uscite.html"
           class="menu-link"
         >
-
           <strong>ESPLORA LE USCITE</strong>
-
-          <span>
-            Trova l'uscita più vicina
-          </span>
-
+          <span>Trova l'uscita più vicina</span>
         </a>
-        <a
-        href="parcheggi.html"
-        class="menu-link"
-      >
-        <strong>🚛 PARCHEGGI MEZZI PESANTI</strong>
-      
-        <span>
-          Trova parcheggi per camion e mezzi pesanti
-        </span>
-      </a>
+
 
         <a
-          href="#come-funziona"
+          href="come-funziona.html"
           class="menu-link"
         >
-
           <strong>COME FUNZIONA</strong>
-
-          <span>
-            Scopri come utilizzare il servizio
-          </span>
-
+          <span>Scopri come utilizzare il servizio</span>
         </a>
 
 
         <a
-          href="#distanze"
+          href="distanze.html"
           class="menu-link"
         >
-
           <strong>LE DISTANZE</strong>
-
-          <span>
-            Quanto ti allontani dall'autostrada
-          </span>
-
+          <span>Quanto ti allontani dall'autostrada</span>
         </a>
 
 
         <a
-          href="#footer"
+          href="parcheggi.html"
           class="menu-link"
         >
-
-          <strong>CONTATTI</strong>
-
-          <span>
-            1 KM E SI MANGIA
-          </span>
-
+          <strong>PARCHEGGI MEZZI PESANTI</strong>
+          <span>Trova parcheggi per camion e mezzi pesanti</span>
         </a>
 
+
+        <a
+          href="index.html#contatti"
+          class="menu-link"
+        >
+          <strong>CONTATTI</strong>
+          <span>1 KM E SI MANGIA</span>
+        </a>
 
       </div>
 
@@ -268,413 +571,97 @@
   </nav>
 
 
+  <!-- =====================================
+       HOME
+  ====================================== -->
 
-  <!-- =====================================================
-       CONTENUTO
-       ===================================================== -->
+  <main>
 
-  <main id="home">
+    <section class="home">
 
+      <div class="home-box">
 
-    <!-- ===================================================
-         HERO
-         =================================================== -->
+        <div class="home-content">
 
-    <section class="hero">
-
-      <div class="hero-content">
-
-
-        <div class="small-title">
-
-          IL TUO PROSSIMO RISTORANTE È PIÙ VICINO
-          DI QUANTO PENSI
-
-        </div>
-
-
-        <h1>
-
-          ESCI.<br>
-          MANGIA.<br>
-          RIPARTI.
-
-        </h1>
-
-
-        <div class="description">
-
-          Trova ristoranti, trattorie e pizzerie
-          a pochi minuti dall'uscita autostradale.
-
-        </div>
-
-
-        <div class="hero-buttons">
-
-
-          <button
-            class="location-button"
-            id="locationButton"
-            type="button"
-          >
-
-            📍 USA LA MIA POSIZIONE
-
-          </button>
-
-
-          <button
-            class="map-button"
-            id="mapButton"
-            type="button"
-          >
-
-            🗺️ ESPLORA LA MAPPA
-
-          </button>
-
-
-        </div>
-
-
-      </div>
-
-    </section>
-
-
-
-    <!-- ===================================================
-         SPAZIO PUBBLICITARIO
-         =================================================== -->
-
-    <section
-      class="ad-space"
-      aria-label="Spazio pubblicitario"
-    >
-
-      <div class="ad-box">
-
-        <span class="ad-label">
-          PUBBLICITÀ
-        </span>
-
-        <span class="ad-placeholder">
-          SPAZIO PUBBLICITARIO
-        </span>
-
-      </div>
-
-    </section>
-
-
-
-    <!-- ===================================================
-         MAPPA
-         =================================================== -->
-
-    <section
-      class="map-section"
-      id="mapSection"
-    >
-
-
-      <div class="map-header">
-
-
-        <div class="map-label">
-
-          1 KM E SI MANGIA
-
-        </div>
-
-
-        <h2>
-
-          ESPLORA LE USCITE
-
-        </h2>
-
-
-        <p>
-
-          Avvicinati sulla mappa per visualizzare
-          le singole uscite autostradali.
-
-        </p>
-
-
-      </div>
-
-
-      <div id="map"></div>
-
-
-      <div class="map-legend">
-
-
-        <div>
-
-          <span class="legend-dot"></span>
-
-          <span>
-            Uscita autostradale
-          </span>
-
-        </div>
-
-
-        <div>
-
-          <span class="legend-route"></span>
-
-          <span>
-            Autostrada
-          </span>
-
-        </div>
-
-
-      </div>
-
-
-    </section>
-
-
-
-    <!-- ===================================================
-         COME FUNZIONA
-         =================================================== -->
-
-    <section
-      class="how-it-works"
-      id="come-funziona"
-    >
-
-
-      <h2>
-
-        COME FUNZIONA
-
-      </h2>
-
-
-      <div class="steps">
-
-
-        <article class="step">
-
-
-          <div class="step-icon">
-            📍
+          <div class="eyebrow">
+            IL TUO PROSSIMO RISTORANTE È PIÙ VICINO DI QUANTO PENSI
           </div>
 
 
-          <h3>
+          <h1>
+            ESCI.<br>
+            MANGIA.<br>
+            RIPARTI.
+          </h1>
 
-            Trova l'uscita
 
-          </h3>
-
-
-          <p>
-
-            Individua sulla mappa l'uscita
-            autostradale più vicina al tuo percorso.
-
+          <p class="home-description">
+            Trova ristoranti, trattorie e pizzerie
+            a pochi minuti dall'uscita autostradale.
           </p>
 
 
-        </article>
+          <div class="home-buttons">
+
+            <a
+              href="uscite.html"
+              class="btn btn-primary"
+            >
+              📍 USA LA MIA POSIZIONE
+            </a>
 
 
-
-        <article class="step">
-
-
-          <div class="step-icon">
-            🍕
+            <a
+              href="uscite.html"
+              class="btn btn-secondary"
+            >
+              🗺️ ESPLORA LE USCITE
+            </a>
 
           </div>
 
-
-          <h3>
-
-            Scegli dove mangiare
-
-          </h3>
-
-
-          <p>
-
-            Scopri ristoranti, trattorie e pizzerie
-            a pochi minuti dall'autostrada.
-
-          </p>
-
-
-        </article>
-
-
-
-        <article class="step">
-
-
-          <div class="step-icon">
-            🚗
-          </div>
-
-
-          <h3>
-
-            Riparti
-
-          </h3>
-
-
-          <p>
-
-            Mangi, ti rilassi e torni rapidamente
-            sul tuo percorso.
-
-          </p>
-
-
-        </article>
-
+        </div>
 
       </div>
-
 
     </section>
 
 
+    <!-- =====================================
+         PUBBLICITÀ
+    ====================================== -->
 
-    <!-- ===================================================
-         DISTANZE
-         =================================================== -->
-
-    <section
-      class="rules"
-      id="distanze"
-    >
-
-
-      <h2>
-
-        QUANTO TI ALLONTANI?
-
-      </h2>
-
-
-      <div class="rule-list">
-
-
-        <article class="rule green">
-
-          <strong>
-            1 KM
-          </strong>
-
-          <span>
-            PRATICAMENTE SULL'USCITA
-          </span>
-
-        </article>
-
-
-
-        <article class="rule yellow">
-
-          <strong>
-            3 KM
-          </strong>
-
-          <span>
-            POCHI MINUTI DI STRADA
-          </span>
-
-        </article>
-
-
-
-        <article class="rule red">
-
-          <strong>
-            5 KM+
-          </strong>
-
-          <span>
-            VALE LA PENA?
-          </span>
-
-        </article>
-
-
-      </div>
-
-
-    </section>
-
+    <div class="advertising">
+      SPAZIO PUBBLICITARIO
+    </div>
 
   </main>
 
 
-
-  <!-- =====================================================
+  <!-- =====================================
        FOOTER
-       ===================================================== -->
+  ====================================== -->
 
-  <footer id="footer">
-
+  <footer id="contatti">
 
     <strong>
-
       1 KM E SI MANGIA
-
     </strong>
 
-
     <p>
-
-      Mangia bene.
-      Perdi poco tempo.
+      Mangia bene.<br>
+      Perdi poco tempo.<br>
       Riparti.
-
     </p>
-
 
   </footer>
 
 
+  <!-- =====================================
+       MENU JS
+  ====================================== -->
 
-  <!-- =====================================================
-       LEAFLET
-       ===================================================== -->
+  <script src="menu.js"></script>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  ></script>
-
-
-  <!-- =====================================================
-       LEAFLET MARKER CLUSTER
-       ===================================================== -->
-
-  <script
-    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
-  ></script>
-
-
-  <!-- =====================================================
-       JAVASCRIPT DEL PROGETTO
-       ===================================================== -->
-
-<script src="script.js"></script>
-
-<script src="navigazione.js"></script>
-
-<script src="collega_navigazione.js"></script>
 </body>
-
 </html>
