@@ -549,304 +549,277 @@ if (mapButton) {
 // GEOLOCALIZZAZIONE
 // =====================================================
 
-// =====================================================
-// GEOLOCALIZZAZIONE
-// =====================================================
-
 const locationButton =
-  document.getElementById("locationButton");
+  document.getElementById(
+    "locationButton"
+  );
 
 let userMarker = null;
-
+let userAccuracyCircle = null;
 
 if (locationButton) {
 
   locationButton.addEventListener(
     "click",
-    function(event) {
+    function() {
 
-      event.preventDefault();
-
-      console.log("GPS: pulsante premuto");
-
-
-      if (!navigator.geolocation) {
+      if (!window.isSecureContext) {
 
         alert(
-          "La geolocalizzazione non è disponibile su questo dispositivo."
+          "La posizione può essere usata solo tramite HTTPS. " +
+          "Apri il sito dalla versione Vercel."
         );
 
         return;
 
       }
 
+      if (!navigator.geolocation) {
+
+        alert(
+          "La geolocalizzazione non è disponibile " +
+          "su questo dispositivo/browser."
+        );
+
+        return;
+
+      }
 
       locationButton.disabled = true;
-
       locationButton.textContent =
         "📍 RICERCA POSIZIONE...";
 
+      function posizioneTrovata(position) {
 
-      navigator.geolocation.getCurrentPosition(
+        const lat =
+          position.coords.latitude;
 
-        function(position) {
+        const lng =
+          position.coords.longitude;
 
-          const lat =
-            position.coords.latitude;
+        const accuracy =
+          Number(position.coords.accuracy) || 100;
 
-          const lng =
-            position.coords.longitude;
+        console.log(
+          "POSIZIONE GPS:",
+          lat,
+          lng,
+          "precisione:",
+          accuracy,
+          "metri"
+        );
 
+        // ---------------------------------------
+        // RIMUOVI VECCHIA POSIZIONE
+        // ---------------------------------------
 
-          console.log(
-            "GPS TROVATO:",
-            lat,
-            lng,
-            "precisione:",
-            position.coords.accuracy,
-            "metri"
+        if (userMarker) {
+
+          map.removeLayer(
+            userMarker
           );
-
-
-          // =========================================
-          // SALVA LA POSIZIONE
-          // =========================================
-
-          try {
-
-            sessionStorage.setItem(
-              "userLatitude",
-              String(lat)
-            );
-
-            sessionStorage.setItem(
-              "userLongitude",
-              String(lng)
-            );
-
-          } catch (e) {
-
-            console.warn(
-              "GPS: impossibile salvare sessionStorage",
-              e
-            );
-
-          }
-
-
-          // =========================================
-          // RIMUOVI EVENTUALE VECCHIO MARKER
-          // =========================================
-
-          if (userMarker) {
-
-            try {
-
-              map.removeLayer(
-                userMarker
-              );
-
-            } catch (e) {
-
-              console.warn(
-                "GPS: errore rimozione vecchio marker",
-                e
-              );
-
-            }
-
-          }
-
-
-          // =========================================
-          // SCORRI ALLA MAPPA PRIMA DELLO ZOOM
-          // =========================================
-
-          if (mapSection) {
-
-            mapSection.scrollIntoView({
-              behavior: "smooth",
-              block: "center"
-            });
-
-          }
-
-
-          // =========================================
-          // AGGIORNA DIMENSIONI LEAFLET
-          // =========================================
-
-          setTimeout(
-            function() {
-
-              try {
-
-                map.invalidateSize(
-                  true
-                );
-
-              } catch (e) {
-
-                console.warn(
-                  "GPS: invalidateSize fallito",
-                  e
-                );
-
-              }
-
-
-              // =====================================
-              // CREA PIN "SEI QUI"
-              // =====================================
-
-              userMarker =
-                L.circleMarker(
-
-                  [
-                    lat,
-                    lng
-                  ],
-
-                  {
-
-                    radius: 10,
-
-                    color: "#ffffff",
-
-                    weight: 4,
-
-                    fillColor: "#075c3b",
-
-                    fillOpacity: 1
-
-                  }
-
-                );
-
-
-              userMarker.addTo(
-                map
-              );
-
-
-              userMarker
-                .bindPopup(
-                  "<strong>📍 Sei qui</strong>"
-                )
-                .openPopup();
-
-
-              // =====================================
-              // CENTRA LA MAPPA SULL'UTENTE
-              // =====================================
-
-              map.setView(
-
-                [
-                  lat,
-                  lng
-                ],
-
-                15,
-
-                {
-                  animate: true
-                }
-
-              );
-
-
-              // =====================================
-              // AGGIORNA PULSANTE
-              // =====================================
-
-              locationButton.textContent =
-                "📍 POSIZIONE TROVATA";
-
-              locationButton.disabled =
-                false;
-
-
-              console.log(
-                "GPS: pin creato e mappa centrata"
-              );
-
-
-            },
-            700
-          );
-
-        },
-
-
-        function(error) {
-
-          console.error(
-            "GPS ERRORE:",
-            error.code,
-            error.message
-          );
-
-
-          let messaggio =
-            "Non siamo riusciti ad ottenere la tua posizione.";
-
-
-          if (error.code === 1) {
-
-            messaggio =
-              "Permesso posizione negato. " +
-              "Consenti l'accesso alla posizione per questo sito.";
-
-          }
-
-
-          if (error.code === 2) {
-
-            messaggio =
-              "Posizione non disponibile. " +
-              "Riprova tra qualche secondo.";
-
-          }
-
-
-          if (error.code === 3) {
-
-            messaggio =
-              "La ricerca della posizione ha impiegato troppo tempo. " +
-              "Riprova.";
-
-          }
-
-
-          alert(
-            messaggio
-          );
-
-
-          locationButton.textContent =
-            "📍 USA LA MIA POSIZIONE";
-
-          locationButton.disabled =
-            false;
-
-        },
-
-
-        {
-
-          enableHighAccuracy: true,
-
-          timeout: 20000,
-
-          maximumAge: 0
 
         }
 
+        if (userAccuracyCircle) {
+
+          map.removeLayer(
+            userAccuracyCircle
+          );
+
+        }
+
+        // ---------------------------------------
+        // PIN "TU SEI QUI"
+        // ---------------------------------------
+
+        const userIcon =
+          L.divIcon({
+            className:
+              "user-location-pin",
+            html: `
+              <div
+                style="
+                  width:34px;
+                  height:34px;
+                  border-radius:50% 50% 50% 0;
+                  background:#075c3b;
+                  border:4px solid #fff;
+                  box-shadow:0 2px 10px rgba(0,0,0,.35);
+                  transform:rotate(-45deg);
+                  position:relative;
+                "
+              >
+                <div
+                  style="
+                    position:absolute;
+                    width:10px;
+                    height:10px;
+                    border-radius:50%;
+                    background:#fff;
+                    top:8px;
+                    left:8px;
+                  "
+                ></div>
+              </div>
+            `,
+            iconSize: [42, 42],
+            iconAnchor: [21, 42],
+            popupAnchor: [0, -38]
+          });
+
+        userMarker =
+          L.marker(
+            [lat, lng],
+            {
+              icon: userIcon,
+              zIndexOffset: 10000
+            }
+          ).addTo(map);
+
+        // ---------------------------------------
+        // CERCHIO DI PRECISIONE GPS
+        // ---------------------------------------
+
+        userAccuracyCircle =
+          L.circle(
+            [lat, lng],
+            {
+              radius: accuracy,
+              color: "#075c3b",
+              weight: 2,
+              fillColor: "#075c3b",
+              fillOpacity: 0.12
+            }
+          ).addTo(map);
+
+        userMarker
+          .bindPopup(
+            "<strong>📍 TU SEI QUI</strong><br>" +
+            "Precisione GPS circa " +
+            Math.round(accuracy) +
+            " m"
+          )
+          .openPopup();
+
+        // ---------------------------------------
+        // PORTA LA MAPPA SULL'UTENTE
+        // ---------------------------------------
+
+        if (mapSection) {
+
+          mapSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        }
+
+        // Dopo lo scroll Leaflet deve ricalcolare
+        // le dimensioni del contenitore.
+        setTimeout(
+          function() {
+
+            map.invalidateSize();
+
+            map.setView(
+              [lat, lng],
+              Math.max(
+                14,
+                Math.min(
+                  17,
+                  Math.round(
+                    17 -
+                    Math.log2(
+                      Math.max(
+                        1,
+                        accuracy / 50
+                      )
+                    )
+                  )
+                )
+              ),
+              {
+                animate: true
+              }
+            );
+
+          },
+          450
+        );
+
+        locationButton.disabled = false;
+
+        locationButton.textContent =
+          "📍 POSIZIONE TROVATA";
+
+      }
+
+      function errorePosizione(error) {
+
+        console.error(
+          "ERRORE GPS:",
+          error.code,
+          error.message
+        );
+
+        let messaggio =
+          "Non siamo riusciti a ottenere la tua posizione.";
+
+        if (error.code === 1) {
+
+          messaggio =
+            "Permesso di posizione negato. " +
+            "Consenti la posizione al browser e riprova.";
+
+        } else if (error.code === 2) {
+
+          messaggio =
+            "Posizione non disponibile. " +
+            "Controlla GPS e connessione e riprova.";
+
+        } else if (error.code === 3) {
+
+          messaggio =
+            "La ricerca della posizione ha impiegato troppo tempo. " +
+            "Riprova tra qualche secondo.";
+
+        }
+
+        alert(messaggio);
+
+        locationButton.disabled = false;
+
+        locationButton.textContent =
+          "📍 USA LA MIA POSIZIONE";
+
+      }
+
+      // Primo tentativo: rapido e compatibile.
+      navigator.geolocation.getCurrentPosition(
+        posizioneTrovata,
+        function() {
+
+          // Secondo tentativo: GPS più preciso.
+          navigator.geolocation.getCurrentPosition(
+            posizioneTrovata,
+            errorePosizione,
+            {
+              enableHighAccuracy: true,
+              timeout: 20000,
+              maximumAge: 0
+            }
+          );
+
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 60000
+        }
       );
 
     }
-
   );
 
 }
