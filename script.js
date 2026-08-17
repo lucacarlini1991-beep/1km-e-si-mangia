@@ -546,206 +546,289 @@ if (mapButton) {
 
 
 // =====================================================
-// GEOLOCALIZZAZIONE - VERSIONE ROBUSTA
+// GEOLOCALIZZAZIONE
 // =====================================================
 
 const locationButton =
-  document.getElementById("locationButton");
+  document.getElementById(
+    "locationButton"
+  );
 
 let userMarker = null;
 let userAccuracyCircle = null;
-let locationSearching = false;
 
 if (locationButton) {
 
-  locationButton.addEventListener("click", function () {
+  locationButton.addEventListener(
+    "click",
+    function() {
 
-    if (locationSearching) return;
+      if (!window.isSecureContext) {
 
-    // La Geolocation API richiede normalmente HTTPS (Vercel lo fornisce).
-    if (!window.isSecureContext) {
-      alert(
-        "La geolocalizzazione funziona solo su una connessione sicura (HTTPS). " +
-        "Apri il sito tramite il suo indirizzo HTTPS."
-      );
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      alert("La geolocalizzazione non è disponibile in questo browser.");
-      return;
-    }
-
-    locationSearching = true;
-    locationButton.disabled = true;
-    locationButton.textContent = "📍 RICERCA POSIZIONE...";
-
-    function posizioneTrovata(position) {
-
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      const accuracy = Number.isFinite(position.coords.accuracy)
-        ? position.coords.accuracy
-        : 0;
-
-      console.log("📍 POSIZIONE TROVATA");
-      console.log("Latitudine:", lat);
-      console.log("Longitudine:", lng);
-      console.log("Precisione:", accuracy, "metri");
-
-      // Rimuove marker e cerchio precedenti
-      if (userMarker) {
-        map.removeLayer(userMarker);
-      }
-
-      if (userAccuracyCircle) {
-        map.removeLayer(userAccuracyCircle);
-      }
-
-      // Cerchio della precisione GPS
-      userAccuracyCircle = L.circle([lat, lng], {
-        radius: Math.max(accuracy, 10),
-        color: "#075c3b",
-        weight: 2,
-        fillColor: "#075c3b",
-        fillOpacity: 0.12
-      }).addTo(map);
-
-      // Punto della posizione dell'utente
-      userMarker = L.circleMarker([lat, lng], {
-        radius: 9,
-        color: "#ffffff",
-        weight: 4,
-        fillColor: "#075c3b",
-        fillOpacity: 1
-      }).addTo(map);
-
-      userMarker
-        .bindPopup(
-          "📍 <strong>Sei qui</strong><br>Precisione circa " +
-          Math.round(accuracy) + " m"
-        )
-        .openPopup();
-
-      // Zoom proporzionato alla precisione reale
-      let zoom = 13;
-      if (accuracy <= 100) zoom = 16;
-      else if (accuracy <= 300) zoom = 15;
-      else if (accuracy <= 1000) zoom = 14;
-
-      map.flyTo([lat, lng], zoom, {
-        duration: 1.5
-      });
-
-      if (mapSection) {
-        mapSection.scrollIntoView({
-          behavior: "smooth"
-        });
-      }
-
-      locationButton.textContent = "📍 POSIZIONE TROVATA";
-      locationButton.disabled = false;
-      locationSearching = false;
-    }
-
-    function erroreGPS(error) {
-
-      console.error("Errore GPS:", error);
-
-      let messaggio = "Non siamo riusciti ad ottenere la tua posizione.";
-
-      switch (error.code) {
-        case 1:
-          messaggio =
-            "Permesso di geolocalizzazione negato. " +
-            "Consenti la posizione nelle autorizzazioni del browser e riprova.";
-          break;
-        case 2:
-          messaggio =
-            "La posizione non è momentaneamente disponibile. " +
-            "Provo nuovamente con una ricerca GPS più precisa...";
-          break;
-        case 3:
-          messaggio =
-            "La ricerca della posizione ha impiegato troppo tempo. " +
-            "Provo nuovamente con una ricerca GPS più precisa...";
-          break;
-      }
-
-      // Primo tentativo: posizione browser/rete, generalmente più veloce su PC.
-      // Se fallisce per posizione non disponibile o timeout, facciamo un secondo
-      // tentativo con GPS ad alta precisione.
-      if ((error.code === 2 || error.code === 3) && !window._gpsRetry) {
-        window._gpsRetry = true;
-
-        locationButton.textContent = "📍 RICERCA GPS PRECISA...";
-
-        navigator.geolocation.getCurrentPosition(
-          posizioneTrovata,
-          function (secondError) {
-            window._gpsRetry = false;
-            console.error("Secondo tentativo GPS fallito:", secondError);
-
-            let finale =
-              "Impossibile ottenere la tua posizione.\n\n";
-
-            if (secondError.code === 1) {
-              finale +=
-                "Il browser ha negato il permesso alla posizione. " +
-                "Controlla le autorizzazioni del sito.";
-            } else if (secondError.code === 2) {
-              finale +=
-                "Il dispositivo non sta fornendo una posizione valida. " +
-                "Verifica che la posizione/GPS sia attiva.";
-            } else if (secondError.code === 3) {
-              finale +=
-                "La ricerca è scaduta. Riprova tra qualche secondo.";
-            } else {
-              finale += "Errore GPS sconosciuto.";
-            }
-
-            alert(finale);
-            locationButton.textContent = "📍 USA LA MIA POSIZIONE";
-            locationButton.disabled = false;
-            locationSearching = false;
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 20000,
-            maximumAge: 0
-          }
+        alert(
+          "La posizione può essere usata solo tramite HTTPS. " +
+          "Apri il sito dalla versione Vercel."
         );
 
         return;
+
       }
 
-      window._gpsRetry = false;
-      alert(messaggio);
-      locationButton.textContent = "📍 USA LA MIA POSIZIONE";
-      locationButton.disabled = false;
-      locationSearching = false;
+      if (!navigator.geolocation) {
+
+        alert(
+          "La geolocalizzazione non è disponibile " +
+          "su questo dispositivo/browser."
+        );
+
+        return;
+
+      }
+
+      locationButton.disabled = true;
+      locationButton.textContent =
+        "📍 RICERCA POSIZIONE...";
+
+      function posizioneTrovata(position) {
+
+        const lat =
+          position.coords.latitude;
+
+        const lng =
+          position.coords.longitude;
+
+        const accuracy =
+          Number(position.coords.accuracy) || 100;
+
+        console.log(
+          "POSIZIONE GPS:",
+          lat,
+          lng,
+          "precisione:",
+          accuracy,
+          "metri"
+        );
+
+        // ---------------------------------------
+        // RIMUOVI VECCHIA POSIZIONE
+        // ---------------------------------------
+
+        if (userMarker) {
+
+          map.removeLayer(
+            userMarker
+          );
+
+        }
+
+        if (userAccuracyCircle) {
+
+          map.removeLayer(
+            userAccuracyCircle
+          );
+
+        }
+
+        // ---------------------------------------
+        // PIN "TU SEI QUI"
+        // ---------------------------------------
+
+        const userIcon =
+          L.divIcon({
+            className:
+              "user-location-pin",
+            html: `
+              <div
+                style="
+                  width:34px;
+                  height:34px;
+                  border-radius:50% 50% 50% 0;
+                  background:#075c3b;
+                  border:4px solid #fff;
+                  box-shadow:0 2px 10px rgba(0,0,0,.35);
+                  transform:rotate(-45deg);
+                  position:relative;
+                "
+              >
+                <div
+                  style="
+                    position:absolute;
+                    width:10px;
+                    height:10px;
+                    border-radius:50%;
+                    background:#fff;
+                    top:8px;
+                    left:8px;
+                  "
+                ></div>
+              </div>
+            `,
+            iconSize: [42, 42],
+            iconAnchor: [21, 42],
+            popupAnchor: [0, -38]
+          });
+
+        userMarker =
+          L.marker(
+            [lat, lng],
+            {
+              icon: userIcon,
+              zIndexOffset: 10000
+            }
+          ).addTo(map);
+
+        // ---------------------------------------
+        // CERCHIO DI PRECISIONE GPS
+        // ---------------------------------------
+
+        userAccuracyCircle =
+          L.circle(
+            [lat, lng],
+            {
+              radius: accuracy,
+              color: "#075c3b",
+              weight: 2,
+              fillColor: "#075c3b",
+              fillOpacity: 0.12
+            }
+          ).addTo(map);
+
+        userMarker
+          .bindPopup(
+            "<strong>📍 TU SEI QUI</strong><br>" +
+            "Precisione GPS circa " +
+            Math.round(accuracy) +
+            " m"
+          )
+          .openPopup();
+
+        // ---------------------------------------
+        // PORTA LA MAPPA SULL'UTENTE
+        // ---------------------------------------
+
+        if (mapSection) {
+
+          mapSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        }
+
+        // Dopo lo scroll Leaflet deve ricalcolare
+        // le dimensioni del contenitore.
+        setTimeout(
+          function() {
+
+            map.invalidateSize();
+
+            map.setView(
+              [lat, lng],
+              Math.max(
+                14,
+                Math.min(
+                  17,
+                  Math.round(
+                    17 -
+                    Math.log2(
+                      Math.max(
+                        1,
+                        accuracy / 50
+                      )
+                    )
+                  )
+                )
+              ),
+              {
+                animate: true
+              }
+            );
+
+          },
+          450
+        );
+
+        locationButton.disabled = false;
+
+        locationButton.textContent =
+          "📍 POSIZIONE TROVATA";
+
+      }
+
+      function errorePosizione(error) {
+
+        console.error(
+          "ERRORE GPS:",
+          error.code,
+          error.message
+        );
+
+        let messaggio =
+          "Non siamo riusciti a ottenere la tua posizione.";
+
+        if (error.code === 1) {
+
+          messaggio =
+            "Permesso di posizione negato. " +
+            "Consenti la posizione al browser e riprova.";
+
+        } else if (error.code === 2) {
+
+          messaggio =
+            "Posizione non disponibile. " +
+            "Controlla GPS e connessione e riprova.";
+
+        } else if (error.code === 3) {
+
+          messaggio =
+            "La ricerca della posizione ha impiegato troppo tempo. " +
+            "Riprova tra qualche secondo.";
+
+        }
+
+        alert(messaggio);
+
+        locationButton.disabled = false;
+
+        locationButton.textContent =
+          "📍 USA LA MIA POSIZIONE";
+
+      }
+
+      // Primo tentativo: rapido e compatibile.
+      navigator.geolocation.getCurrentPosition(
+        posizioneTrovata,
+        function() {
+
+          // Secondo tentativo: GPS più preciso.
+          navigator.geolocation.getCurrentPosition(
+            posizioneTrovata,
+            errorePosizione,
+            {
+              enableHighAccuracy: true,
+              timeout: 20000,
+              maximumAge: 0
+            }
+          );
+
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 60000
+        }
+      );
+
     }
+  );
 
-    // Primo tentativo: più compatibile e rapido su PC/Chromebook.
-    window._gpsRetry = false;
-
-    navigator.geolocation.getCurrentPosition(
-      posizioneTrovata,
-      erroreGPS,
-      {
-        enableHighAccuracy: false,
-        timeout: 15000,
-        maximumAge: 120000
-      }
-    );
-
-  });
 }
 
 
 // =====================================================
 // MENU PRINCIPALE - GESTIONE UNIFICATA
 // =====================================================
+
 
 (function () {
 
