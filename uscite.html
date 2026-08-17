@@ -432,6 +432,96 @@
 
   <script src="script.js"></script>
 
+  <!-- =====================================================
+       POSIZIONE ARRIVATA DALLA HOME
+       ===================================================== -->
+  <script>
+    (function () {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const lat = Number(params.get("lat"));
+        const lng = Number(params.get("lng"));
+        const accuracy = Number(params.get("accuracy")) || 100;
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+        function mostraPosizione() {
+          if (
+            typeof L === "undefined" ||
+            typeof map === "undefined"
+          ) {
+            setTimeout(mostraPosizione, 100);
+            return;
+          }
+
+          if (window.__1kmHomeUserMarker) {
+            map.removeLayer(window.__1kmHomeUserMarker);
+          }
+
+          if (window.__1kmHomeAccuracyCircle) {
+            map.removeLayer(window.__1kmHomeAccuracyCircle);
+          }
+
+          window.__1kmHomeAccuracyCircle = L.circle(
+            [lat, lng],
+            {
+              radius: accuracy,
+              color: "#075c3b",
+              weight: 2,
+              fillColor: "#075c3b",
+              fillOpacity: 0.12
+            }
+          ).addTo(map);
+
+          window.__1kmHomeUserMarker = L.circleMarker(
+            [lat, lng],
+            {
+              radius: 10,
+              color: "#ffffff",
+              weight: 4,
+              fillColor: "#075c3b",
+              fillOpacity: 1,
+              zIndexOffset: 10000
+            }
+          ).addTo(map);
+
+          window.__1kmHomeUserMarker
+            .bindPopup(
+              "<strong>📍 TU SEI QUI</strong><br>" +
+              "Precisione GPS circa " +
+              Math.round(accuracy) +
+              " m"
+            )
+            .openPopup();
+
+          map.invalidateSize();
+
+          map.flyTo(
+            [lat, lng],
+            15,
+            { duration: 1.5 }
+          );
+
+          console.log(
+            "GPS HOME VISUALIZZATO:",
+            lat,
+            lng,
+            accuracy
+          );
+        }
+
+        // Esegui dopo il caricamento di script.js.
+        setTimeout(mostraPosizione, 300);
+      } catch (error) {
+        console.error(
+          "Errore visualizzazione GPS Home:",
+          error
+        );
+      }
+    })();
+  </script>
+
+
   <script src="navigazione.js"></script>
 
   <script src="collega_navigazione.js"></script>

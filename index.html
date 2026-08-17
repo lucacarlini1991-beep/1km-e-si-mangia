@@ -701,7 +701,15 @@
                 JSON.stringify(data)
               );
 
-              window.location.href = "uscite.html?posizione=1";
+              const params = new URLSearchParams({
+              posizione: "1",
+              lat: String(data.lat),
+              lng: String(data.lng),
+              accuracy: String(data.accuracy || 0)
+            });
+
+            window.location.href =
+              "uscite.html?" + params.toString();
             } catch (error) {
               console.error("Errore salvataggio posizione:", error);
               button.disabled = false;
