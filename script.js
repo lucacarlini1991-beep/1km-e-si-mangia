@@ -236,7 +236,7 @@ function mostraTuttiRistoranti(uscita) {
               ${ristorante.cucina ? `<div style="font-size:12px;color:#555;margin-top:3px">🍽️ ${escapeHtml(ristorante.cucina)}</div>` : ""}
             </div>
             ${typeof ristorante.lat === "number" && typeof ristorante.lon === "number"
-              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" style="vertical-align:-4px;margin-right:5px"><path d="M9 3 6 29M23 3l3 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 4v5M16 13v5M16 22v6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 4"/></svg> MAPPA</button>`
+              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" style="vertical-align:-4px;margin-right:5px"><path d="M9 3 6 29M23 3l3 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 4v5M16 13v5M16 22v6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 4"/></svg> NAVIGA</button>`
               : ""}
           </div>
           <div style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px">
@@ -276,6 +276,17 @@ function mostraTuttiRistoranti(uscita) {
       if (!ristorante) return;
 
       chiudiPannelloRistoranti();
+
+      // Il pulsante della scheda ristorante porta direttamente
+      // alla scelta dell'app di navigazione.
+      // navigazione.js espone apriNavigazione().
+      if (typeof window.apriNavigazione === "function") {
+        window.apriNavigazione(ristorante);
+        return;
+      }
+
+      // Fallback: se navigazione.js non fosse ancora disponibile,
+      // manteniamo comunque il comportamento precedente.
       map.setView([ristorante.lat, ristorante.lon], 17, { animate: true });
 
       ristorantiLayer.eachLayer(function(layer) {
