@@ -1,1285 +1,441 @@
-// =====================================================
-// 1 KM E SI MANGIA
-// SCRIPT PRINCIPALE
-// =====================================================
-
-
-// =====================================================
-// CONFIGURAZIONE
-// =====================================================
-
-const CONFIG = {
-
-  distanzaMassimaRistoranteKm: 2,
-
-  tolleranzaDistanzaMetri: 100,
-
-  get distanzaMassimaEffettivaMetri() {
-
-    return (
-      this.distanzaMassimaRistoranteKm * 1000 +
-      this.tolleranzaDistanzaMetri
-    );
-
-  }
-
-};
-
-
-// =====================================================
-// MAPPA
-// =====================================================
-
-const map = L.map("map", {
-
-  center: [42.5, 12.5],
-
-  zoom: 6,
-
-  scrollWheelZoom: true
-
-});
-
-
-// =====================================================
-// OPENSTREETMAP
-// =====================================================
-
-L.tileLayer(
-
-  "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-
-  {
-
-    maxZoom: 19,
-
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-
-  }
-
-).addTo(map);
-
-
-// =====================================================
-// GRUPPO USCITE
-// =====================================================
-
-const clusterUscite = L.markerClusterGroup({
-
-  showCoverageOnHover: false,
-
-  spiderfyOnMaxZoom: true,
-
-  zoomToBoundsOnClick: true,
-
-  removeOutsideVisibleBounds: true,
-
-  maxClusterRadius: 55
-
-});
-
-map.addLayer(clusterUscite);
-
-
-// =====================================================
-// ICONA USCITA
-// =====================================================
-
-const exitIcon = L.divIcon({
-
-  className: "",
-
-  html:
-    '<div class="custom-marker"></div>',
-
-  iconSize: [36, 36],
-
-  iconAnchor: [18, 18],
-
-  popupAnchor: [0, -18]
-
-});
-
-
-// =====================================================
-// DATABASE
-// =====================================================
-
-let usciteItaliane = [];
-
-
-// =====================================================
-// DATABASE RISTORANTI
-// =====================================================
-
-let ristorantiDatabase = [];
-
-const ristorantiLayer = L.layerGroup().addTo(map);
-const ristorantiPerUscitaMap = new Map();
-
-const restaurantIcon = L.divIcon({
-  className: "restaurant-map-icon",
-  html:
-    '<div style="width:34px;height:34px;border-radius:50%;background:#ffffff;border:3px solid #075c3b;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35);">🍴</div>',
-  iconSize: [34, 34],
-  iconAnchor: [17, 17],
-  popupAnchor: [0, -17]
-});
-
-function escapeHtml(value) {
-  return String(value == null ? "" : value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function ristorantiPerUscita(uscita) {
-  if (!uscita || !uscita.id) return [];
-  return ristorantiPerUscitaMap.get(String(uscita.id)) || [];
-}
-
-function creaPopupRistorante(ristorante) {
-  const nome = escapeHtml(ristorante.nome || "Ristorante");
-  const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
-    ? `<small>📍 ${Math.round(Number(ristorante.uscita.distanza_m))} m dall'uscita</small>`
-    : "";
-  const parcheggio = ristorante.parcheggio?.presente === true
-    ? `<small>🅿️ Parcheggio ${ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente"}</small>`
-    : `<small>🅿️ Parcheggio da verificare</small>`;
-
-  return `
-    <div style="min-width:190px;line-height:1.4">
-      <strong>${nome}</strong>
-      ${ristorante.cucina ? `<small>🍽️ ${escapeHtml(ristorante.cucina)}</small>` : ""}
-      ${distanza}
-      ${parcheggio}
-      ${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}
-    </div>
-  `;
-}
-
-function creaMarkerRistorante(ristorante) {
-  if (typeof ristorante.lat !== "number" || typeof ristorante.lon !== "number") {
-    return null;
-  }
-
-  const marker = L.marker([ristorante.lat, ristorante.lon], {
-    icon: restaurantIcon
-  });
-
-  marker.bindPopup(creaPopupRistorante(ristorante));
-  return marker;
-}
-
-function chiudiPannelloRistoranti() {
-  const panel = document.getElementById("ristorantiMapPanel");
-  if (panel) panel.remove();
-}
-
-function mostraTuttiRistoranti(uscita) {
-  if (!uscita) return;
-
-  const ristoranti = ristorantiPerUscita(uscita);
-  ristorantiLayer.clearLayers();
-  chiudiPannelloRistoranti();
-
-  const bounds = L.latLngBounds([[uscita.lat, uscita.lon]]);
-  let markerCount = 0;
-
-  ristoranti.forEach(function(ristorante) {
-    const marker = creaMarkerRistorante(ristorante);
-    if (!marker) return;
-
-    marker.addTo(ristorantiLayer);
-    bounds.extend([ristorante.lat, ristorante.lon]);
-    markerCount++;
-  });
-
-  if (bounds.isValid()) {
-    map.fitBounds(bounds, {
-      padding: [45, 45],
-      maxZoom: 15
-    });
-  }
-
-  const panel = document.createElement("div");
-  panel.id = "ristorantiMapPanel";
-  panel.style.cssText =
-    "position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:80vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:18px;font-family:system-ui,sans-serif;";
-
-  if (!ristoranti.length) {
-    panel.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong style="font-size:20px">Nessun ristorante</strong>
-        <button id="chiudiRistorantiMap" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer">×</button>
-      </div>
-      <p>Non risultano ristoranti associati a questa uscita nel database.</p>
-    `;
-  } else {
-    const cards = ristoranti.map(function(ristorante, index) {
-      const nome = escapeHtml(ristorante.nome || "Ristorante");
-      const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
-        ? Math.round(Number(ristorante.uscita.distanza_m)) + " m dall'uscita"
-        : "";
-      const parcheggio = ristorante.parcheggio?.presente === true
-        ? "🅿️ Parcheggio " + (ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente")
-        : "🅿️ Parcheggio da verificare";
-
-      return `
-        <div style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px">
-          <div style="display:flex;justify-content:space-between;gap:10px">
-            <div>
-              <strong>${index + 1}. ${nome}</strong>
-              ${ristorante.cucina ? `<div style="font-size:12px;color:#555;margin-top:3px">🍽️ ${escapeHtml(ristorante.cucina)}</div>` : ""}
-            </div>
-            ${typeof ristorante.lat === "number" && typeof ristorante.lon === "number"
-              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer">📍 MAPPA</button>`
-              : ""}
-          </div>
-          <div style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px">
-            ${distanza ? `<span>📍 ${distanza}</span>` : ""}
-            <span>${parcheggio}</span>
-            ${ristorante.telefono ? `<span>📞 ${escapeHtml(ristorante.telefono)}</span>` : ""}
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    panel.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px">
-        <div>
-          <strong style="font-size:20px">🍴 Ristoranti</strong>
-          <div style="font-size:13px;color:#555">${escapeHtml(uscita.nome || "Uscita autostradale")} · ${ristoranti.length} trovati</div>
-        </div>
-        <button id="chiudiRistorantiMap" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer">×</button>
-      </div>
-      ${cards}
-      <button id="chiudiRistorantiMapBottom" type="button" style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:700;cursor:pointer">CHIUDI</button>
-    `;
-  }
-
-  document.body.appendChild(panel);
-
-  const closeTop = panel.querySelector("#chiudiRistorantiMap");
-  if (closeTop) closeTop.addEventListener("click", chiudiPannelloRistoranti);
-
-  const closeBottom = panel.querySelector("#chiudiRistorantiMapBottom");
-  if (closeBottom) closeBottom.addEventListener("click", chiudiPannelloRistoranti);
-
-  panel.querySelectorAll("[data-ristorante-index]").forEach(function(button) {
-    button.addEventListener("click", function() {
-      const index = Number(button.getAttribute("data-ristorante-index"));
-      const ristorante = ristoranti[index];
-      if (!ristorante) return;
-
-      chiudiPannelloRistoranti();
-      map.setView([ristorante.lat, ristorante.lon], 17, { animate: true });
-
-      ristorantiLayer.eachLayer(function(layer) {
-        if (
-          layer.getLatLng &&
-          Math.abs(layer.getLatLng().lat - ristorante.lat) < 0.000001 &&
-          Math.abs(layer.getLatLng().lng - ristorante.lon) < 0.000001
-        ) {
-          layer.openPopup();
-        }
-      });
-    });
-  });
-
-  console.log("Ristoranti mostrati:", ristoranti.length, "Marker:", markerCount, "Uscita:", uscita.nome);
-}
-
-window.mostraTuttiRistoranti = mostraTuttiRistoranti;
-
-// Carica e indicizza il database ristoranti per ID uscita.
-fetch("./ristoranti.json")
-  .then(function(response) {
-    if (!response.ok) throw new Error("Impossibile caricare ristoranti.json");
-    return response.json();
-  })
-  .then(function(database) {
-    if (!Array.isArray(database)) {
-      throw new Error("ristoranti.json non contiene un array");
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Esplora le uscite | 1 KM E SI MANGIA</title>
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+  <style>
+    /* === LOGO ORIGINALE 1 KM E SI MANGIA === */
+    .logo-link{
+      display:flex !important;
+      align-items:center !important;
+      text-decoration:none !important;
+      line-height:0 !important;
     }
 
-    ristorantiDatabase = database;
-    ristorantiPerUscitaMap.clear();
+    .site-logo{
+      width:108px !important;
+      height:72px !important;
+      object-fit:contain !important;
+      display:block !important;
+    }
 
-    ristorantiDatabase.forEach(function(ristorante) {
-      const id = ristorante?.uscita?.id;
-      if (!id) return;
+    .mobile-menu-logo{
+      display:block !important;
+      width:150px !important;
+      height:auto !important;
+      margin:10px 0 0 !important;
+    }
 
-      const chiave = String(id);
-      if (!ristorantiPerUscitaMap.has(chiave)) {
-        ristorantiPerUscitaMap.set(chiave, []);
+    @media (max-width:750px){
+      .site-logo{
+        width:82px !important;
+        height:58px !important;
       }
 
-      // Manteniamo solo il raggio configurato: 2 km + 100 m.
-      const distanza = Number(ristorante?.uscita?.distanza_m);
-      if (!Number.isFinite(distanza) || distanza <= CONFIG.distanzaMassimaEffettivaMetri) {
-        ristorantiPerUscitaMap.get(chiave).push(ristorante);
+      .mobile-menu-logo{
+        width:135px !important;
       }
-    });
-
-    console.log("DATABASE RISTORANTI - caricati:", ristorantiDatabase.length);
-    console.log("Uscite con ristoranti:", ristorantiPerUscitaMap.size);
-  })
-  .catch(function(error) {
-    console.error("Errore database ristoranti:", error);
-  });
-
-// Pulsante presente nel popup dell'uscita.
-document.addEventListener("click", function(event) {
-  const button = event.target.closest("[data-ristoranti-uscita]");
-  if (!button) return;
-
-  event.preventDefault();
-  event.stopPropagation();
-
-  const id = button.getAttribute("data-ristoranti-uscita");
-  const uscita = usciteItaliane.find(function(item) {
-    return String(item.id || "") === String(id);
-  });
-
-  if (!uscita) {
-    console.error("Uscita non trovata:", id);
-    return;
-  }
-
-  mostraTuttiRistoranti(uscita);
-}, true);
-
-
-// =====================================================
-// CONTROLLA SE E' AREA DI SERVIZIO / AUTOGRILL
-// =====================================================
-
-function eAreaDiServizio(uscita) {
-
-  if (!uscita) {
-
-    return true;
-
-  }
-
-
-  // ---------------------------------------------
-  // CONTROLLO CAMPO TIPO
-  // ---------------------------------------------
-
-  const tipo = String(
-    uscita.tipo || ""
-  ).toLowerCase();
-
-
-  if (
-
-    tipo.includes("servizio") ||
-
-    tipo.includes("autogrill") ||
-
-    tipo.includes("ristoro") ||
-
-    tipo.includes("sosta") ||
-
-    tipo.includes("service")
-
-  ) {
-
-    return true;
-
-  }
-
-
-  // ---------------------------------------------
-  // CONTROLLO NOME
-  // ---------------------------------------------
-
-  const nome = (
-
-    String(uscita.nome || "") +
-
-    " " +
-
-    String(uscita.nome_autostrada || "") +
-
-    " " +
-
-    String(uscita.autostrada || "")
-
-  ).toLowerCase();
-
-
-  const paroleDaEscludere = [
-
-    "area di servizio",
-
-    "area servizio",
-
-    "area di sosta",
-
-    "area sosta",
-
-    "autogrill",
-
-    "area ristoro",
-
-    "ristoro",
-
-    "service area",
-
-    "service station"
-
-  ];
-
-
-  for (
-    let i = 0;
-    i < paroleDaEscludere.length;
-    i++
-  ) {
-
-    if (
-      nome.includes(
-        paroleDaEscludere[i]
-      )
-    ) {
-
-      return true;
-
     }
+  </style>
 
-  }
+</head>
 
+<body>
 
-  return false;
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
 
-}
+  <header class="topbar">
 
+    <a
+      href="index.html"
+      class="logo-link"
+      aria-label="1 KM E SI MANGIA"
+    >
+      <img
+        src="assets/logo-definitivo.png"
+        alt="1 KM E SI MANGIA"
+        class="site-logo"
+      >
+    </a>
 
-// =====================================================
-// CONTROLLA USCITA VALIDA
-// =====================================================
+    <a
+      href="index.html"
+      class="logo"
+      style="text-decoration:none;color:inherit;"
+    >
 
-function uscitaValida(uscita) {
+      <div class="logo-pin">
 
-  if (!uscita) {
+        <svg
+          viewBox="0 0 48 55"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
 
-    return false;
+          <path
+            d="M24 2
+               C12 2 4 11 4 22
+               C4 37 24 53 24 53
+               C24 53 44 37 44 22
+               C44 11 36 2 24 2Z"
+            fill="white"
+          />
 
-  }
+          <circle
+            cx="24"
+            cy="21"
+            r="11"
+            fill="none"
+            stroke="#075c3b"
+            stroke-width="3"
+          />
 
+          <circle
+            cx="24"
+            cy="21"
+            r="5"
+            fill="none"
+            stroke="#075c3b"
+            stroke-width="2"
+          />
 
-  if (
+        </svg>
 
-    typeof uscita.lat !== "number" ||
+      </div>
 
-    typeof uscita.lon !== "number"
+      <div class="logo-text">
 
-  ) {
+        <strong>
+          1 KM
+        </strong>
 
-    return false;
+        <span>
+          E SI MANGIA
+        </span>
 
-  }
+      </div>
 
+    </a>
 
-  if (
-    uscita.visualizza_mappa === false
-  ) {
+    <button
+      class="menu-button"
+      id="menuButton"
+      type="button"
+      aria-label="Apri menu"
+      aria-expanded="false"
+    >
 
-    return false;
+      ☰
 
-  }
+    </button>
 
+  </header>
 
-  // ESCLUDI AUTOGRILL / AREE DI SERVIZIO
+  <!-- =====================================================
+       MENU
+       ===================================================== -->
 
-  if (
-    eAreaDiServizio(uscita)
-  ) {
+  <nav
+    class="mobile-menu"
+    id="mobileMenu"
+    aria-hidden="true"
+  >
 
-    return false;
-
-  }
-
-
-  return true;
-
-}
-
-
-// =====================================================
-// CREA POPUP
-// =====================================================
-
-function creaPopup(uscita) {
-
-  let popup = `
-
-    <div class="exit-popup">
-
-      <strong>
-        ${uscita.nome || "Uscita autostradale"}
-      </strong>
-
-  `;
-
-
-  if (uscita.autostrada) {
-
-    popup += `
-
-      <small>
-        ${uscita.autostrada}
-
-    `;
-
-
-    if (uscita.numero_uscita) {
-
-      popup +=
-        ` · Uscita ${uscita.numero_uscita}`;
-
-    }
-
-
-    popup += `
-
-      </small>
-
-    `;
-
-  }
-
-
-  if (uscita.nome_autostrada) {
-
-    popup += `
-
-      <small>
-        ${uscita.nome_autostrada}
-      </small>
-
-    `;
-
-  }
-
-
-  popup += `
-
-      <small>
-        📍 Uscita autostradale
-      </small>
+    <div class="mobile-menu-inner">
 
       <button
+        class="menu-close"
+        id="menuClose"
         type="button"
-        data-ristoranti-uscita="${escapeHtml(uscita.id)}"
-        style="margin-top:10px;width:100%;padding:9px;border:0;border-radius:8px;cursor:pointer;background:#075c3b;color:#fff;font-weight:700;"
+        aria-label="Chiudi menu"
       >
-        🍝 MOSTRA RISTORANTI
+
+        ×
+
       </button>
+
+      <div class="mobile-menu-title">
+        <img
+          src="assets/logo-definitivo.png"
+          alt="1 KM E SI MANGIA"
+          class="mobile-menu-logo"
+        >
+      </div>
+
+      <div class="menu-links">
+
+        <a
+          href="come-funziona.html"
+          class="menu-link"
+        >
+
+          <strong>
+            COME FUNZIONA
+          </strong>
+
+          <span>
+            Scopri come utilizzare il servizio
+          </span>
+
+        </a>
+
+        <a
+          href="index.html"
+          class="menu-link"
+        >
+
+          <strong>
+            HOME
+          </strong>
+
+          <span>
+            La nostra idea
+          </span>
+
+        </a>
+
+        <a
+          href="uscite.html"
+          class="menu-link"
+        >
+
+          <strong>
+            ESPLORA LE USCITE
+          </strong>
+
+          <span>
+            Trova l'uscita più vicina
+          </span>
+
+        </a>
+
+        <a
+          href="parcheggi.html"
+          class="menu-link"
+        >
+
+          <strong>
+            🚛 PARCHEGGI MEZZI PESANTI
+          </strong>
+
+          <span>
+            Trova un parcheggio per il tuo mezzo
+          </span>
+
+        </a>
+
+        <a
+          href="distanze.html"
+          class="menu-link"
+        >
+
+          <strong>
+            LE DISTANZE
+          </strong>
+
+          <span>
+            Quanto ti allontani dall'autostrada
+          </span>
+
+        </a>
+
+        <a
+          href="contatti.html"
+          class="menu-link"
+        >
+
+          <strong>
+            CONTATTI
+          </strong>
+
+          <span>
+            Scrivici
+          </span>
+
+        </a>
+
+        <a
+          href="fonti-licenze.html"
+          class="menu-link"
+        >
+
+          <strong>
+            FONTI E LICENZE
+          </strong>
+
+          <span>
+            Dati, fonti e informazioni legali
+          </span>
+
+        </a>
+
+      </div>
 
     </div>
 
-  `;
+  </nav>
 
+  <!-- =====================================================
+       PAGINA USCITE
+       ===================================================== -->
 
-  return popup;
+  <main>
 
-}
+    <section
+      class="map-section"
+      id="mapSection"
+    >
 
+      <div class="map-header">
 
-// =====================================================
-// CARICA DATABASE USCITE
-// =====================================================
+        <div class="map-label">
 
-fetch("./uscite.json")
+          1 KM E SI MANGIA
 
-  .then(function(response) {
+        </div>
 
-    if (!response.ok) {
+        <h1>
 
-      throw new Error(
-        "Impossibile caricare uscite.json"
-      );
+          ESPLORA LE USCITE
 
-    }
+        </h1>
 
-    return response.json();
+        <p>
 
-  })
+          Spostati sulla mappa per visualizzare
+          le singole uscite autostradali.
 
-  .then(function(database) {
+        </p>
 
-    usciteItaliane = database;
+      </div>
 
+      <div id="map"></div>
 
-    console.log(
-      "================================="
-    );
+      <div class="map-legend">
 
-    console.log(
-      "DATABASE 1 KM E SI MANGIA"
-    );
+        <div>
 
-    console.log(
-      "Uscite caricate:",
-      usciteItaliane.length
-    );
+          <span class="legend-dot"></span>
 
-    console.log(
-      "================================="
-    );
+          <span>
+            Uscita autostradale
+          </span>
 
+        </div>
 
-    let usciteVisibili = 0;
+        <div>
 
-    let usciteEscluse = 0;
+          <span class="legend-route"></span>
 
+          <span>
+            Autostrada
+          </span>
 
-    // ---------------------------------------------
-    // CREA MARKER
-    // ---------------------------------------------
+        </div>
 
-    usciteItaliane.forEach(function(uscita) {
+      </div>
 
-      if (
-        !uscitaValida(uscita)
-      ) {
+    </section>
 
-        usciteEscluse++;
+  </main>
 
-        return;
+  <!-- =====================================================
+       FOOTER
+       ===================================================== -->
 
-      }
+  <footer id="footer">
 
+    <strong>
 
-      const marker = L.marker(
+      1 KM E SI MANGIA
 
-        [
-          uscita.lat,
-          uscita.lon
-        ],
+    </strong>
 
-        {
-          icon: exitIcon
-        }
+    <p>
 
-      );
+      Mangia bene.
+      Perdi poco tempo.
+      Riparti.
 
+    </p>
 
-      marker.bindPopup(
-        creaPopup(uscita)
-      );
+  </footer>
 
+  <!-- =====================================================
+       LEAFLET
+       ===================================================== -->
 
-      // -------------------------------------------
-      // CLICK MARKER
-      // -------------------------------------------
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  ></script>
 
-      marker.on(
+  <!-- =====================================================
+       LEAFLET MARKER CLUSTER
+       ===================================================== -->
 
-        "click",
+  <script
+    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
+  ></script>
 
-        function() {
+  <!-- =====================================================
+       JAVASCRIPT DEL PROGETTO
+       ===================================================== -->
 
-          map.flyTo(
+  <script src="menu.js"></script>
 
-            [
-              uscita.lat,
-              uscita.lon
-            ],
+  <script src="script.js"></script>
 
-            14,
+  <script src="navigazione.js"></script>
 
-            {
-              duration: 1
-            }
+  <script src="collega_navigazione.js"></script>
 
-          );
+</body>
 
-        }
-
-      );
-
-
-      clusterUscite.addLayer(
-        marker
-      );
-
-
-      usciteVisibili++;
-
-    });
-
-
-    console.log(
-      "Uscite visibili:",
-      usciteVisibili
-    );
-
-
-    console.log(
-      "Elementi esclusi:",
-      usciteEscluse
-    );
-
-
-    console.log(
-      "Filtro ristoranti:",
-      CONFIG.distanzaMassimaRistoranteKm +
-      " km + " +
-      CONFIG.tolleranzaDistanzaMetri +
-      " m"
-    );
-
-
-    console.log(
-      "Distanza effettiva:",
-      CONFIG.distanzaMassimaEffettivaMetri +
-      " m"
-    );
-
-  })
-
-
-  .catch(function(error) {
-
-    console.error(
-      "Errore database:",
-      error
-    );
-
-  });
-
-
-// =====================================================
-// PULSANTE "ESPLORA LA MAPPA"
-// =====================================================
-
-const mapButton =
-  document.getElementById(
-    "mapButton"
-  );
-
-
-const mapSection =
-  document.getElementById(
-    "mapSection"
-  );
-
-
-if (mapButton) {
-
-  mapButton.addEventListener(
-
-    "click",
-
-    function() {
-
-      if (mapSection) {
-
-        mapSection.scrollIntoView({
-
-          behavior: "smooth"
-
-        });
-
-      }
-
-    }
-
-  );
-
-}
-
-
-// =====================================================
-// GEOLOCALIZZAZIONE
-// =====================================================
-
-const locationButton =
-  document.getElementById(
-    "locationButton"
-  );
-
-let userMarker = null;
-let userAccuracyCircle = null;
-
-if (locationButton) {
-
-  locationButton.addEventListener(
-    "click",
-    function() {
-
-      if (!window.isSecureContext) {
-
-        alert(
-          "La posizione può essere usata solo tramite HTTPS. " +
-          "Apri il sito dalla versione Vercel."
-        );
-
-        return;
-
-      }
-
-      if (!navigator.geolocation) {
-
-        alert(
-          "La geolocalizzazione non è disponibile " +
-          "su questo dispositivo/browser."
-        );
-
-        return;
-
-      }
-
-      locationButton.disabled = true;
-      locationButton.textContent =
-        "📍 RICERCA POSIZIONE...";
-
-      function posizioneTrovata(position) {
-
-        const lat =
-          position.coords.latitude;
-
-        const lng =
-          position.coords.longitude;
-
-        const accuracy =
-          Number(position.coords.accuracy) || 100;
-
-        console.log(
-          "POSIZIONE GPS:",
-          lat,
-          lng,
-          "precisione:",
-          accuracy,
-          "metri"
-        );
-
-        // ---------------------------------------
-        // RIMUOVI VECCHIA POSIZIONE
-        // ---------------------------------------
-
-        if (userMarker) {
-
-          map.removeLayer(
-            userMarker
-          );
-
-        }
-
-        if (userAccuracyCircle) {
-
-          map.removeLayer(
-            userAccuracyCircle
-          );
-
-        }
-
-        // ---------------------------------------
-        // PIN "TU SEI QUI"
-        // ---------------------------------------
-
-        const userIcon =
-          L.divIcon({
-            className:
-              "user-location-pin",
-            html: `
-              <div
-                style="
-                  width:34px;
-                  height:34px;
-                  border-radius:50% 50% 50% 0;
-                  background:#075c3b;
-                  border:4px solid #fff;
-                  box-shadow:0 2px 10px rgba(0,0,0,.35);
-                  transform:rotate(-45deg);
-                  position:relative;
-                "
-              >
-                <div
-                  style="
-                    position:absolute;
-                    width:10px;
-                    height:10px;
-                    border-radius:50%;
-                    background:#fff;
-                    top:8px;
-                    left:8px;
-                  "
-                ></div>
-              </div>
-            `,
-            iconSize: [42, 42],
-            iconAnchor: [21, 42],
-            popupAnchor: [0, -38]
-          });
-
-        userMarker =
-          L.marker(
-            [lat, lng],
-            {
-              icon: userIcon,
-              zIndexOffset: 10000
-            }
-          ).addTo(map);
-
-        // ---------------------------------------
-        // CERCHIO DI PRECISIONE GPS
-        // ---------------------------------------
-
-        userAccuracyCircle =
-          L.circle(
-            [lat, lng],
-            {
-              radius: accuracy,
-              color: "#075c3b",
-              weight: 2,
-              fillColor: "#075c3b",
-              fillOpacity: 0.12
-            }
-          ).addTo(map);
-
-        userMarker
-          .bindPopup(
-            "<strong>📍 TU SEI QUI</strong><br>" +
-            "Precisione GPS circa " +
-            Math.round(accuracy) +
-            " m"
-          )
-          .openPopup();
-
-        // ---------------------------------------
-        // PORTA LA MAPPA SULL'UTENTE
-        // ---------------------------------------
-
-        if (mapSection) {
-
-          mapSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-          });
-
-        }
-
-        // Dopo lo scroll Leaflet deve ricalcolare
-        // le dimensioni del contenitore.
-        setTimeout(
-          function() {
-
-            map.invalidateSize();
-
-            map.setView(
-              [lat, lng],
-              Math.max(
-                14,
-                Math.min(
-                  17,
-                  Math.round(
-                    17 -
-                    Math.log2(
-                      Math.max(
-                        1,
-                        accuracy / 50
-                      )
-                    )
-                  )
-                )
-              ),
-              {
-                animate: true
-              }
-            );
-
-          },
-          450
-        );
-
-        locationButton.disabled = false;
-
-        locationButton.textContent =
-          "📍 POSIZIONE TROVATA";
-
-      }
-
-      function errorePosizione(error) {
-
-        console.error(
-          "ERRORE GPS:",
-          error.code,
-          error.message
-        );
-
-        let messaggio =
-          "Non siamo riusciti a ottenere la tua posizione.";
-
-        if (error.code === 1) {
-
-          messaggio =
-            "Permesso di posizione negato. " +
-            "Consenti la posizione al browser e riprova.";
-
-        } else if (error.code === 2) {
-
-          messaggio =
-            "Posizione non disponibile. " +
-            "Controlla GPS e connessione e riprova.";
-
-        } else if (error.code === 3) {
-
-          messaggio =
-            "La ricerca della posizione ha impiegato troppo tempo. " +
-            "Riprova tra qualche secondo.";
-
-        }
-
-        alert(messaggio);
-
-        locationButton.disabled = false;
-
-        locationButton.textContent =
-          "📍 USA LA MIA POSIZIONE";
-
-      }
-
-      // Primo tentativo: rapido e compatibile.
-      navigator.geolocation.getCurrentPosition(
-        posizioneTrovata,
-        function() {
-
-          // Secondo tentativo: GPS più preciso.
-          navigator.geolocation.getCurrentPosition(
-            posizioneTrovata,
-            errorePosizione,
-            {
-              enableHighAccuracy: true,
-              timeout: 20000,
-              maximumAge: 0
-            }
-          );
-
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 60000
-        }
-      );
-
-    }
-  );
-
-}
-
-
-// =====================================================
-// MENU PRINCIPALE - GESTIONE UNIFICATA
-// =====================================================
-
-
-(function () {
-
-  function initMenu() {
-
-    const menuButton = document.querySelector(".menu-button");
-
-    // Supportiamo entrambe le versioni che abbiamo usato:
-    // #mobileMenu / .mobile-menu
-    // #siteMenu / .site-menu
-    const menuPanel =
-      document.getElementById("mobileMenu") ||
-      document.querySelector(".mobile-menu") ||
-      document.getElementById("siteMenu") ||
-      document.querySelector(".site-menu");
-
-    const menuClose =
-      document.getElementById("menuClose") ||
-      document.querySelector(".menu-close") ||
-      document.querySelector(".site-menu-close");
-
-    const overlay =
-      document.querySelector(".site-menu-overlay") ||
-      document.querySelector(".mobile-menu-overlay");
-
-    if (!menuButton || !menuPanel) {
-      console.warn("MENU: elementi non trovati", {
-        menuButton: !!menuButton,
-        menuPanel: !!menuPanel
-      });
-      return;
-    }
-
-    let aperto = false;
-
-    function openMenu() {
-
-      aperto = true;
-
-      menuPanel.classList.add("open");
-      menuPanel.classList.add("active");
-
-      menuPanel.setAttribute("aria-hidden", "false");
-
-      menuButton.setAttribute("aria-expanded", "true");
-
-      document.body.classList.add("menu-open");
-
-      // Forziamo anche lo stile essenziale in modo che il menu
-      // funzioni anche se una vecchia regola CSS è rimasta nel file.
-      menuPanel.style.visibility = "visible";
-      menuPanel.style.opacity = "1";
-      menuPanel.style.pointerEvents = "auto";
-      menuPanel.style.zIndex = "9999";
-
-      if (overlay) {
-        overlay.classList.add("open");
-        overlay.classList.add("active");
-        overlay.style.visibility = "visible";
-        overlay.style.opacity = "1";
-        overlay.style.pointerEvents = "auto";
-        overlay.style.zIndex = "9998";
-      }
-
-      console.log("MENU APERTO");
-    }
-
-    function closeMenu() {
-
-      aperto = false;
-
-      menuPanel.classList.remove("open");
-      menuPanel.classList.remove("active");
-
-      menuPanel.setAttribute("aria-hidden", "true");
-
-      menuButton.setAttribute("aria-expanded", "false");
-
-      document.body.classList.remove("menu-open");
-
-      menuPanel.style.visibility = "hidden";
-      menuPanel.style.opacity = "0";
-      menuPanel.style.pointerEvents = "none";
-
-      if (overlay) {
-        overlay.classList.remove("open");
-        overlay.classList.remove("active");
-        overlay.style.visibility = "hidden";
-        overlay.style.opacity = "0";
-        overlay.style.pointerEvents = "none";
-      }
-
-      console.log("MENU CHIUSO");
-    }
-
-    // Stato iniziale
-    closeMenu();
-
-    // Pulsante hamburger
-    menuButton.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (aperto) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    });
-
-    // Pulsante X
-    if (menuClose) {
-      menuClose.addEventListener("click", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        closeMenu();
-      });
-    }
-
-    // Overlay
-    if (overlay) {
-      overlay.addEventListener("click", function () {
-        closeMenu();
-      });
-    }
-
-    // ESC
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") {
-        closeMenu();
-      }
-    });
-
-    // Link del menu
-    const menuLinks = menuPanel.querySelectorAll(".menu-link");
-
-    menuLinks.forEach(function (link) {
-
-      link.addEventListener("click", function (event) {
-
-        const target = link.getAttribute("href");
-
-        closeMenu();
-
-        if (target && target.startsWith("#")) {
-
-          const elemento = document.querySelector(target);
-
-          if (elemento) {
-            event.preventDefault();
-
-            setTimeout(function () {
-              elemento.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-              });
-            }, 150);
-          }
-        }
-      });
-    });
-
-    console.log("MENU PRINCIPALE ATTIVO");
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initMenu);
-  } else {
-    initMenu();
-  }
-
-})();
-
-
-// =====================================================
-// RESIZE MAPPA
-// =====================================================
-
-window.addEventListener("resize", function () {
-
-  setTimeout(function () {
-    map.invalidateSize();
-  }, 100);
-
-});
-
-
-// =====================================================
-// AVVIO
-// =====================================================
-
-console.log("=================================");
-console.log("1 KM E SI MANGIA - SCRIPT AVVIATO");
-console.log(
-  "Filtro:",
-  CONFIG.distanzaMassimaRistoranteKm +
-  " km + " +
-  CONFIG.tolleranzaDistanzaMetri +
-  " m"
-);
-console.log("=================================");
+</html>
