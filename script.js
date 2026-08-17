@@ -260,28 +260,29 @@ function creaPopupRistorante(ristorante) {
     typeof ristorante.lat === "number" &&
     typeof ristorante.lon === "number"
       ? `
-        <a
-          href="https://www.google.com/maps/dir/?api=1&destination=${ristorante.lat},${ristorante.lon}"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          class="apri-navigazione-ristorante"
           style="
             display:block;
             width:100%;
             box-sizing:border-box;
             margin-top:12px;
             padding:10px 12px;
+            border:0;
             border-radius:10px;
             background:#075c3b;
             color:#fff;
             text-align:center;
-            text-decoration:none;
             font-weight:700;
+            cursor:pointer;
           "
         >
           🧭 NAVIGA
-        </a>
+        </button>
       `
       : "";
+
 
   return `
     <div style="
@@ -342,6 +343,57 @@ function creaMarkerRistorante(ristorante) {
     creaPopupRistorante(
       ristorante
     )
+  );
+
+  // Un solo pulsante NAVIGA nel popup.
+  // Il click viene collegato al ristorante esatto
+  // associato a questo marker.
+  marker.on(
+    "popupopen",
+    function(event) {
+
+      const popupElement =
+        event.popup &&
+        event.popup.getElement
+          ? event.popup.getElement()
+          : null;
+
+      if (!popupElement) {
+        return;
+      }
+
+      const bottone =
+        popupElement.querySelector(
+          ".apri-navigazione-ristorante"
+        );
+
+      if (!bottone) {
+        return;
+      }
+
+      bottone.onclick =
+        function(clickEvent) {
+
+          clickEvent.preventDefault();
+          clickEvent.stopPropagation();
+
+          if (
+            typeof window.apriNavigazione !==
+            "function"
+          ) {
+            alert(
+              "Modulo di navigazione non disponibile."
+            );
+            return;
+          }
+
+          window.apriNavigazione(
+            ristorante
+          );
+
+        };
+
+    }
   );
 
   return marker;
