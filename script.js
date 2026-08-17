@@ -144,7 +144,7 @@ function ristorantiPerUscita(uscita) {
 function creaPopupRistorante(ristorante) {
   const nome = escapeHtml(ristorante.nome || "Ristorante");
   const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
-    ? `<small>📍 ${Math.round(Number(ristorante.uscita.distanza_m))} m dall'uscita</small>`
+    ? `<small>📏 ${Math.round(Number(ristorante.uscita.distanza_m))} m dall'uscita</small>`
     : "";
   const parcheggio = ristorante.parcheggio?.presente === true
     ? `<small>🅿️ Parcheggio ${ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente"}</small>`
@@ -236,11 +236,11 @@ function mostraTuttiRistoranti(uscita) {
               ${ristorante.cucina ? `<div style="font-size:12px;color:#555;margin-top:3px">🍽️ ${escapeHtml(ristorante.cucina)}</div>` : ""}
             </div>
             ${typeof ristorante.lat === "number" && typeof ristorante.lon === "number"
-              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer">📍 MAPPA</button>`
+              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" style="vertical-align:-4px;margin-right:5px"><path d="M9 3 6 29M23 3l3 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 4v5M16 13v5M16 22v6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 4"/></svg> MAPPA</button>`
               : ""}
           </div>
           <div style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px">
-            ${distanza ? `<span>📍 ${distanza}</span>` : ""}
+            ${distanza ? `<span>📏 ${distanza}</span>` : ""}
             <span>${parcheggio}</span>
             ${ristorante.telefono ? `<span>📞 ${escapeHtml(ristorante.telefono)}</span>` : ""}
           </div>
@@ -572,7 +572,7 @@ function creaPopup(uscita) {
   popup += `
 
       <small>
-        📍 Uscita autostradale
+        🛣️ Uscita autostradale
       </small>
 
       <button
@@ -580,7 +580,7 @@ function creaPopup(uscita) {
         data-ristoranti-uscita="${escapeHtml(uscita.id)}"
         style="margin-top:10px;width:100%;padding:9px;border:0;border-radius:8px;cursor:pointer;background:#075c3b;color:#fff;font-weight:700;"
       >
-        🍝 MOSTRA RISTORANTI
+        🍴 MOSTRA RISTORANTI
       </button>
 
     </div>
@@ -840,7 +840,7 @@ if (locationButton) {
 
       locationButton.disabled = true;
       locationButton.textContent =
-        "📍 RICERCA POSIZIONE...";
+        "RICERCA POSIZIONE...";
 
       function posizioneTrovata(position) {
 
@@ -888,37 +888,17 @@ if (locationButton) {
 
         const userIcon =
           L.divIcon({
-            className:
-              "user-location-pin",
+            className: "user-location-pin",
             html: `
-              <div
-                style="
-                  width:34px;
-                  height:34px;
-                  border-radius:50% 50% 50% 0;
-                  background:#075c3b;
-                  border:4px solid #fff;
-                  box-shadow:0 2px 10px rgba(0,0,0,.35);
-                  transform:rotate(-45deg);
-                  position:relative;
-                "
-              >
-                <div
-                  style="
-                    position:absolute;
-                    width:10px;
-                    height:10px;
-                    border-radius:50%;
-                    background:#fff;
-                    top:8px;
-                    left:8px;
-                  "
-                ></div>
-              </div>
+              <svg viewBox="0 0 48 58" xmlns="http://www.w3.org/2000/svg" width="48" height="58" aria-hidden="true">
+                <path d="M24 2C12 2 3 11 3 23c0 15 21 33 21 33s21-18 21-33C45 11 36 2 24 2Z" fill="#075c3b" stroke="#fff" stroke-width="2.5"/>
+                <circle cx="24" cy="23" r="9" fill="none" stroke="#fff" stroke-width="2.5"/>
+                <path d="M17 18v-6M20 18v-7M23 18v-7M26 18v-6M17 18c0 4 2 6 5 7v7M31 14v11M31 25c-2 1-3 3-3 5v2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
             `,
-            iconSize: [42, 42],
-            iconAnchor: [21, 42],
-            popupAnchor: [0, -38]
+            iconSize: [48, 58],
+            iconAnchor: [24, 56],
+            popupAnchor: [0, -52]
           });
 
         userMarker =
@@ -948,7 +928,7 @@ if (locationButton) {
 
         userMarker
           .bindPopup(
-            "<strong>📍 TU SEI QUI</strong><br>" +
+            "<strong>TU SEI QUI</strong><br>" +
             "Precisione GPS circa " +
             Math.round(accuracy) +
             " m"
@@ -1004,7 +984,7 @@ if (locationButton) {
         locationButton.disabled = false;
 
         locationButton.textContent =
-          "📍 POSIZIONE TROVATA";
+          "POSIZIONE TROVATA";
 
       }
 
@@ -1044,7 +1024,7 @@ if (locationButton) {
         locationButton.disabled = false;
 
         locationButton.textContent =
-          "📍 USA LA MIA POSIZIONE";
+          "USA LA MIA POSIZIONE";
 
       }
 

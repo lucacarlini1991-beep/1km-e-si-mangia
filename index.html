@@ -177,6 +177,30 @@
       letter-spacing: 4px;
     }
 
+    .menu-item-icon {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      flex: 0 0 28px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    .btn-icon {
+      width: 30px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 30px;
+    }
+
+    .btn-icon svg {
+      width: 30px;
+      height: 34px;
+      display: block;
+    }
+
     .menu-links {
       margin-top: 15px;
     }
@@ -524,7 +548,7 @@
           href="index.html"
           class="menu-link"
         >
-          <strong>HOME</strong>
+          <strong><img class="menu-item-icon" src="assets/logo-definitivo.png" alt=""> HOME</strong>
           <span>La nostra idea</span>
         </a>
 
@@ -609,7 +633,14 @@
               class="btn btn-primary"
               aria-label="Usa la mia posizione"
             >
-              📍 USA LA MIA POSIZIONE
+              <span class="btn-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 58" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M24 2C12 2 3 11 3 23c0 15 21 33 21 33s21-18 21-33C45 11 36 2 24 2Z" fill="none" stroke="currentColor" stroke-width="4"/>
+                  <circle cx="24" cy="23" r="9" fill="none" stroke="currentColor" stroke-width="3"/>
+                  <path d="M17 18v-6M20 18v-7M23 18v-7M26 18v-6M17 18c0 4 2 6 5 7v7M31 14v11M31 25c-2 1-3 3-3 5v2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </span>
+              USA LA MIA POSIZIONE
             </button>
 
 
@@ -617,7 +648,13 @@
               href="uscite.html"
               class="btn btn-secondary"
             >
-              🗺️ ESPLORA LE USCITE
+              <span class="btn-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 3 6 29M23 3l3 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M16 4v5M16 13v5M16 22v6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 4"/>
+                </svg>
+              </span>
+              ESPLORA LE USCITE
             </a>
 
 
@@ -693,7 +730,7 @@
         }
 
         button.disabled = true;
-        button.textContent = "📍 RICERCA POSIZIONE...";
+        button.textContent = "RICERCA POSIZIONE...";
 
         navigator.geolocation.getCurrentPosition(
           function (position) {
@@ -722,7 +759,7 @@
             } catch (error) {
               console.error("Errore salvataggio posizione:", error);
               button.disabled = false;
-              button.textContent = "📍 USA LA MIA POSIZIONE";
+              button.textContent = "USA LA MIA POSIZIONE";
               alert("Non è stato possibile trasferire la posizione alla mappa.");
             }
           },
@@ -744,7 +781,7 @@
             }
 
             button.disabled = false;
-            button.textContent = "📍 USA LA MIA POSIZIONE";
+            button.textContent = "USA LA MIA POSIZIONE";
             alert(messaggio);
           },
           {
