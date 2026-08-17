@@ -1,33 +1,3 @@
-<style>
-/* === LOGO ORIGINALE 1 KM E SI MANGIA === */
-.logo-link{
-  display:flex !important;
-  align-items:center !important;
-  text-decoration:none !important;
-  line-height:0 !important;
-}
-.site-logo{
-  width:108px !important;
-  height:72px !important;
-  object-fit:contain !important;
-  display:block !important;
-}
-.mobile-menu-logo{
-  display:block !important;
-  width:150px !important;
-  height:auto !important;
-  margin:10px 0 0 !important;
-}
-@media (max-width:750px){
-  .site-logo{
-    width:82px !important;
-    height:58px !important;
-  }
-  .mobile-menu-logo{
-    width:135px !important;
-  }
-}
-</style>
 <!DOCTYPE html>
 <html lang="it">
 
@@ -49,7 +19,7 @@
 
   <link
     rel="preconnect"
-    href="https://fonts.gstatic.com"
+    href="https://fonts.googleapis.com"
     crossorigin
   >
 
@@ -78,20 +48,62 @@
     href="styles.css"
   >
 
+  <style>
+    /* === LOGO ORIGINALE 1 KM E SI MANGIA === */
+    .logo-link{
+      display:flex !important;
+      align-items:center !important;
+      text-decoration:none !important;
+      line-height:0 !important;
+    }
+
+    .site-logo{
+      width:108px !important;
+      height:72px !important;
+      object-fit:contain !important;
+      display:block !important;
+    }
+
+    .mobile-menu-logo{
+      display:block !important;
+      width:150px !important;
+      height:auto !important;
+      margin:10px 0 0 !important;
+    }
+
+    @media (max-width:750px){
+      .site-logo{
+        width:82px !important;
+        height:58px !important;
+      }
+
+      .mobile-menu-logo{
+        width:135px !important;
+      }
+    }
+  </style>
+
 </head>
 
-
 <body>
-
 
   <!-- =====================================================
        HEADER
        ===================================================== -->
 
   <header class="topbar">
-  <a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
-  <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo">
-</a>
+
+    <a
+      href="index.html"
+      class="logo-link"
+      aria-label="1 KM E SI MANGIA"
+    >
+      <img
+        src="assets/logo-definitivo.png"
+        alt="1 KM E SI MANGIA"
+        class="site-logo"
+      >
+    </a>
 
     <a
       href="index.html"
@@ -138,7 +150,6 @@
 
       </div>
 
-
       <div class="logo-text">
 
         <strong>
@@ -152,7 +163,6 @@
       </div>
 
     </a>
-
 
     <button
       class="menu-button"
@@ -168,8 +178,6 @@
 
   </header>
 
-
-
   <!-- =====================================================
        MENU
        ===================================================== -->
@@ -182,7 +190,6 @@
 
     <div class="mobile-menu-inner">
 
-
       <button
         class="menu-close"
         id="menuClose"
@@ -194,62 +201,15 @@
 
       </button>
 
-
       <div class="mobile-menu-title">
-  <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="mobile-menu-logo">
-</div>
-
+        <img
+          src="assets/logo-definitivo.png"
+          alt="1 KM E SI MANGIA"
+          class="mobile-menu-logo"
+        >
+      </div>
 
       <div class="menu-links">
-
-
-        <a
-          href="index.html"
-          class="menu-link"
-        >
-
-          <strong>
-            HOME
-          </strong>
-
-          <span>
-            La nostra idea
-          </span>
-
-        </a>
-
-
-        <a
-          href="uscite.html"
-          class="menu-link"
-        >
-
-          <strong>
-            ESPLORA LE USCITE
-          </strong>
-
-          <span>
-            Trova l'uscita più vicina
-          </span>
-
-        </a>
-
-
-        <a
-          href="parcheggi.html"
-          class="menu-link"
-        >
-
-          <strong>
-            🚛 PARCHEGGI MEZZI PESANTI
-          </strong>
-
-          <span>
-            Trova un parcheggio per il tuo mezzo
-          </span>
-
-        </a>
-
 
         <a
           href="come-funziona.html"
@@ -266,6 +226,50 @@
 
         </a>
 
+        <a
+          href="index.html"
+          class="menu-link"
+        >
+
+          <strong>
+            HOME
+          </strong>
+
+          <span>
+            La nostra idea
+          </span>
+
+        </a>
+
+        <a
+          href="uscite.html"
+          class="menu-link"
+        >
+
+          <strong>
+            ESPLORA LE USCITE
+          </strong>
+
+          <span>
+            Trova l'uscita più vicina
+          </span>
+
+        </a>
+
+        <a
+          href="parcheggi.html"
+          class="menu-link"
+        >
+
+          <strong>
+            🚛 PARCHEGGI MEZZI PESANTI
+          </strong>
+
+          <span>
+            Trova un parcheggio per il tuo mezzo
+          </span>
+
+        </a>
 
         <a
           href="distanze.html"
@@ -282,7 +286,6 @@
 
         </a>
 
-
         <a
           href="contatti.html"
           class="menu-link"
@@ -297,7 +300,6 @@
           </span>
 
         </a>
-
 
         <a
           href="fonti-licenze.html"
@@ -314,14 +316,11 @@
 
         </a>
 
-
       </div>
 
     </div>
 
   </nav>
-
-
 
   <!-- =====================================================
        PAGINA USCITE
@@ -336,20 +335,17 @@
 
       <div class="map-header">
 
-
         <div class="map-label">
 
           1 KM E SI MANGIA
 
         </div>
 
-
         <h1>
 
           ESPLORA LE USCITE
 
         </h1>
-
 
         <p>
 
@@ -358,15 +354,11 @@
 
         </p>
 
-
       </div>
-
 
       <div id="map"></div>
 
-
       <div class="map-legend">
-
 
         <div>
 
@@ -378,7 +370,6 @@
 
         </div>
 
-
         <div>
 
           <span class="legend-route"></span>
@@ -389,15 +380,11 @@
 
         </div>
 
-
       </div>
-
 
     </section>
 
   </main>
-
-
 
   <!-- =====================================================
        FOOTER
@@ -411,7 +398,6 @@
 
     </strong>
 
-
     <p>
 
       Mangia bene.
@@ -422,8 +408,6 @@
 
   </footer>
 
-
-
   <!-- =====================================================
        LEAFLET
        ===================================================== -->
@@ -432,7 +416,6 @@
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   ></script>
 
-
   <!-- =====================================================
        LEAFLET MARKER CLUSTER
        ===================================================== -->
@@ -440,7 +423,6 @@
   <script
     src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
   ></script>
-
 
   <!-- =====================================================
        JAVASCRIPT DEL PROGETTO
@@ -453,7 +435,6 @@
   <script src="navigazione.js"></script>
 
   <script src="collega_navigazione.js"></script>
-
 
 </body>
 
