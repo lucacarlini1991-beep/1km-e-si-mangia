@@ -110,6 +110,251 @@ let usciteItaliane = [];
 
 
 // =====================================================
+// DATABASE RISTORANTI
+// =====================================================
+
+let ristorantiDatabase = [];
+
+const ristorantiLayer = L.layerGroup().addTo(map);
+const ristorantiPerUscitaMap = new Map();
+
+const restaurantIcon = L.divIcon({
+  className: "restaurant-map-icon",
+  html:
+    '<div style="width:34px;height:34px;border-radius:50%;background:#ffffff;border:3px solid #075c3b;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35);">🍴</div>',
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+  popupAnchor: [0, -17]
+});
+
+function escapeHtml(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function ristorantiPerUscita(uscita) {
+  if (!uscita || !uscita.id) return [];
+  return ristorantiPerUscitaMap.get(String(uscita.id)) || [];
+}
+
+function creaPopupRistorante(ristorante) {
+  const nome = escapeHtml(ristorante.nome || "Ristorante");
+  const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
+    ? `<small>📍 ${Math.round(Number(ristorante.uscita.distanza_m))} m dall'uscita</small>`
+    : "";
+  const parcheggio = ristorante.parcheggio?.presente === true
+    ? `<small>🅿️ Parcheggio ${ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente"}</small>`
+    : `<small>🅿️ Parcheggio da verificare</small>`;
+
+  return `
+    <div style="min-width:190px;line-height:1.4">
+      <strong>${nome}</strong>
+      ${ristorante.cucina ? `<small>🍽️ ${escapeHtml(ristorante.cucina)}</small>` : ""}
+      ${distanza}
+      ${parcheggio}
+      ${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}
+    </div>
+  `;
+}
+
+function creaMarkerRistorante(ristorante) {
+  if (typeof ristorante.lat !== "number" || typeof ristorante.lon !== "number") {
+    return null;
+  }
+
+  const marker = L.marker([ristorante.lat, ristorante.lon], {
+    icon: restaurantIcon
+  });
+
+  marker.bindPopup(creaPopupRistorante(ristorante));
+  return marker;
+}
+
+function chiudiPannelloRistoranti() {
+  const panel = document.getElementById("ristorantiMapPanel");
+  if (panel) panel.remove();
+}
+
+function mostraTuttiRistoranti(uscita) {
+  if (!uscita) return;
+
+  const ristoranti = ristorantiPerUscita(uscita);
+  ristorantiLayer.clearLayers();
+  chiudiPannelloRistoranti();
+
+  const bounds = L.latLngBounds([[uscita.lat, uscita.lon]]);
+  let markerCount = 0;
+
+  ristoranti.forEach(function(ristorante) {
+    const marker = creaMarkerRistorante(ristorante);
+    if (!marker) return;
+
+    marker.addTo(ristorantiLayer);
+    bounds.extend([ristorante.lat, ristorante.lon]);
+    markerCount++;
+  });
+
+  if (bounds.isValid()) {
+    map.fitBounds(bounds, {
+      padding: [45, 45],
+      maxZoom: 15
+    });
+  }
+
+  const panel = document.createElement("div");
+  panel.id = "ristorantiMapPanel";
+  panel.style.cssText =
+    "position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:80vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:18px;font-family:system-ui,sans-serif;";
+
+  if (!ristoranti.length) {
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:20px">Nessun ristorante</strong>
+        <button id="chiudiRistorantiMap" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer">×</button>
+      </div>
+      <p>Non risultano ristoranti associati a questa uscita nel database.</p>
+    `;
+  } else {
+    const cards = ristoranti.map(function(ristorante, index) {
+      const nome = escapeHtml(ristorante.nome || "Ristorante");
+      const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
+        ? Math.round(Number(ristorante.uscita.distanza_m)) + " m dall'uscita"
+        : "";
+      const parcheggio = ristorante.parcheggio?.presente === true
+        ? "🅿️ Parcheggio " + (ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente")
+        : "🅿️ Parcheggio da verificare";
+
+      return `
+        <div style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px">
+          <div style="display:flex;justify-content:space-between;gap:10px">
+            <div>
+              <strong>${index + 1}. ${nome}</strong>
+              ${ristorante.cucina ? `<div style="font-size:12px;color:#555;margin-top:3px">🍽️ ${escapeHtml(ristorante.cucina)}</div>` : ""}
+            </div>
+            ${typeof ristorante.lat === "number" && typeof ristorante.lon === "number"
+              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer">📍 MAPPA</button>`
+              : ""}
+          </div>
+          <div style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px">
+            ${distanza ? `<span>📍 ${distanza}</span>` : ""}
+            <span>${parcheggio}</span>
+            ${ristorante.telefono ? `<span>📞 ${escapeHtml(ristorante.telefono)}</span>` : ""}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px">
+        <div>
+          <strong style="font-size:20px">🍴 Ristoranti</strong>
+          <div style="font-size:13px;color:#555">${escapeHtml(uscita.nome || "Uscita autostradale")} · ${ristoranti.length} trovati</div>
+        </div>
+        <button id="chiudiRistorantiMap" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer">×</button>
+      </div>
+      ${cards}
+      <button id="chiudiRistorantiMapBottom" type="button" style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:700;cursor:pointer">CHIUDI</button>
+    `;
+  }
+
+  document.body.appendChild(panel);
+
+  const closeTop = panel.querySelector("#chiudiRistorantiMap");
+  if (closeTop) closeTop.addEventListener("click", chiudiPannelloRistoranti);
+
+  const closeBottom = panel.querySelector("#chiudiRistorantiMapBottom");
+  if (closeBottom) closeBottom.addEventListener("click", chiudiPannelloRistoranti);
+
+  panel.querySelectorAll("[data-ristorante-index]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      const index = Number(button.getAttribute("data-ristorante-index"));
+      const ristorante = ristoranti[index];
+      if (!ristorante) return;
+
+      chiudiPannelloRistoranti();
+      map.setView([ristorante.lat, ristorante.lon], 17, { animate: true });
+
+      ristorantiLayer.eachLayer(function(layer) {
+        if (
+          layer.getLatLng &&
+          Math.abs(layer.getLatLng().lat - ristorante.lat) < 0.000001 &&
+          Math.abs(layer.getLatLng().lng - ristorante.lon) < 0.000001
+        ) {
+          layer.openPopup();
+        }
+      });
+    });
+  });
+
+  console.log("Ristoranti mostrati:", ristoranti.length, "Marker:", markerCount, "Uscita:", uscita.nome);
+}
+
+window.mostraTuttiRistoranti = mostraTuttiRistoranti;
+
+// Carica e indicizza il database ristoranti per ID uscita.
+fetch("./ristoranti.json")
+  .then(function(response) {
+    if (!response.ok) throw new Error("Impossibile caricare ristoranti.json");
+    return response.json();
+  })
+  .then(function(database) {
+    if (!Array.isArray(database)) {
+      throw new Error("ristoranti.json non contiene un array");
+    }
+
+    ristorantiDatabase = database;
+    ristorantiPerUscitaMap.clear();
+
+    ristorantiDatabase.forEach(function(ristorante) {
+      const id = ristorante?.uscita?.id;
+      if (!id) return;
+
+      const chiave = String(id);
+      if (!ristorantiPerUscitaMap.has(chiave)) {
+        ristorantiPerUscitaMap.set(chiave, []);
+      }
+
+      // Manteniamo solo il raggio configurato: 2 km + 100 m.
+      const distanza = Number(ristorante?.uscita?.distanza_m);
+      if (!Number.isFinite(distanza) || distanza <= CONFIG.distanzaMassimaEffettivaMetri) {
+        ristorantiPerUscitaMap.get(chiave).push(ristorante);
+      }
+    });
+
+    console.log("DATABASE RISTORANTI - caricati:", ristorantiDatabase.length);
+    console.log("Uscite con ristoranti:", ristorantiPerUscitaMap.size);
+  })
+  .catch(function(error) {
+    console.error("Errore database ristoranti:", error);
+  });
+
+// Pulsante presente nel popup dell'uscita.
+document.addEventListener("click", function(event) {
+  const button = event.target.closest("[data-ristoranti-uscita]");
+  if (!button) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const id = button.getAttribute("data-ristoranti-uscita");
+  const uscita = usciteItaliane.find(function(item) {
+    return String(item.id || "") === String(id);
+  });
+
+  if (!uscita) {
+    console.error("Uscita non trovata:", id);
+    return;
+  }
+
+  mostraTuttiRistoranti(uscita);
+}, true);
+
+
+// =====================================================
 // CONTROLLA SE E' AREA DI SERVIZIO / AUTOGRILL
 // =====================================================
 
@@ -329,6 +574,14 @@ function creaPopup(uscita) {
       <small>
         📍 Uscita autostradale
       </small>
+
+      <button
+        type="button"
+        data-ristoranti-uscita="${escapeHtml(uscita.id)}"
+        style="margin-top:10px;width:100%;padding:9px;border:0;border-radius:8px;cursor:pointer;background:#075c3b;color:#fff;font-weight:700;"
+      >
+        🍝 MOSTRA RISTORANTI
+      </button>
 
     </div>
 
