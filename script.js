@@ -333,6 +333,11 @@ function creaMarkerRistorante(ristorante) {
       }
     );
 
+  // Colleghiamo il marker direttamente al ristorante.
+  // Serve per aprire esclusivamente il ristorante scelto
+  // dal pulsante "MAPPA", evitando popup multipli.
+  marker._ristorante = ristorante;
+
   marker.bindPopup(
     creaPopupRistorante(
       ristorante
@@ -717,8 +722,20 @@ function mostraTuttiRistoranti(uscita) {
 
             }
 
+            // Chiudiamo il pannello e tutti gli eventuali popup
+            // precedentemente aperti.
             chiudiPannelloRistoranti();
+            map.closePopup();
 
+            ristorantiLayer.eachLayer(
+              function(layer) {
+                if (layer.closePopup) {
+                  layer.closePopup();
+                }
+              }
+            );
+
+            // Portiamo la mappa esattamente sul ristorante scelto.
             map.setView(
               [
                 ristorante.lat,
@@ -731,28 +748,30 @@ function mostraTuttiRistoranti(uscita) {
               }
             );
 
+            // Apriamo SOLO il popup del ristorante cliccato.
+            // Usiamo il riferimento diretto all'oggetto, non solo
+            // le coordinate: così non vengono aperti più "NAVIGA"
+            // quando due ristoranti condividono la stessa posizione.
+            let markerSelezionato = null;
 
             ristorantiLayer.eachLayer(
               function(layer) {
-
                 if (
-                  layer.getLatLng &&
-                  Math.abs(
-                    layer.getLatLng().lat -
-                    ristorante.lat
-                  ) < 0.000001 &&
-                  Math.abs(
-                    layer.getLatLng().lng -
-                    ristorante.lon
-                  ) < 0.000001
+                  layer._ristorante === ristorante
                 ) {
-
-                  layer.openPopup();
-
+                  markerSelezionato = layer;
                 }
-
               }
             );
+
+            if (markerSelezionato) {
+              setTimeout(
+                function() {
+                  markerSelezionato.openPopup();
+                },
+                250
+              );
+            }
 
           }
         );
