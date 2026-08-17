@@ -108,904 +108,6 @@ const exitIcon = L.divIcon({
 
 let usciteItaliane = [];
 
-// =====================================================
-// DATABASE RISTORANTI
-// =====================================================
-
-let ristorantiDatabase = [];
-
-const ristorantiLayer =
-  L.layerGroup().addTo(map);
-
-const ristorantiPerUscitaMap =
-  new Map();
-
-const restaurantIcon =
-  L.divIcon({
-
-    className:
-      "restaurant-map-icon",
-
-    html:
-      '<div style="width:34px;height:34px;border-radius:50%;background:#ffffff;border:3px solid #075c3b;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35);">🍴</div>',
-
-    iconSize:
-      [34, 34],
-
-    iconAnchor:
-      [17, 17],
-
-    popupAnchor:
-      [0, -17]
-
-  });
-
-
-function escapeHtml(value) {
-
-  return String(
-    value == null
-      ? ""
-      : value
-  )
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-}
-
-
-function ristorantiPerUscita(uscita) {
-
-  if (!uscita || !uscita.id) {
-
-    return [];
-
-  }
-
-  return ristorantiPerUscitaMap.get(
-    String(uscita.id)
-  ) || [];
-
-}
-
-
-function creaPopupRistorante(ristorante) {
-
-  const nome =
-    escapeHtml(
-      ristorante.nome ||
-      "Ristorante"
-    );
-
-  const cucina =
-    ristorante.cucina
-      ? `
-        <div style="
-          font-size:13px;
-          color:#555;
-          margin-top:4px;
-        ">
-          🍽️ ${escapeHtml(ristorante.cucina)}
-        </div>
-      `
-      : "";
-
-  const distanza =
-    Number.isFinite(
-      Number(
-        ristorante?.uscita?.distanza_m
-      )
-    )
-      ? `
-        <div style="
-          font-size:13px;
-          color:#555;
-          margin-top:6px;
-        ">
-          📍 ${Math.round(
-            Number(
-              ristorante.uscita.distanza_m
-            )
-          )} m dall'uscita
-        </div>
-      `
-      : "";
-
-  const parcheggio =
-    ristorante.parcheggio?.presente === true
-      ? `
-        <div style="
-          font-size:13px;
-          color:#555;
-          margin-top:4px;
-        ">
-          🅿️ Parcheggio ${
-            ristorante.parcheggio.distanza_m != null
-              ? Math.round(
-                  Number(
-                    ristorante.parcheggio.distanza_m
-                  )
-                ) + " m"
-              : "presente"
-          }
-        </div>
-      `
-      : `
-        <div style="
-          font-size:13px;
-          color:#777;
-          margin-top:4px;
-        ">
-          🅿️ Parcheggio da verificare
-        </div>
-      `;
-
-  const telefono =
-    ristorante.telefono
-      ? `
-        <div style="
-          font-size:13px;
-          color:#555;
-          margin-top:4px;
-        ">
-          📞 ${escapeHtml(ristorante.telefono)}
-        </div>
-      `
-      : "";
-
-  const navigazione =
-    typeof ristorante.lat === "number" &&
-    typeof ristorante.lon === "number"
-      ? `
-        <button
-          type="button"
-          class="apri-navigazione-ristorante"
-          style="
-            display:block;
-            width:100%;
-            box-sizing:border-box;
-            margin-top:12px;
-            padding:10px 12px;
-            border:0;
-            border-radius:10px;
-            background:#075c3b;
-            color:#fff;
-            text-align:center;
-            font-weight:700;
-            cursor:pointer;
-          "
-        >
-          🧭 NAVIGA
-        </button>
-      `
-      : "";
-
-
-  return `
-    <div style="
-      min-width:220px;
-      max-width:280px;
-      line-height:1.35;
-    ">
-
-      <strong style="
-        display:block;
-        font-size:16px;
-        color:#073d2b;
-      ">
-        ${nome}
-      </strong>
-
-      ${cucina}
-      ${distanza}
-      ${parcheggio}
-      ${telefono}
-      ${navigazione}
-
-    </div>
-  `;
-
-}
-
-
-function creaMarkerRistorante(ristorante) {
-
-  if (
-    typeof ristorante.lat !== "number" ||
-    typeof ristorante.lon !== "number"
-  ) {
-
-    return null;
-
-  }
-
-  const marker =
-    L.marker(
-      [
-        ristorante.lat,
-        ristorante.lon
-      ],
-      {
-        icon:
-          restaurantIcon
-      }
-    );
-
-  // Colleghiamo il marker direttamente al ristorante.
-  // Serve per aprire esclusivamente il ristorante scelto
-  // dal pulsante "MAPPA", evitando popup multipli.
-  marker._ristorante = ristorante;
-
-  marker.bindPopup(
-    creaPopupRistorante(
-      ristorante
-    )
-  );
-
-  // Un solo pulsante NAVIGA nel popup.
-  // Il click viene collegato al ristorante esatto
-  // associato a questo marker.
-  marker.on(
-    "popupopen",
-    function(event) {
-
-      const popupElement =
-        event.popup &&
-        event.popup.getElement
-          ? event.popup.getElement()
-          : null;
-
-      if (!popupElement) {
-        return;
-      }
-
-      const bottone =
-        popupElement.querySelector(
-          ".apri-navigazione-ristorante"
-        );
-
-      if (!bottone) {
-        return;
-      }
-
-      bottone.onclick =
-        function(clickEvent) {
-
-          clickEvent.preventDefault();
-          clickEvent.stopPropagation();
-
-          if (
-            typeof window.apriNavigazione !==
-            "function"
-          ) {
-            alert(
-              "Modulo di navigazione non disponibile."
-            );
-            return;
-          }
-
-          window.apriNavigazione(
-            ristorante
-          );
-
-        };
-
-    }
-  );
-
-  return marker;
-
-}
-
-
-function chiudiPannelloRistoranti() {
-
-  const panel =
-    document.getElementById(
-      "ristorantiMapPanel"
-    );
-
-  if (panel) {
-
-    panel.remove();
-
-  }
-
-}
-
-
-function mostraTuttiRistoranti(uscita) {
-
-  if (!uscita) {
-
-    return;
-
-  }
-
-  const ristoranti =
-    ristorantiPerUscita(
-      uscita
-    );
-
-  ristorantiLayer.clearLayers();
-
-  chiudiPannelloRistoranti();
-
-
-  // -----------------------------------------------
-  // CREA MARKER
-  // -----------------------------------------------
-
-  const bounds =
-    L.latLngBounds(
-      [
-        [
-          uscita.lat,
-          uscita.lon
-        ]
-      ]
-    );
-
-  let markerCount = 0;
-
-  ristoranti.forEach(
-    function(ristorante) {
-
-      const marker =
-        creaMarkerRistorante(
-          ristorante
-        );
-
-      if (!marker) {
-
-        return;
-
-      }
-
-      marker.addTo(
-        ristorantiLayer
-      );
-
-      bounds.extend(
-        [
-          ristorante.lat,
-          ristorante.lon
-        ]
-      );
-
-      markerCount++;
-
-    }
-  );
-
-
-  if (bounds.isValid()) {
-
-    map.fitBounds(
-      bounds,
-      {
-        padding:
-          [45, 45],
-
-        maxZoom:
-          15
-      }
-    );
-
-  }
-
-
-  // -----------------------------------------------
-  // PANNELLO
-  // -----------------------------------------------
-
-  const panel =
-    document.createElement(
-      "div"
-    );
-
-  panel.id =
-    "ristorantiMapPanel";
-
-  panel.style.cssText =
-    "position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:80vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:18px;font-family:system-ui,sans-serif;";
-
-
-  if (!ristoranti.length) {
-
-    panel.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong style="font-size:20px">
-          Nessun ristorante
-        </strong>
-
-        <button
-          id="chiudiRistorantiMap"
-          type="button"
-          style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer"
-        >
-          ×
-        </button>
-      </div>
-
-      <p>
-        Non risultano ristoranti associati
-        a questa uscita nel database.
-      </p>
-    `;
-
-    document.body.appendChild(
-      panel
-    );
-
-    panel
-      .querySelector(
-        "#chiudiRistorantiMap"
-      )
-      .addEventListener(
-        "click",
-        chiudiPannelloRistoranti
-      );
-
-    return;
-
-  }
-
-
-  const cards =
-    ristoranti.map(
-      function(
-        ristorante,
-        index
-      ) {
-
-        const nome =
-          escapeHtml(
-            ristorante.nome ||
-            "Ristorante"
-          );
-
-        const distanza =
-          Number.isFinite(
-            Number(
-              ristorante?.uscita?.distanza_m
-            )
-          )
-            ? Math.round(
-                Number(
-                  ristorante.uscita.distanza_m
-                )
-              ) + " m dall'uscita"
-            : "";
-
-        const parcheggio =
-          ristorante.parcheggio?.presente === true
-            ? "🅿️ Parcheggio " +
-              (
-                ristorante.parcheggio.distanza_m != null
-                  ? Math.round(
-                      Number(
-                        ristorante.parcheggio.distanza_m
-                      )
-                    ) + " m"
-                  : "presente"
-              )
-            : "🅿️ Parcheggio da verificare";
-
-        return `
-          <div
-            style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px"
-          >
-
-            <div
-              style="display:flex;justify-content:space-between;gap:10px"
-            >
-
-              <div>
-
-                <strong>
-                  ${index + 1}. ${nome}
-                </strong>
-
-                ${
-                  ristorante.cucina
-                    ? `<div style="font-size:12px;color:#555;margin-top:3px">
-                        🍽️ ${escapeHtml(
-                          ristorante.cucina
-                        )}
-                      </div>`
-                    : ""
-                }
-
-              </div>
-
-              ${
-                typeof ristorante.lat === "number" &&
-                typeof ristorante.lon === "number"
-
-                  ? `<button
-                      type="button"
-                      data-ristorante-index="${index}"
-                      style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer"
-                    >
-                      📍 MAPPA
-                    </button>`
-
-                  : ""
-              }
-
-            </div>
-
-            <div
-              style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px"
-            >
-
-              ${
-                distanza
-                  ? `<span>📍 ${distanza}</span>`
-                  : ""
-              }
-
-              <span>
-                ${parcheggio}
-              </span>
-
-              ${
-                ristorante.telefono
-                  ? `<span>
-                      📞 ${escapeHtml(
-                        ristorante.telefono
-                      )}
-                    </span>`
-                  : ""
-              }
-
-            </div>
-
-          </div>
-        `;
-
-      }
-    )
-    .join("");
-
-
-  panel.innerHTML = `
-
-    <div
-      style="display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px"
-    >
-
-      <div>
-
-        <strong style="font-size:20px">
-          🍴 Ristoranti
-        </strong>
-
-        <div style="font-size:13px;color:#555">
-          ${escapeHtml(
-            uscita.nome ||
-            "Uscita autostradale"
-          )}
-
-          ·
-
-          ${ristoranti.length}
-          trovati
-
-        </div>
-
-      </div>
-
-
-      <button
-        id="chiudiRistorantiMap"
-        type="button"
-        style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer"
-      >
-        ×
-      </button>
-
-    </div>
-
-    ${cards}
-
-    <button
-      id="chiudiRistorantiMapBottom"
-      type="button"
-      style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:700;cursor:pointer"
-    >
-      CHIUDI
-    </button>
-
-  `;
-
-  document.body.appendChild(
-    panel
-  );
-
-
-  panel
-    .querySelector(
-      "#chiudiRistorantiMap"
-    )
-    .addEventListener(
-      "click",
-      chiudiPannelloRistoranti
-    );
-
-  panel
-    .querySelector(
-      "#chiudiRistorantiMapBottom"
-    )
-    .addEventListener(
-      "click",
-      chiudiPannelloRistoranti
-    );
-
-
-  panel
-    .querySelectorAll(
-      "[data-ristorante-index]"
-    )
-    .forEach(
-      function(button) {
-
-        button.addEventListener(
-          "click",
-          function() {
-
-            const index =
-              Number(
-                button.getAttribute(
-                  "data-ristorante-index"
-                )
-              );
-
-            const ristorante =
-              ristoranti[index];
-
-            if (!ristorante) {
-
-              return;
-
-            }
-
-            // Chiudiamo il pannello e tutti gli eventuali popup
-            // precedentemente aperti.
-            chiudiPannelloRistoranti();
-            map.closePopup();
-
-            ristorantiLayer.eachLayer(
-              function(layer) {
-                if (layer.closePopup) {
-                  layer.closePopup();
-                }
-              }
-            );
-
-            // Portiamo la mappa esattamente sul ristorante scelto.
-            map.setView(
-              [
-                ristorante.lat,
-                ristorante.lon
-              ],
-              17,
-              {
-                animate:
-                  true
-              }
-            );
-
-            // Apriamo SOLO il popup del ristorante cliccato.
-            // Usiamo il riferimento diretto all'oggetto, non solo
-            // le coordinate: così non vengono aperti più "NAVIGA"
-            // quando due ristoranti condividono la stessa posizione.
-            let markerSelezionato = null;
-
-            ristorantiLayer.eachLayer(
-              function(layer) {
-                if (
-                  layer._ristorante === ristorante
-                ) {
-                  markerSelezionato = layer;
-                }
-              }
-            );
-
-            if (markerSelezionato) {
-              setTimeout(
-                function() {
-                  markerSelezionato.openPopup();
-                },
-                250
-              );
-            }
-
-          }
-        );
-
-      }
-    );
-
-
-  console.log(
-    "Ristoranti mostrati:",
-    ristoranti.length,
-    "Marker:",
-    markerCount,
-    "Uscita:",
-    uscita.nome
-  );
-
-}
-
-
-window.mostraTuttiRistoranti =
-  mostraTuttiRistoranti;
-
-
-fetch("./ristoranti.json")
-  .then(
-    function(response) {
-
-      if (!response.ok) {
-
-        throw new Error(
-          "Impossibile caricare ristoranti.json"
-        );
-
-      }
-
-      return response.json();
-
-    }
-  )
-  .then(
-    function(database) {
-
-      if (
-        !Array.isArray(database)
-      ) {
-
-        throw new Error(
-          "ristoranti.json non contiene un array"
-        );
-
-      }
-
-      ristorantiDatabase =
-        database;
-
-      ristorantiPerUscitaMap.clear();
-
-      ristorantiDatabase.forEach(
-        function(ristorante) {
-
-          const id =
-            ristorante?.uscita?.id;
-
-          if (!id) {
-
-            return;
-
-          }
-
-          const chiave =
-            String(id);
-
-          if (
-            !ristorantiPerUscitaMap.has(
-              chiave
-            )
-          ) {
-
-            ristorantiPerUscitaMap.set(
-              chiave,
-              []
-            );
-
-          }
-
-          ristorantiPerUscitaMap
-            .get(chiave)
-            .push(
-              ristorante
-            );
-
-        }
-      );
-
-      console.log(
-        "Ristoranti caricati:",
-        ristorantiDatabase.length
-      );
-
-      console.log(
-        "Uscite con ristoranti:",
-        ristorantiPerUscitaMap.size
-      );
-
-    }
-  )
-  .catch(
-    function(error) {
-
-      console.error(
-        "Errore database ristoranti:",
-        error
-      );
-
-    }
-  );
-
-
-// =====================================================
-// CLICK "MOSTRA TUTTI" DAL POPUP
-// =====================================================
-
-document.addEventListener(
-  "click",
-  function(event) {
-
-    const button =
-      event.target.closest(
-        ".mostra-tutti-ristoranti"
-      );
-
-    if (!button) {
-
-      return;
-
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const id =
-      button.getAttribute(
-        "data-uscita-id"
-      );
-
-    if (!id) {
-
-      return;
-
-    }
-
-    const uscita =
-      usciteItaliane.find(
-        function(item) {
-
-          return String(
-            item.id || ""
-          ) === String(id);
-
-        }
-      );
-
-    if (!uscita) {
-
-      console.error(
-        "Uscita non trovata:",
-        id
-      );
-
-      return;
-
-    }
-
-    mostraTuttiRistoranti(
-      uscita
-    );
-
-  },
-  true
-);
-
 
 // =====================================================
 // CONTROLLA SE E' AREA DI SERVIZIO / AUTOGRILL
@@ -1171,30 +273,12 @@ function uscitaValida(uscita) {
 
 function creaPopup(uscita) {
 
-  const id =
-    escapeHtml(
-      String(
-        uscita.id || ""
-      )
-    );
-
-  const ristoranti =
-    ristorantiPerUscita(
-      uscita
-    );
-
-  const numero =
-    ristoranti.length;
-
   let popup = `
 
     <div class="exit-popup">
 
       <strong>
-        ${escapeHtml(
-          uscita.nome ||
-          "Uscita autostradale"
-        )}
+        ${uscita.nome || "Uscita autostradale"}
       </strong>
 
   `;
@@ -1205,9 +289,7 @@ function creaPopup(uscita) {
     popup += `
 
       <small>
-        ${escapeHtml(
-          uscita.autostrada
-        )}
+        ${uscita.autostrada}
 
     `;
 
@@ -1215,9 +297,7 @@ function creaPopup(uscita) {
     if (uscita.numero_uscita) {
 
       popup +=
-        ` · Uscita ${escapeHtml(
-          uscita.numero_uscita
-        )}`;
+        ` · Uscita ${uscita.numero_uscita}`;
 
     }
 
@@ -1236,9 +316,7 @@ function creaPopup(uscita) {
     popup += `
 
       <small>
-        ${escapeHtml(
-          uscita.nome_autostrada
-        )}
+        ${uscita.nome_autostrada}
       </small>
 
     `;
@@ -1251,31 +329,6 @@ function creaPopup(uscita) {
       <small>
         📍 Uscita autostradale
       </small>
-
-      <button
-        type="button"
-        class="mostra-tutti-ristoranti"
-        data-uscita-id="${id}"
-        style="
-          display:block;
-          width:100%;
-          margin-top:10px;
-          border:0;
-          border-radius:10px;
-          background:#075c3b;
-          color:#fff;
-          padding:10px 12px;
-          font-weight:700;
-          cursor:pointer;
-        "
-      >
-        🍴 MOSTRA TUTTI
-        ${
-          numero
-            ? `(${numero})`
-            : ""
-        }
-      </button>
 
     </div>
 
@@ -1493,195 +546,200 @@ if (mapButton) {
 
 
 // =====================================================
-// GEOLOCALIZZAZIONE
+// GEOLOCALIZZAZIONE - VERSIONE ROBUSTA
 // =====================================================
 
 const locationButton =
-  document.getElementById(
-    "locationButton"
-  );
-
+  document.getElementById("locationButton");
 
 let userMarker = null;
-
+let userAccuracyCircle = null;
+let locationSearching = false;
 
 if (locationButton) {
 
-  locationButton.addEventListener(
+  locationButton.addEventListener("click", function () {
 
-    "click",
+    if (locationSearching) return;
 
-    function() {
+    // La Geolocation API richiede normalmente HTTPS (Vercel lo fornisce).
+    if (!window.isSecureContext) {
+      alert(
+        "La geolocalizzazione funziona solo su una connessione sicura (HTTPS). " +
+        "Apri il sito tramite il suo indirizzo HTTPS."
+      );
+      return;
+    }
 
+    if (!navigator.geolocation) {
+      alert("La geolocalizzazione non è disponibile in questo browser.");
+      return;
+    }
 
-      if (!navigator.geolocation) {
+    locationSearching = true;
+    locationButton.disabled = true;
+    locationButton.textContent = "📍 RICERCA POSIZIONE...";
 
-        alert(
-          "La geolocalizzazione non è disponibile."
+    function posizioneTrovata(position) {
+
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const accuracy = Number.isFinite(position.coords.accuracy)
+        ? position.coords.accuracy
+        : 0;
+
+      console.log("📍 POSIZIONE TROVATA");
+      console.log("Latitudine:", lat);
+      console.log("Longitudine:", lng);
+      console.log("Precisione:", accuracy, "metri");
+
+      // Rimuove marker e cerchio precedenti
+      if (userMarker) {
+        map.removeLayer(userMarker);
+      }
+
+      if (userAccuracyCircle) {
+        map.removeLayer(userAccuracyCircle);
+      }
+
+      // Cerchio della precisione GPS
+      userAccuracyCircle = L.circle([lat, lng], {
+        radius: Math.max(accuracy, 10),
+        color: "#075c3b",
+        weight: 2,
+        fillColor: "#075c3b",
+        fillOpacity: 0.12
+      }).addTo(map);
+
+      // Punto della posizione dell'utente
+      userMarker = L.circleMarker([lat, lng], {
+        radius: 9,
+        color: "#ffffff",
+        weight: 4,
+        fillColor: "#075c3b",
+        fillOpacity: 1
+      }).addTo(map);
+
+      userMarker
+        .bindPopup(
+          "📍 <strong>Sei qui</strong><br>Precisione circa " +
+          Math.round(accuracy) + " m"
+        )
+        .openPopup();
+
+      // Zoom proporzionato alla precisione reale
+      let zoom = 13;
+      if (accuracy <= 100) zoom = 16;
+      else if (accuracy <= 300) zoom = 15;
+      else if (accuracy <= 1000) zoom = 14;
+
+      map.flyTo([lat, lng], zoom, {
+        duration: 1.5
+      });
+
+      if (mapSection) {
+        mapSection.scrollIntoView({
+          behavior: "smooth"
+        });
+      }
+
+      locationButton.textContent = "📍 POSIZIONE TROVATA";
+      locationButton.disabled = false;
+      locationSearching = false;
+    }
+
+    function erroreGPS(error) {
+
+      console.error("Errore GPS:", error);
+
+      let messaggio = "Non siamo riusciti ad ottenere la tua posizione.";
+
+      switch (error.code) {
+        case 1:
+          messaggio =
+            "Permesso di geolocalizzazione negato. " +
+            "Consenti la posizione nelle autorizzazioni del browser e riprova.";
+          break;
+        case 2:
+          messaggio =
+            "La posizione non è momentaneamente disponibile. " +
+            "Provo nuovamente con una ricerca GPS più precisa...";
+          break;
+        case 3:
+          messaggio =
+            "La ricerca della posizione ha impiegato troppo tempo. " +
+            "Provo nuovamente con una ricerca GPS più precisa...";
+          break;
+      }
+
+      // Primo tentativo: posizione browser/rete, generalmente più veloce su PC.
+      // Se fallisce per posizione non disponibile o timeout, facciamo un secondo
+      // tentativo con GPS ad alta precisione.
+      if ((error.code === 2 || error.code === 3) && !window._gpsRetry) {
+        window._gpsRetry = true;
+
+        locationButton.textContent = "📍 RICERCA GPS PRECISA...";
+
+        navigator.geolocation.getCurrentPosition(
+          posizioneTrovata,
+          function (secondError) {
+            window._gpsRetry = false;
+            console.error("Secondo tentativo GPS fallito:", secondError);
+
+            let finale =
+              "Impossibile ottenere la tua posizione.\n\n";
+
+            if (secondError.code === 1) {
+              finale +=
+                "Il browser ha negato il permesso alla posizione. " +
+                "Controlla le autorizzazioni del sito.";
+            } else if (secondError.code === 2) {
+              finale +=
+                "Il dispositivo non sta fornendo una posizione valida. " +
+                "Verifica che la posizione/GPS sia attiva.";
+            } else if (secondError.code === 3) {
+              finale +=
+                "La ricerca è scaduta. Riprova tra qualche secondo.";
+            } else {
+              finale += "Errore GPS sconosciuto.";
+            }
+
+            alert(finale);
+            locationButton.textContent = "📍 USA LA MIA POSIZIONE";
+            locationButton.disabled = false;
+            locationSearching = false;
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 0
+          }
         );
 
         return;
-
       }
 
-
-      locationButton.textContent =
-        "📍 RICERCA POSIZIONE...";
-
-
-      navigator.geolocation.getCurrentPosition(
-
-        function(position) {
-
-          const lat =
-            position.coords.latitude;
-
-
-          const lng =
-            position.coords.longitude;
-
-
-          console.log(
-            "Posizione GPS:",
-            lat,
-            lng
-          );
-
-
-          // ---------------------------------------
-          // RIMUOVI VECCHIO MARKER
-          // ---------------------------------------
-
-          if (userMarker) {
-
-            map.removeLayer(
-              userMarker
-            );
-
-          }
-
-
-          // ---------------------------------------
-          // MARKER UTENTE
-          // ---------------------------------------
-
-          userMarker = L.circleMarker(
-
-            [
-              lat,
-              lng
-            ],
-
-            {
-
-              radius: 9,
-
-              color: "#ffffff",
-
-              weight: 4,
-
-              fillColor: "#075c3b",
-
-              fillOpacity: 1
-
-            }
-
-          );
-
-
-          userMarker.addTo(map);
-
-
-          userMarker
-
-            .bindPopup(
-              "📍 Sei qui"
-            )
-
-            .openPopup();
-
-
-          // ---------------------------------------
-          // ZOOM
-          // ---------------------------------------
-
-          map.flyTo(
-
-            [
-              lat,
-              lng
-            ],
-
-            13,
-
-            {
-              duration: 1.5
-            }
-
-          );
-
-
-          // ---------------------------------------
-          // SCROLL MAPPA
-          // ---------------------------------------
-
-          if (mapSection) {
-
-            mapSection.scrollIntoView({
-
-              behavior: "smooth"
-
-            });
-
-          }
-
-
-          locationButton.textContent =
-            "📍 POSIZIONE TROVATA";
-
-        },
-
-
-        function(error) {
-
-          console.error(
-            "Errore GPS:",
-            error
-          );
-
-
-          alert(
-
-            "Non siamo riusciti ad ottenere " +
-            "la tua posizione. " +
-            "Controlla l'autorizzazione " +
-            "alla geolocalizzazione."
-
-          );
-
-
-          locationButton.textContent =
-            "📍 USA LA MIA POSIZIONE";
-
-        },
-
-
-        {
-
-          enableHighAccuracy: true,
-
-          timeout: 10000,
-
-          maximumAge: 30000
-
-        }
-
-      );
-
+      window._gpsRetry = false;
+      alert(messaggio);
+      locationButton.textContent = "📍 USA LA MIA POSIZIONE";
+      locationButton.disabled = false;
+      locationSearching = false;
     }
 
-  );
+    // Primo tentativo: più compatibile e rapido su PC/Chromebook.
+    window._gpsRetry = false;
 
+    navigator.geolocation.getCurrentPosition(
+      posizioneTrovata,
+      erroreGPS,
+      {
+        enableHighAccuracy: false,
+        timeout: 15000,
+        maximumAge: 120000
+      }
+    );
+
+  });
 }
 
 
