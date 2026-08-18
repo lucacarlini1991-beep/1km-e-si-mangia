@@ -108,300 +108,974 @@ const exitIcon = L.divIcon({
 
 let usciteItaliane = [];
 
-
 // =====================================================
 // DATABASE RISTORANTI
 // =====================================================
 
 let ristorantiDatabase = [];
 
-const ristorantiLayer = L.layerGroup().addTo(map);
-const ristorantiPerUscitaMap = new Map();
+const ristorantiLayer =
+  L.layerGroup().addTo(map);
 
-const restaurantIcon = L.divIcon({
-  className: "restaurant-map-icon",
-  html:
-    '<div style="width:34px;height:34px;border-radius:50%;background:#ffffff;border:3px solid #075c3b;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35);">🍴</div>',
-  iconSize: [34, 34],
-  iconAnchor: [17, 17],
-  popupAnchor: [0, -17]
-});
+const ristorantiPerUscitaMap =
+  new Map();
+
+const restaurantIcon =
+  L.divIcon({
+
+    className:
+      "restaurant-map-icon",
+
+    html:
+      '<div style="width:34px;height:34px;border-radius:50%;background:#ffffff;border:3px solid #075c3b;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35);">🍴</div>',
+
+    iconSize:
+      [34, 34],
+
+    iconAnchor:
+      [17, 17],
+
+    popupAnchor:
+      [0, -17]
+
+  });
+
 
 function escapeHtml(value) {
-  return String(value == null ? "" : value)
+
+  return String(
+    value == null
+      ? ""
+      : value
+  )
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
 }
+
 
 function ristorantiPerUscita(uscita) {
-  if (!uscita || !uscita.id) return [];
-  return ristorantiPerUscitaMap.get(String(uscita.id)) || [];
+
+  if (!uscita || !uscita.id) {
+
+    return [];
+
+  }
+
+  return ristorantiPerUscitaMap.get(
+    String(uscita.id)
+  ) || [];
+
 }
 
-function creaPopupRistorante(ristorante) {
-  const nome = escapeHtml(ristorante.nome || "Ristorante");
-  const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
-    ? `<small>📍 ${Math.round(Number(ristorante.uscita.distanza_m))} m dall'uscita</small>`
-    : "";
-  const parcheggio = ristorante.parcheggio?.presente === true
-    ? `<small>🅿️ Parcheggio ${ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente"}</small>`
-    : `<small>🅿️ Parcheggio da verificare</small>`;
 
-  // Usiamo l'ID del ristorante per collegare il popup alla navigazione.
-  const ristoranteId = escapeHtml(
-    ristorante.id != null ? String(ristorante.id) : String(ristorante.nome || "")
-  );
+function creaPopupRistorante(ristorante) {
+
+  const nome =
+    escapeHtml(
+      ristorante.nome ||
+      "Ristorante"
+    );
+
+  const cucina =
+    ristorante.cucina
+      ? `
+        <div style="
+          font-size:13px;
+          color:#555;
+          margin-top:4px;
+        ">
+          🍽️ ${escapeHtml(ristorante.cucina)}
+        </div>
+      `
+      : "";
+
+  const distanza =
+    Number.isFinite(
+      Number(
+        ristorante?.uscita?.distanza_m
+      )
+    )
+      ? `
+        <div style="
+          font-size:13px;
+          color:#555;
+          margin-top:6px;
+        ">
+          📍 ${Math.round(
+            Number(
+              ristorante.uscita.distanza_m
+            )
+          )} m dall'uscita
+        </div>
+      `
+      : "";
+
+  const parcheggio =
+    ristorante.parcheggio?.presente === true
+      ? `
+        <div style="
+          font-size:13px;
+          color:#555;
+          margin-top:4px;
+        ">
+          🅿️ Parcheggio ${
+            ristorante.parcheggio.distanza_m != null
+              ? Math.round(
+                  Number(
+                    ristorante.parcheggio.distanza_m
+                  )
+                ) + " m"
+              : "presente"
+          }
+        </div>
+      `
+      : `
+        <div style="
+          font-size:13px;
+          color:#777;
+          margin-top:4px;
+        ">
+          🅿️ Parcheggio da verificare
+        </div>
+      `;
+
+  const telefono =
+    ristorante.telefono
+      ? `
+        <div style="
+          font-size:13px;
+          color:#555;
+          margin-top:4px;
+        ">
+          📞 ${escapeHtml(ristorante.telefono)}
+        </div>
+      `
+      : "";
+
+  const navigazione =
+    Number.isFinite(Number(ristorante.lat)) &&
+    Number.isFinite(Number(ristorante.lon))
+      ? `
+        <button
+          type="button"
+          class="btn-naviga-ristorante"
+          data-lat="${Number(ristorante.lat)}"
+          data-lon="${Number(ristorante.lon)}"
+          style="
+            display:block;
+            width:100%;
+            box-sizing:border-box;
+            margin-top:12px;
+            padding:10px 12px;
+            border:0;
+            border-radius:10px;
+            background:#075c3b;
+            color:#fff;
+            text-align:center;
+            font-weight:700;
+            font-size:14px;
+            cursor:pointer;
+          "
+        >
+          🧭 NAVIGA
+        </button>
+      `
+      : "";
 
   return `
-    <div class="popup-ristorante-1km" style="min-width:210px;line-height:1.4;text-align:center">
-      <strong style="display:block;font-size:16px;margin-bottom:5px">${nome}</strong>
-      ${ristorante.cucina ? `<small>🍽️ ${escapeHtml(ristorante.cucina)}</small>` : ""}
+    <div style="
+      min-width:220px;
+      max-width:280px;
+      line-height:1.35;
+    ">
+
+      <strong style="
+        display:block;
+        font-size:16px;
+        color:#073d2b;
+      ">
+        ${nome}
+      </strong>
+
+      ${cucina}
       ${distanza}
       ${parcheggio}
-      ${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}
+      ${telefono}
+      ${navigazione}
 
-      <button
-        type="button"
-        class="btn-naviga-ristorante"
-        data-naviga-ristorante="${ristoranteId}"
-        style="display:block;width:100%;margin-top:12px;padding:10px 12px;border:0;border-radius:9px;background:#075c3b;color:#fff;font-size:14px;font-weight:800;cursor:pointer"
-      >
-        🧭 NAVIGA
+    </div>
+  `;
+
+}
+
+
+
+// =====================================================
+// NAVIGAZIONE RISTORANTE - AUTONOMA
+// =====================================================
+// Non dipende da navigazione.js: il pulsante NAVIGA del
+// popup funziona anche se gli altri moduli non sono caricati.
+
+function chiudiSceltaNavigazione() {
+  const el = document.getElementById("sceltaNavigazioneRistorante");
+  if (el) el.remove();
+}
+
+function apriSceltaNavigazione(lat, lon) {
+  lat = Number(lat);
+  lon = Number(lon);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    alert("Coordinate del ristorante non disponibili.");
+    return;
+  }
+
+  chiudiSceltaNavigazione();
+
+  const overlay = document.createElement("div");
+  overlay.id = "sceltaNavigazioneRistorante";
+  overlay.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:10000;
+    background:rgba(0,0,0,.45);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      width:min(360px,100%);
+      background:#fff;
+      border-radius:16px;
+      padding:20px;
+      box-shadow:0 12px 40px rgba(0,0,0,.3);
+      font-family:Arial,sans-serif;
+    ">
+      <div style="font-size:20px;font-weight:800;color:#073d2b;margin-bottom:6px;">
+        🧭 Scegli navigazione
+      </div>
+      <div style="font-size:13px;color:#666;margin-bottom:16px;">
+        Come vuoi raggiungere il ristorante?
+      </div>
+
+      <button type="button" data-nav="google" style="width:100%;margin:5px 0;padding:12px;border:0;border-radius:10px;background:#075c3b;color:#fff;font-weight:700;cursor:pointer;">
+        Google Maps
+      </button>
+      <button type="button" data-nav="apple" style="width:100%;margin:5px 0;padding:12px;border:0;border-radius:10px;background:#222;color:#fff;font-weight:700;cursor:pointer;">
+        Apple Maps
+      </button>
+      <button type="button" data-nav="waze" style="width:100%;margin:5px 0;padding:12px;border:0;border-radius:10px;background:#168cff;color:#fff;font-weight:700;cursor:pointer;">
+        Waze
+      </button>
+      <button type="button" data-nav="close" style="width:100%;margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:10px;background:#fff;color:#555;font-weight:600;cursor:pointer;">
+        Annulla
       </button>
     </div>
   `;
+
+  overlay.addEventListener("click", function (event) {
+    if (event.target === overlay) {
+      chiudiSceltaNavigazione();
+      return;
+    }
+
+    const button = event.target.closest("button[data-nav]");
+    if (!button) return;
+
+    const scelta = button.getAttribute("data-nav");
+
+    if (scelta === "close") {
+      chiudiSceltaNavigazione();
+      return;
+    }
+
+    const destinazione = encodeURIComponent(`${lat},${lon}`);
+    let url = "";
+
+    if (scelta === "google") {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${destinazione}`;
+    } else if (scelta === "apple") {
+      url = `https://maps.apple.com/?daddr=${destinazione}&dirflg=d`;
+    } else if (scelta === "waze") {
+      url = `https://www.waze.com/ul?ll=${destinazione}&navigate=yes`;
+    }
+
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      chiudiSceltaNavigazione();
+    }
+  });
+
+  document.body.appendChild(overlay);
 }
+
+// API pubblica: se navigazione.js esiste può riutilizzarla.
+window.apriNavigazioneRistorante = apriSceltaNavigazione;
+
+// Un solo listener globale: funziona anche sui popup creati dopo il caricamento.
+document.addEventListener("click", function (event) {
+  const button = event.target.closest(".btn-naviga-ristorante");
+  if (!button) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  apriSceltaNavigazione(
+    button.getAttribute("data-lat"),
+    button.getAttribute("data-lon")
+  );
+});
 
 function creaMarkerRistorante(ristorante) {
-  if (typeof ristorante.lat !== "number" || typeof ristorante.lon !== "number") {
+
+  if (
+    typeof ristorante.lat !== "number" ||
+    typeof ristorante.lon !== "number"
+  ) {
+
     return null;
+
   }
 
-  const marker = L.marker([ristorante.lat, ristorante.lon], {
-    icon: restaurantIcon
-  });
+  const marker =
+    L.marker(
+      [
+        ristorante.lat,
+        ristorante.lon
+      ],
+      {
+        icon:
+          restaurantIcon
+      }
+    );
 
-  marker.bindPopup(creaPopupRistorante(ristorante));
+  // Colleghiamo il marker direttamente al ristorante.
+  // Serve per aprire esclusivamente il ristorante scelto
+  // dal pulsante "MAPPA", evitando popup multipli.
+  marker._ristorante = ristorante;
+
+  marker.bindPopup(
+    creaPopupRistorante(
+      ristorante
+    )
+  );
+
   return marker;
+
 }
+
 
 function chiudiPannelloRistoranti() {
-  const panel = document.getElementById("ristorantiMapPanel");
-  if (panel) panel.remove();
-}
 
-function mostraTuttiRistoranti(uscita) {
-  if (!uscita) return;
+  const panel =
+    document.getElementById(
+      "ristorantiMapPanel"
+    );
 
-  const ristoranti = ristorantiPerUscita(uscita);
-  ristorantiLayer.clearLayers();
-  chiudiPannelloRistoranti();
+  if (panel) {
 
-  const bounds = L.latLngBounds([[uscita.lat, uscita.lon]]);
-  let markerCount = 0;
+    panel.remove();
 
-  ristoranti.forEach(function(ristorante) {
-    const marker = creaMarkerRistorante(ristorante);
-    if (!marker) return;
-
-    marker.addTo(ristorantiLayer);
-    bounds.extend([ristorante.lat, ristorante.lon]);
-    markerCount++;
-  });
-
-  if (bounds.isValid()) {
-    map.fitBounds(bounds, {
-      padding: [45, 45],
-      maxZoom: 15
-    });
   }
 
-  const panel = document.createElement("div");
-  panel.id = "ristorantiMapPanel";
+}
+
+
+function mostraTuttiRistoranti(uscita) {
+
+  if (!uscita) {
+
+    return;
+
+  }
+
+  const ristoranti =
+    ristorantiPerUscita(
+      uscita
+    );
+
+  ristorantiLayer.clearLayers();
+
+  chiudiPannelloRistoranti();
+
+
+  // -----------------------------------------------
+  // CREA MARKER
+  // -----------------------------------------------
+
+  const bounds =
+    L.latLngBounds(
+      [
+        [
+          uscita.lat,
+          uscita.lon
+        ]
+      ]
+    );
+
+  let markerCount = 0;
+
+  ristoranti.forEach(
+    function(ristorante) {
+
+      const marker =
+        creaMarkerRistorante(
+          ristorante
+        );
+
+      if (!marker) {
+
+        return;
+
+      }
+
+      marker.addTo(
+        ristorantiLayer
+      );
+
+      bounds.extend(
+        [
+          ristorante.lat,
+          ristorante.lon
+        ]
+      );
+
+      markerCount++;
+
+    }
+  );
+
+
+  if (bounds.isValid()) {
+
+    map.fitBounds(
+      bounds,
+      {
+        padding:
+          [45, 45],
+
+        maxZoom:
+          15
+      }
+    );
+
+  }
+
+
+  // -----------------------------------------------
+  // PANNELLO
+  // -----------------------------------------------
+
+  const panel =
+    document.createElement(
+      "div"
+    );
+
+  panel.id =
+    "ristorantiMapPanel";
+
   panel.style.cssText =
     "position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:80vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:18px;font-family:system-ui,sans-serif;";
 
+
   if (!ristoranti.length) {
+
     panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong style="font-size:20px">Nessun ristorante</strong>
-        <button id="chiudiRistorantiMap" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer">×</button>
-      </div>
-      <p>Non risultano ristoranti associati a questa uscita nel database.</p>
-    `;
-  } else {
-    const cards = ristoranti.map(function(ristorante, index) {
-      const nome = escapeHtml(ristorante.nome || "Ristorante");
-      const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
-        ? Math.round(Number(ristorante.uscita.distanza_m)) + " m dall'uscita"
-        : "";
-      const parcheggio = ristorante.parcheggio?.presente === true
-        ? "🅿️ Parcheggio " + (ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente")
-        : "🅿️ Parcheggio da verificare";
+        <strong style="font-size:20px">
+          Nessun ristorante
+        </strong>
 
-      return `
-        <div style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px">
-          <div style="display:flex;justify-content:space-between;gap:10px">
-            <div>
-              <strong>${index + 1}. ${nome}</strong>
-              ${ristorante.cucina ? `<div style="font-size:12px;color:#555;margin-top:3px">🍽️ ${escapeHtml(ristorante.cucina)}</div>` : ""}
-            </div>
-            ${typeof ristorante.lat === "number" && typeof ristorante.lon === "number"
-              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer">📍 MAPPA</button>`
-              : ""}
-          </div>
-          <div style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px">
-            ${distanza ? `<span>📍 ${distanza}</span>` : ""}
-            <span>${parcheggio}</span>
-            ${ristorante.telefono ? `<span>📞 ${escapeHtml(ristorante.telefono)}</span>` : ""}
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    panel.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px">
-        <div>
-          <strong style="font-size:20px">🍴 Ristoranti</strong>
-          <div style="font-size:13px;color:#555">${escapeHtml(uscita.nome || "Uscita autostradale")} · ${ristoranti.length} trovati</div>
-        </div>
-        <button id="chiudiRistorantiMap" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer">×</button>
+        <button
+          id="chiudiRistorantiMap"
+          type="button"
+          style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer"
+        >
+          ×
+        </button>
       </div>
-      ${cards}
-      <button id="chiudiRistorantiMapBottom" type="button" style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:700;cursor:pointer">CHIUDI</button>
+
+      <p>
+        Non risultano ristoranti associati
+        a questa uscita nel database.
+      </p>
     `;
+
+    document.body.appendChild(
+      panel
+    );
+
+    panel
+      .querySelector(
+        "#chiudiRistorantiMap"
+      )
+      .addEventListener(
+        "click",
+        chiudiPannelloRistoranti
+      );
+
+    return;
+
   }
 
-  document.body.appendChild(panel);
 
-  const closeTop = panel.querySelector("#chiudiRistorantiMap");
-  if (closeTop) closeTop.addEventListener("click", chiudiPannelloRistoranti);
+  const cards =
+    ristoranti.map(
+      function(
+        ristorante,
+        index
+      ) {
 
-  const closeBottom = panel.querySelector("#chiudiRistorantiMapBottom");
-  if (closeBottom) closeBottom.addEventListener("click", chiudiPannelloRistoranti);
+        const nome =
+          escapeHtml(
+            ristorante.nome ||
+            "Ristorante"
+          );
 
-  panel.querySelectorAll("[data-ristorante-index]").forEach(function(button) {
-    button.addEventListener("click", function() {
-      const index = Number(button.getAttribute("data-ristorante-index"));
-      const ristorante = ristoranti[index];
-      if (!ristorante) return;
+        const distanza =
+          Number.isFinite(
+            Number(
+              ristorante?.uscita?.distanza_m
+            )
+          )
+            ? Math.round(
+                Number(
+                  ristorante.uscita.distanza_m
+                )
+              ) + " m dall'uscita"
+            : "";
 
-      chiudiPannelloRistoranti();
-      map.setView([ristorante.lat, ristorante.lon], 17, { animate: true });
+        const parcheggio =
+          ristorante.parcheggio?.presente === true
+            ? "🅿️ Parcheggio " +
+              (
+                ristorante.parcheggio.distanza_m != null
+                  ? Math.round(
+                      Number(
+                        ristorante.parcheggio.distanza_m
+                      )
+                    ) + " m"
+                  : "presente"
+              )
+            : "🅿️ Parcheggio da verificare";
 
-      ristorantiLayer.eachLayer(function(layer) {
-        if (
-          layer.getLatLng &&
-          Math.abs(layer.getLatLng().lat - ristorante.lat) < 0.000001 &&
-          Math.abs(layer.getLatLng().lng - ristorante.lon) < 0.000001
-        ) {
-          layer.openPopup();
-        }
-      });
-    });
-  });
+        return `
+          <div
+            style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px"
+          >
 
-  console.log("Ristoranti mostrati:", ristoranti.length, "Marker:", markerCount, "Uscita:", uscita.nome);
+            <div
+              style="display:flex;justify-content:space-between;gap:10px"
+            >
+
+              <div>
+
+                <strong>
+                  ${index + 1}. ${nome}
+                </strong>
+
+                ${
+                  ristorante.cucina
+                    ? `<div style="font-size:12px;color:#555;margin-top:3px">
+                        🍽️ ${escapeHtml(
+                          ristorante.cucina
+                        )}
+                      </div>`
+                    : ""
+                }
+
+              </div>
+
+              ${
+                typeof ristorante.lat === "number" &&
+                typeof ristorante.lon === "number"
+
+                  ? `<button
+                      type="button"
+                      data-ristorante-index="${index}"
+                      style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer"
+                    >
+                      📍 MAPPA
+                    </button>`
+
+                  : ""
+              }
+
+            </div>
+
+            <div
+              style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px"
+            >
+
+              ${
+                distanza
+                  ? `<span>📍 ${distanza}</span>`
+                  : ""
+              }
+
+              <span>
+                ${parcheggio}
+              </span>
+
+              ${
+                ristorante.telefono
+                  ? `<span>
+                      📞 ${escapeHtml(
+                        ristorante.telefono
+                      )}
+                    </span>`
+                  : ""
+              }
+
+            </div>
+
+          </div>
+        `;
+
+      }
+    )
+    .join("");
+
+
+  panel.innerHTML = `
+
+    <div
+      style="display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px"
+    >
+
+      <div>
+
+        <strong style="font-size:20px">
+          🍴 Ristoranti
+        </strong>
+
+        <div style="font-size:13px;color:#555">
+          ${escapeHtml(
+            uscita.nome ||
+            "Uscita autostradale"
+          )}
+
+          ·
+
+          ${ristoranti.length}
+          trovati
+
+        </div>
+
+      </div>
+
+
+      <button
+        id="chiudiRistorantiMap"
+        type="button"
+        style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer"
+      >
+        ×
+      </button>
+
+    </div>
+
+    ${cards}
+
+    <button
+      id="chiudiRistorantiMapBottom"
+      type="button"
+      style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:700;cursor:pointer"
+    >
+      CHIUDI
+    </button>
+
+  `;
+
+  document.body.appendChild(
+    panel
+  );
+
+
+  panel
+    .querySelector(
+      "#chiudiRistorantiMap"
+    )
+    .addEventListener(
+      "click",
+      chiudiPannelloRistoranti
+    );
+
+  panel
+    .querySelector(
+      "#chiudiRistorantiMapBottom"
+    )
+    .addEventListener(
+      "click",
+      chiudiPannelloRistoranti
+    );
+
+
+  panel
+    .querySelectorAll(
+      "[data-ristorante-index]"
+    )
+    .forEach(
+      function(button) {
+
+        button.addEventListener(
+          "click",
+          function() {
+
+            const index =
+              Number(
+                button.getAttribute(
+                  "data-ristorante-index"
+                )
+              );
+
+            const ristorante =
+              ristoranti[index];
+
+            if (!ristorante) {
+
+              return;
+
+            }
+
+            // Chiudiamo il pannello e tutti gli eventuali popup
+            // precedentemente aperti.
+            chiudiPannelloRistoranti();
+            map.closePopup();
+
+            ristorantiLayer.eachLayer(
+              function(layer) {
+                if (layer.closePopup) {
+                  layer.closePopup();
+                }
+              }
+            );
+
+            // Portiamo la mappa esattamente sul ristorante scelto.
+            map.setView(
+              [
+                ristorante.lat,
+                ristorante.lon
+              ],
+              17,
+              {
+                animate:
+                  true
+              }
+            );
+
+            // Apriamo SOLO il popup del ristorante cliccato.
+            // Usiamo il riferimento diretto all'oggetto, non solo
+            // le coordinate: così non vengono aperti più "NAVIGA"
+            // quando due ristoranti condividono la stessa posizione.
+            let markerSelezionato = null;
+
+            ristorantiLayer.eachLayer(
+              function(layer) {
+                if (
+                  layer._ristorante === ristorante
+                ) {
+                  markerSelezionato = layer;
+                }
+              }
+            );
+
+            if (markerSelezionato) {
+              setTimeout(
+                function() {
+                  markerSelezionato.openPopup();
+                },
+                250
+              );
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+  console.log(
+    "Ristoranti mostrati:",
+    ristoranti.length,
+    "Marker:",
+    markerCount,
+    "Uscita:",
+    uscita.nome
+  );
+
 }
 
-window.mostraTuttiRistoranti = mostraTuttiRistoranti;
 
-// Carica e indicizza il database ristoranti per ID uscita.
+window.mostraTuttiRistoranti =
+  mostraTuttiRistoranti;
+
+
 fetch("./ristoranti.json")
-  .then(function(response) {
-    if (!response.ok) throw new Error("Impossibile caricare ristoranti.json");
-    return response.json();
-  })
-  .then(function(database) {
-    if (!Array.isArray(database)) {
-      throw new Error("ristoranti.json non contiene un array");
+  .then(
+    function(response) {
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Impossibile caricare ristoranti.json"
+        );
+
+      }
+
+      return response.json();
+
+    }
+  )
+  .then(
+    function(database) {
+
+      if (
+        !Array.isArray(database)
+      ) {
+
+        throw new Error(
+          "ristoranti.json non contiene un array"
+        );
+
+      }
+
+      ristorantiDatabase =
+        database;
+
+      ristorantiPerUscitaMap.clear();
+
+      ristorantiDatabase.forEach(
+        function(ristorante) {
+
+          const id =
+            ristorante?.uscita?.id;
+
+          if (!id) {
+
+            return;
+
+          }
+
+          const chiave =
+            String(id);
+
+          if (
+            !ristorantiPerUscitaMap.has(
+              chiave
+            )
+          ) {
+
+            ristorantiPerUscitaMap.set(
+              chiave,
+              []
+            );
+
+          }
+
+          ristorantiPerUscitaMap
+            .get(chiave)
+            .push(
+              ristorante
+            );
+
+        }
+      );
+
+      console.log(
+        "Ristoranti caricati:",
+        ristorantiDatabase.length
+      );
+
+      console.log(
+        "Uscite con ristoranti:",
+        ristorantiPerUscitaMap.size
+      );
+
+    }
+  )
+  .catch(
+    function(error) {
+
+      console.error(
+        "Errore database ristoranti:",
+        error
+      );
+
+    }
+  );
+
+
+// =====================================================
+// CLICK "MOSTRA TUTTI" DAL POPUP
+// =====================================================
+
+document.addEventListener(
+  "click",
+  function(event) {
+
+    const button =
+      event.target.closest(
+        ".mostra-tutti-ristoranti"
+      );
+
+    if (!button) {
+
+      return;
+
     }
 
-    ristorantiDatabase = database;
-    ristorantiPerUscitaMap.clear();
+    event.preventDefault();
+    event.stopPropagation();
 
-    ristorantiDatabase.forEach(function(ristorante) {
-      const id = ristorante?.uscita?.id;
-      if (!id) return;
+    const id =
+      button.getAttribute(
+        "data-uscita-id"
+      );
 
-      const chiave = String(id);
-      if (!ristorantiPerUscitaMap.has(chiave)) {
-        ristorantiPerUscitaMap.set(chiave, []);
-      }
+    if (!id) {
 
-      // Manteniamo solo il raggio configurato: 2 km + 100 m.
-      const distanza = Number(ristorante?.uscita?.distanza_m);
-      if (!Number.isFinite(distanza) || distanza <= CONFIG.distanzaMassimaEffettivaMetri) {
-        ristorantiPerUscitaMap.get(chiave).push(ristorante);
-      }
-    });
+      return;
 
-    console.log("DATABASE RISTORANTI - caricati:", ristorantiDatabase.length);
-    console.log("Uscite con ristoranti:", ristorantiPerUscitaMap.size);
-  })
-  .catch(function(error) {
-    console.error("Errore database ristoranti:", error);
-  });
+    }
 
-// Pulsante presente nel popup dell'uscita.
-document.addEventListener("click", function(event) {
-  const button = event.target.closest("[data-ristoranti-uscita]");
-  if (!button) return;
+    const uscita =
+      usciteItaliane.find(
+        function(item) {
 
-  event.preventDefault();
-  event.stopPropagation();
+          return String(
+            item.id || ""
+          ) === String(id);
 
-  const id = button.getAttribute("data-ristoranti-uscita");
-  const uscita = usciteItaliane.find(function(item) {
-    return String(item.id || "") === String(id);
-  });
+        }
+      );
 
-  if (!uscita) {
-    console.error("Uscita non trovata:", id);
-    return;
-  }
+    if (!uscita) {
 
-  mostraTuttiRistoranti(uscita);
-}, true);
+      console.error(
+        "Uscita non trovata:",
+        id
+      );
 
+      return;
 
-// =====================================================
-// NAVIGAZIONE DAL POPUP DEL RISTORANTE
-// =====================================================
+    }
 
-// Il popup viene creato dinamicamente da Leaflet, quindi usiamo
-// la delega degli eventi invece di collegare il click al momento
-// della creazione del bottone.
-document.addEventListener("click", function(event) {
-  const button = event.target.closest("[data-naviga-ristorante]");
-  if (!button) return;
+    mostraTuttiRistoranti(
+      uscita
+    );
 
-  event.preventDefault();
-  event.stopPropagation();
-
-  const id = button.getAttribute("data-naviga-ristorante");
-
-  const ristorante = ristorantiDatabase.find(function(item) {
-    const itemId = item?.id != null ? String(item.id) : String(item?.nome || "");
-    return itemId === String(id);
-  });
-
-  if (!ristorante) {
-    console.error("Navigazione: ristorante non trovato:", id);
-    return;
-  }
-
-  if (typeof window.apriNavigazione !== "function") {
-    alert("La navigazione non è disponibile. Ricarica la pagina.");
-    console.error("window.apriNavigazione non disponibile");
-    return;
-  }
-
-  window.apriNavigazione(ristorante);
-}, true);
+  },
+  true
+);
 
 
 // =====================================================
@@ -568,12 +1242,30 @@ function uscitaValida(uscita) {
 
 function creaPopup(uscita) {
 
+  const id =
+    escapeHtml(
+      String(
+        uscita.id || ""
+      )
+    );
+
+  const ristoranti =
+    ristorantiPerUscita(
+      uscita
+    );
+
+  const numero =
+    ristoranti.length;
+
   let popup = `
 
     <div class="exit-popup">
 
       <strong>
-        ${uscita.nome || "Uscita autostradale"}
+        ${escapeHtml(
+          uscita.nome ||
+          "Uscita autostradale"
+        )}
       </strong>
 
   `;
@@ -584,7 +1276,9 @@ function creaPopup(uscita) {
     popup += `
 
       <small>
-        ${uscita.autostrada}
+        ${escapeHtml(
+          uscita.autostrada
+        )}
 
     `;
 
@@ -592,7 +1286,9 @@ function creaPopup(uscita) {
     if (uscita.numero_uscita) {
 
       popup +=
-        ` · Uscita ${uscita.numero_uscita}`;
+        ` · Uscita ${escapeHtml(
+          uscita.numero_uscita
+        )}`;
 
     }
 
@@ -611,7 +1307,9 @@ function creaPopup(uscita) {
     popup += `
 
       <small>
-        ${uscita.nome_autostrada}
+        ${escapeHtml(
+          uscita.nome_autostrada
+        )}
       </small>
 
     `;
@@ -627,10 +1325,27 @@ function creaPopup(uscita) {
 
       <button
         type="button"
-        data-ristoranti-uscita="${escapeHtml(uscita.id)}"
-        style="margin-top:10px;width:100%;padding:9px;border:0;border-radius:8px;cursor:pointer;background:#075c3b;color:#fff;font-weight:700;"
+        class="mostra-tutti-ristoranti"
+        data-uscita-id="${id}"
+        style="
+          display:block;
+          width:100%;
+          margin-top:10px;
+          border:0;
+          border-radius:10px;
+          background:#075c3b;
+          color:#fff;
+          padding:10px 12px;
+          font-weight:700;
+          cursor:pointer;
+        "
       >
-        🍝 MOSTRA RISTORANTI
+        🍴 MOSTRA TUTTI
+        ${
+          numero
+            ? `(${numero})`
+            : ""
+        }
       </button>
 
     </div>
@@ -857,272 +1572,185 @@ const locationButton =
     "locationButton"
   );
 
+
 let userMarker = null;
-let userAccuracyCircle = null;
+
 
 if (locationButton) {
 
   locationButton.addEventListener(
+
     "click",
+
     function() {
 
-      if (!window.isSecureContext) {
-
-        alert(
-          "La posizione può essere usata solo tramite HTTPS. " +
-          "Apri il sito dalla versione Vercel."
-        );
-
-        return;
-
-      }
 
       if (!navigator.geolocation) {
 
         alert(
-          "La geolocalizzazione non è disponibile " +
-          "su questo dispositivo/browser."
+          "La geolocalizzazione non è disponibile."
         );
 
         return;
 
       }
 
-      locationButton.disabled = true;
+
       locationButton.textContent =
         "📍 RICERCA POSIZIONE...";
 
-      function posizioneTrovata(position) {
 
-        const lat =
-          position.coords.latitude;
+      navigator.geolocation.getCurrentPosition(
 
-        const lng =
-          position.coords.longitude;
+        function(position) {
 
-        const accuracy =
-          Number(position.coords.accuracy) || 100;
+          const lat =
+            position.coords.latitude;
 
-        console.log(
-          "POSIZIONE GPS:",
-          lat,
-          lng,
-          "precisione:",
-          accuracy,
-          "metri"
-        );
 
-        // ---------------------------------------
-        // RIMUOVI VECCHIA POSIZIONE
-        // ---------------------------------------
+          const lng =
+            position.coords.longitude;
 
-        if (userMarker) {
 
-          map.removeLayer(
-            userMarker
+          console.log(
+            "Posizione GPS:",
+            lat,
+            lng
           );
 
-        }
 
-        if (userAccuracyCircle) {
+          // ---------------------------------------
+          // RIMUOVI VECCHIO MARKER
+          // ---------------------------------------
 
-          map.removeLayer(
-            userAccuracyCircle
-          );
+          if (userMarker) {
 
-        }
-
-        // ---------------------------------------
-        // PIN "TU SEI QUI"
-        // ---------------------------------------
-
-        const userIcon =
-          L.divIcon({
-            className:
-              "user-location-pin",
-            html: `
-              <div
-                style="
-                  width:34px;
-                  height:34px;
-                  border-radius:50% 50% 50% 0;
-                  background:#075c3b;
-                  border:4px solid #fff;
-                  box-shadow:0 2px 10px rgba(0,0,0,.35);
-                  transform:rotate(-45deg);
-                  position:relative;
-                "
-              >
-                <div
-                  style="
-                    position:absolute;
-                    width:10px;
-                    height:10px;
-                    border-radius:50%;
-                    background:#fff;
-                    top:8px;
-                    left:8px;
-                  "
-                ></div>
-              </div>
-            `,
-            iconSize: [42, 42],
-            iconAnchor: [21, 42],
-            popupAnchor: [0, -38]
-          });
-
-        userMarker =
-          L.marker(
-            [lat, lng],
-            {
-              icon: userIcon,
-              zIndexOffset: 10000
-            }
-          ).addTo(map);
-
-        // ---------------------------------------
-        // CERCHIO DI PRECISIONE GPS
-        // ---------------------------------------
-
-        userAccuracyCircle =
-          L.circle(
-            [lat, lng],
-            {
-              radius: accuracy,
-              color: "#075c3b",
-              weight: 2,
-              fillColor: "#075c3b",
-              fillOpacity: 0.12
-            }
-          ).addTo(map);
-
-        userMarker
-          .bindPopup(
-            "<strong>📍 TU SEI QUI</strong><br>" +
-            "Precisione GPS circa " +
-            Math.round(accuracy) +
-            " m"
-          )
-          .openPopup();
-
-        // ---------------------------------------
-        // PORTA LA MAPPA SULL'UTENTE
-        // ---------------------------------------
-
-        if (mapSection) {
-
-          mapSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-          });
-
-        }
-
-        // Dopo lo scroll Leaflet deve ricalcolare
-        // le dimensioni del contenitore.
-        setTimeout(
-          function() {
-
-            map.invalidateSize();
-
-            map.setView(
-              [lat, lng],
-              Math.max(
-                14,
-                Math.min(
-                  17,
-                  Math.round(
-                    17 -
-                    Math.log2(
-                      Math.max(
-                        1,
-                        accuracy / 50
-                      )
-                    )
-                  )
-                )
-              ),
-              {
-                animate: true
-              }
+            map.removeLayer(
+              userMarker
             );
 
-          },
-          450
-        );
+          }
 
-        locationButton.disabled = false;
 
-        locationButton.textContent =
-          "📍 POSIZIONE TROVATA";
+          // ---------------------------------------
+          // MARKER UTENTE
+          // ---------------------------------------
 
-      }
+          userMarker = L.circleMarker(
 
-      function errorePosizione(error) {
+            [
+              lat,
+              lng
+            ],
 
-        console.error(
-          "ERRORE GPS:",
-          error.code,
-          error.message
-        );
-
-        let messaggio =
-          "Non siamo riusciti a ottenere la tua posizione.";
-
-        if (error.code === 1) {
-
-          messaggio =
-            "Permesso di posizione negato. " +
-            "Consenti la posizione al browser e riprova.";
-
-        } else if (error.code === 2) {
-
-          messaggio =
-            "Posizione non disponibile. " +
-            "Controlla GPS e connessione e riprova.";
-
-        } else if (error.code === 3) {
-
-          messaggio =
-            "La ricerca della posizione ha impiegato troppo tempo. " +
-            "Riprova tra qualche secondo.";
-
-        }
-
-        alert(messaggio);
-
-        locationButton.disabled = false;
-
-        locationButton.textContent =
-          "📍 USA LA MIA POSIZIONE";
-
-      }
-
-      // Primo tentativo: rapido e compatibile.
-      navigator.geolocation.getCurrentPosition(
-        posizioneTrovata,
-        function() {
-
-          // Secondo tentativo: GPS più preciso.
-          navigator.geolocation.getCurrentPosition(
-            posizioneTrovata,
-            errorePosizione,
             {
-              enableHighAccuracy: true,
-              timeout: 20000,
-              maximumAge: 0
+
+              radius: 9,
+
+              color: "#ffffff",
+
+              weight: 4,
+
+              fillColor: "#075c3b",
+
+              fillOpacity: 1
+
             }
+
           );
 
+
+          userMarker.addTo(map);
+
+
+          userMarker
+
+            .bindPopup(
+              "📍 Sei qui"
+            )
+
+            .openPopup();
+
+
+          // ---------------------------------------
+          // ZOOM
+          // ---------------------------------------
+
+          map.flyTo(
+
+            [
+              lat,
+              lng
+            ],
+
+            13,
+
+            {
+              duration: 1.5
+            }
+
+          );
+
+
+          // ---------------------------------------
+          // SCROLL MAPPA
+          // ---------------------------------------
+
+          if (mapSection) {
+
+            mapSection.scrollIntoView({
+
+              behavior: "smooth"
+
+            });
+
+          }
+
+
+          locationButton.textContent =
+            "📍 POSIZIONE TROVATA";
+
         },
+
+
+        function(error) {
+
+          console.error(
+            "Errore GPS:",
+            error
+          );
+
+
+          alert(
+
+            "Non siamo riusciti ad ottenere " +
+            "la tua posizione. " +
+            "Controlla l'autorizzazione " +
+            "alla geolocalizzazione."
+
+          );
+
+
+          locationButton.textContent =
+            "📍 USA LA MIA POSIZIONE";
+
+        },
+
+
         {
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 60000
+
+          enableHighAccuracy: true,
+
+          timeout: 10000,
+
+          maximumAge: 30000
+
         }
+
       );
 
     }
+
   );
 
 }
@@ -1131,7 +1759,6 @@ if (locationButton) {
 // =====================================================
 // MENU PRINCIPALE - GESTIONE UNIFICATA
 // =====================================================
-
 
 (function () {
 
@@ -1333,3 +1960,223 @@ console.log(
   " m"
 );
 console.log("=================================");
+/* ============================================================
+   FIX NAVIGAZIONE RISTORANTE - AGGIUNTA FINALE
+   Non modificare il codice precedente.
+   ============================================================ */
+
+   (function () {
+
+    console.log("FIX NAVIGAZIONE: avviato");
+  
+    function aggiungiPulsanteNaviga() {
+  
+      // Cerca tutti i popup Leaflet presenti nella pagina
+      const popup = document.querySelector(".leaflet-popup");
+  
+      if (!popup) return;
+  
+      // Evita di aggiungere il pulsante due volte
+      if (popup.querySelector(".fix-naviga-ristorante")) return;
+  
+      // Recuperiamo il testo del popup
+      const testoPopup = popup.innerText || "";
+  
+      if (!testoPopup.trim()) return;
+  
+      /*
+        Prendiamo la prima riga del popup come nome del ristorante.
+        È sufficiente per cercarlo nelle app di navigazione.
+      */
+      let righe = testoPopup
+        .split("\n")
+        .map(r => r.trim())
+        .filter(Boolean);
+  
+      if (!righe.length) return;
+  
+      let nomeRistorante = righe[0];
+  
+      // Elimina eventuali simboli/emoji iniziali
+      nomeRistorante = nomeRistorante
+        .replace(/^[📍📌🍴🍽️⭐️🧭]+\s*/u, "")
+        .trim();
+  
+      if (!nomeRistorante) return;
+  
+      // Contenitore
+      const contenitore = document.createElement("div");
+  
+      contenitore.className = "fix-naviga-ristorante";
+  
+      contenitore.style.cssText = `
+        margin-top:12px;
+        padding-top:10px;
+        border-top:1px solid #ddd;
+        display:flex;
+        flex-direction:column;
+        gap:7px;
+      `;
+  
+      // Titolo
+      const titolo = document.createElement("div");
+  
+      titolo.innerHTML = "🧭 <strong>NAVIGA VERSO IL RISTORANTE</strong>";
+  
+      titolo.style.cssText = `
+        font-size:13px;
+        color:#075d3d;
+        margin-bottom:3px;
+      `;
+  
+      contenitore.appendChild(titolo);
+  
+      // Google Maps
+      const google = document.createElement("button");
+  
+      google.type = "button";
+      google.innerHTML = "📍 Google Maps";
+  
+      google.style.cssText = `
+        width:100%;
+        padding:9px 12px;
+        border:0;
+        border-radius:7px;
+        background:#075d3d;
+        color:white;
+        font-weight:bold;
+        cursor:pointer;
+        font-size:14px;
+      `;
+  
+      google.onclick = function () {
+  
+        const q = encodeURIComponent(nomeRistorante);
+  
+        window.open(
+          "https://www.google.com/maps/search/?api=1&query=" + q,
+          "_blank"
+        );
+      };
+  
+      contenitore.appendChild(google);
+  
+      // Apple Maps
+      const apple = document.createElement("button");
+  
+      apple.type = "button";
+      apple.innerHTML = "🍎 Apple Maps";
+  
+      apple.style.cssText = `
+        width:100%;
+        padding:9px 12px;
+        border:0;
+        border-radius:7px;
+        background:#222;
+        color:white;
+        font-weight:bold;
+        cursor:pointer;
+        font-size:14px;
+      `;
+  
+      apple.onclick = function () {
+  
+        const q = encodeURIComponent(nomeRistorante);
+  
+        window.open(
+          "https://maps.apple.com/?q=" + q,
+          "_blank"
+        );
+      };
+  
+      contenitore.appendChild(apple);
+  
+      // Waze
+      const waze = document.createElement("button");
+  
+      waze.type = "button";
+      waze.innerHTML = "🚗 Waze";
+  
+      waze.style.cssText = `
+        width:100%;
+        padding:9px 12px;
+        border:0;
+        border-radius:7px;
+        background:#00a9e8;
+        color:white;
+        font-weight:bold;
+        cursor:pointer;
+        font-size:14px;
+      `;
+  
+      waze.onclick = function () {
+  
+        const q = encodeURIComponent(nomeRistorante);
+  
+        window.open(
+          "https://www.waze.com/ul?q=" + q + "&navigate=yes",
+          "_blank"
+        );
+      };
+  
+      contenitore.appendChild(waze);
+  
+      // Inserimento nel popup
+      const contenuto = popup.querySelector(".leaflet-popup-content");
+  
+      if (contenuto) {
+        contenuto.appendChild(contenitore);
+      }
+  
+      console.log(
+        "FIX NAVIGAZIONE: pulsante aggiunto per",
+        nomeRistorante
+      );
+    }
+  
+  
+    /*
+      Controlliamo quando Leaflet apre un popup.
+    */
+    document.addEventListener("click", function () {
+  
+      setTimeout(aggiungiPulsanteNaviga, 100);
+      setTimeout(aggiungiPulsanteNaviga, 400);
+      setTimeout(aggiungiPulsanteNaviga, 800);
+  
+    });
+  
+  
+    /*
+      Controllo automatico del DOM.
+      Serve perché Leaflet crea il popup dinamicamente.
+    */
+    const osservatore = new MutationObserver(function () {
+  
+      aggiungiPulsanteNaviga();
+  
+    });
+  
+    osservatore.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  
+  
+    /*
+      Controllo iniziale
+    */
+    if (document.readyState === "loading") {
+  
+      document.addEventListener(
+        "DOMContentLoaded",
+        aggiungiPulsanteNaviga
+      );
+  
+    } else {
+  
+      aggiungiPulsanteNaviga();
+  
+    }
+  
+  })();
