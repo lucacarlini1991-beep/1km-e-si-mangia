@@ -1,441 +1,141 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esplora le uscite | 1 KM E SI MANGIA</title>
 
-  <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Esplora le uscite | 1 KM E SI MANGIA</title>
-
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
-  >
-
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
-    crossorigin
-  >
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
-
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="styles.css"
-  >
-
-  <style>
-    /* === LOGO ORIGINALE 1 KM E SI MANGIA === */
-    .logo-link{
-      display:flex !important;
-      align-items:center !important;
-      text-decoration:none !important;
-      line-height:0 !important;
-    }
-
-    .site-logo{
-      width:108px !important;
-      height:72px !important;
-      object-fit:contain !important;
-      display:block !important;
-    }
-
-    .mobile-menu-logo{
-      display:block !important;
-      width:150px !important;
-      height:auto !important;
-      margin:10px 0 0 !important;
-    }
-
-    @media (max-width:750px){
-      .site-logo{
-        width:82px !important;
-        height:58px !important;
-      }
-
-      .mobile-menu-logo{
-        width:135px !important;
-      }
-    }
-  </style>
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Leaflet: altezza esplicita per evitare mappa bianca */
+  #map { width: 100%; height: 560px; min-height: 560px; }
+  .map-section { min-height: 0 !important; }
+  @media (max-width: 750px) { #map { height: 65vh; min-height: 420px; } }
+</style>
 </head>
 
 <body>
 
-  <!-- =====================================================
-       HEADER
-       ===================================================== -->
+<header class="topbar">
+  <a href="index.html" class="logo" style="text-decoration:none;color:inherit;">
+    <div class="logo-pin">
+      <svg viewBox="0 0 48 55" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M24 2 C12 2 4 11 4 22 C4 37 24 53 24 53 C24 53 44 37 44 22 C44 11 36 2 24 2Z" fill="white"/>
+        <circle cx="24" cy="21" r="11" fill="none" stroke="#075c3b" stroke-width="3"/>
+        <circle cx="24" cy="21" r="5" fill="none" stroke="#075c3b" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <strong>1 KM</strong>
+      <span>E SI MANGIA</span>
+    </div>
+  </a>
 
-  <header class="topbar">
+  <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
+</header>
 
-    <a
-      href="index.html"
-      class="logo-link"
-      aria-label="1 KM E SI MANGIA"
-    >
-      <img
-        src="assets/logo-definitivo.png"
-        alt="1 KM E SI MANGIA"
-        class="site-logo"
-      >
-    </a>
+<nav class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <div class="mobile-menu-inner">
+    <button class="menu-close" id="menuClose" type="button" aria-label="Chiudi menu">×</button>
 
-    <a
-      href="index.html"
-      class="logo"
-      style="text-decoration:none;color:inherit;"
-    >
-
-      <div class="logo-pin">
-
-        <svg
-          viewBox="0 0 48 55"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-
-          <path
-            d="M24 2
-               C12 2 4 11 4 22
-               C4 37 24 53 24 53
-               C24 53 44 37 44 22
-               C44 11 36 2 24 2Z"
-            fill="white"
-          />
-
-          <circle
-            cx="24"
-            cy="21"
-            r="11"
-            fill="none"
-            stroke="#075c3b"
-            stroke-width="3"
-          />
-
-          <circle
-            cx="24"
-            cy="21"
-            r="5"
-            fill="none"
-            stroke="#075c3b"
-            stroke-width="2"
-          />
-
-        </svg>
-
-      </div>
-
-      <div class="logo-text">
-
-        <strong>
-          1 KM
-        </strong>
-
-        <span>
-          E SI MANGIA
-        </span>
-
-      </div>
-
-    </a>
-
-    <button
-      class="menu-button"
-      id="menuButton"
-      type="button"
-      aria-label="Apri menu"
-      aria-expanded="false"
-    >
-
-      ☰
-
-    </button>
-
-  </header>
-
-  <!-- =====================================================
-       MENU
-       ===================================================== -->
-
-  <nav
-    class="mobile-menu"
-    id="mobileMenu"
-    aria-hidden="true"
-  >
-
-    <div class="mobile-menu-inner">
-
-      <button
-        class="menu-close"
-        id="menuClose"
-        type="button"
-        aria-label="Chiudi menu"
-      >
-
-        ×
-
-      </button>
-
-      <div class="mobile-menu-title">
-        <img
-          src="assets/logo-definitivo.png"
-          alt="1 KM E SI MANGIA"
-          class="mobile-menu-logo"
-        >
-      </div>
-
-      <div class="menu-links">
-
-        <a
-          href="come-funziona.html"
-          class="menu-link"
-        >
-
-          <strong>
-            COME FUNZIONA
-          </strong>
-
-          <span>
-            Scopri come utilizzare il servizio
-          </span>
-
-        </a>
-
-        <a
-          href="index.html"
-          class="menu-link"
-        >
-
-          <strong>
-            HOME
-          </strong>
-
-          <span>
-            La nostra idea
-          </span>
-
-        </a>
-
-        <a
-          href="uscite.html"
-          class="menu-link"
-        >
-
-          <strong>
-            ESPLORA LE USCITE
-          </strong>
-
-          <span>
-            Trova l'uscita più vicina
-          </span>
-
-        </a>
-
-        <a
-          href="parcheggi.html"
-          class="menu-link"
-        >
-
-          <strong>
-            🚛 PARCHEGGI MEZZI PESANTI
-          </strong>
-
-          <span>
-            Trova un parcheggio per il tuo mezzo
-          </span>
-
-        </a>
-
-        <a
-          href="distanze.html"
-          class="menu-link"
-        >
-
-          <strong>
-            LE DISTANZE
-          </strong>
-
-          <span>
-            Quanto ti allontani dall'autostrada
-          </span>
-
-        </a>
-
-        <a
-          href="contatti.html"
-          class="menu-link"
-        >
-
-          <strong>
-            CONTATTI
-          </strong>
-
-          <span>
-            Scrivici
-          </span>
-
-        </a>
-
-        <a
-          href="fonti-licenze.html"
-          class="menu-link"
-        >
-
-          <strong>
-            FONTI E LICENZE
-          </strong>
-
-          <span>
-            Dati, fonti e informazioni legali
-          </span>
-
-        </a>
-
-      </div>
-
+    <div class="mobile-menu-title">
+      <strong>1 KM</strong>
+      <span>E SI MANGIA</span>
     </div>
 
-  </nav>
+    <div class="menu-links">
+      <!-- COME FUNZIONA deve rimanere la prima voce -->
+      <a href="come-funziona.html" class="menu-link menu-link-how">
+        <strong>COME FUNZIONA</strong>
+        <span>Scopri come utilizzare il servizio</span>
+      </a>
 
-  <!-- =====================================================
-       PAGINA USCITE
-       ===================================================== -->
+      <a href="index.html" class="menu-link">
+        <strong>HOME</strong>
+        <span>La nostra idea</span>
+      </a>
 
-  <main>
+      <a href="uscite.html" class="menu-link">
+        <strong>ESPLORA LE USCITE</strong>
+        <span>Trova l'uscita più vicina</span>
+      </a>
 
-    <section
-      class="map-section"
-      id="mapSection"
-    >
+      <a href="parcheggi.html" class="menu-link">
+        <strong>PARCHEGGI MEZZI PESANTI</strong>
+        <span>Trova un parcheggio per il tuo mezzo</span>
+      </a>
 
-      <div class="map-header">
+      <a href="distanze.html" class="menu-link">
+        <strong>LE DISTANZE</strong>
+        <span>Quanto ti allontani dall'autostrada</span>
+      </a>
 
-        <div class="map-label">
+      <a href="contatti.html" class="menu-link">
+        <strong>CONTATTI</strong>
+        <span>Scrivici</span>
+      </a>
 
-          1 KM E SI MANGIA
+      <a href="fonti-licenze.html" class="menu-link">
+        <strong>FONTI E LICENZE</strong>
+        <span>Dati, fonti e informazioni legali</span>
+      </a>
+    </div>
+  </div>
+</nav>
 
-        </div>
+<main>
+  <section class="map-section" id="mapSection">
+    <div class="map-header">
+      <div class="map-label">1 KM E SI MANGIA</div>
+      <h1>ESPLORA LE USCITE</h1>
+      <p>Avvicinati sulla mappa per visualizzare le singole uscite autostradali.</p>
+    </div>
 
-        <h1>
+    <div id="map"></div>
 
-          ESPLORA LE USCITE
-
-        </h1>
-
-        <p>
-
-          Spostati sulla mappa per visualizzare
-          le singole uscite autostradali.
-
-        </p>
-
+    <div class="map-legend">
+      <div>
+        <span class="legend-dot"></span>
+        <span>Uscita autostradale</span>
       </div>
-
-      <div id="map"></div>
-
-      <div class="map-legend">
-
-        <div>
-
-          <span class="legend-dot"></span>
-
-          <span>
-            Uscita autostradale
-          </span>
-
-        </div>
-
-        <div>
-
-          <span class="legend-route"></span>
-
-          <span>
-            Autostrada
-          </span>
-
-        </div>
-
+      <div>
+        <span class="legend-route"></span>
+        <span>Autostrada</span>
       </div>
+    </div>
+  </section>
+</main>
 
-    </section>
+<footer id="footer">
+  <strong>1 KM E SI MANGIA</strong>
+  <p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p>
+</footer>
 
-  </main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
-  <!-- =====================================================
-       FOOTER
-       ===================================================== -->
+<!-- Menu -->
+<script src="menu.js"></script>
 
-  <footer id="footer">
+<!-- GPS e navigazione -->
+<script src="gps.js"></script>
+<script src="collega-gps.js"></script>
+<script src="navigazione.js"></script>
+<script src="collega_navigazione.js"></script>
+<script src="camion-navigazione.js"></script>
 
-    <strong>
+<!-- Mappa + ristoranti -->
+<script src="script.js?v=20260818-2"></script>
 
-      1 KM E SI MANGIA
-
-    </strong>
-
-    <p>
-
-      Mangia bene.
-      Perdi poco tempo.
-      Riparti.
-
-    </p>
-
-  </footer>
-
-  <!-- =====================================================
-       LEAFLET
-       ===================================================== -->
-
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  ></script>
-
-  <!-- =====================================================
-       LEAFLET MARKER CLUSTER
-       ===================================================== -->
-
-  <script
-    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
-  ></script>
-
-  <!-- =====================================================
-       JAVASCRIPT DEL PROGETTO
-       ===================================================== -->
-
-  <script src="menu.js"></script>
-
-  <script src="script.js"></script>
-
-  <script src="navigazione.js"></script>
-
-  <script src="collega_navigazione.js"></script>
+<!-- Modalità demo -->
+<script src="demo.js"></script>
 
 </body>
-
 </html>
