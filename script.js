@@ -236,7 +236,9 @@ function mostraTuttiRistoranti(uscita) {
               ${ristorante.cucina ? `<div style="font-size:12px;color:#555;margin-top:3px">🍽️ ${escapeHtml(ristorante.cucina)}</div>` : ""}
             </div>
             ${typeof ristorante.lat === "number" && typeof ristorante.lon === "number"
-              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" style="vertical-align:-4px;margin-right:5px"><path d="M9 3 6 29M23 3l3 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 4v5M16 13v5M16 22v6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 4"/></svg> NAVIGA</button>`
+              ? `<button type="button" data-ristorante-index="${index}" style="box-sizing:border-box;min-width:132px;height:42px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true"><path d="M9 3 6 29M23 3l3 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 4v5M16 13v5M16 22v6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 4"/></svg> NAVIGA</button>` + (ristorante.parcheggio?.presente === true && Number.isFinite(Number(ristorante.parcheggio.distanza_m)) && Number(ristorante.parcheggio.distanza_m) <= 600
+                ? ` <button type="button" data-demo-ristorante-index="${index}" style="box-sizing:border-box;min-width:132px;height:42px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #075c3b;border-radius:10px;background:#fff;color:#075c3b;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap">🚛 DEMO</button>`
+                : "")
               : ""}
           </div>
           <div style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px">
@@ -297,6 +299,113 @@ function mostraTuttiRistoranti(uscita) {
         ) {
           layer.openPopup();
         }
+      });
+    });
+  });
+
+
+  // =====================================================
+  // MODALITÀ DEMO MEZZI PESANTI
+  // =====================================================
+  panel.querySelectorAll("[data-demo-ristorante-index]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      const index = Number(button.getAttribute("data-demo-ristorante-index"));
+      const ristorante = ristoranti[index];
+      if (!ristorante) return;
+
+      const parcheggio = ristorante.parcheggio;
+      const distanza = Number(parcheggio?.distanza_m);
+
+      if (
+        parcheggio?.presente !== true ||
+        !Number.isFinite(distanza) ||
+        distanza > 600 ||
+        !Number.isFinite(Number(parcheggio?.lat)) ||
+        !Number.isFinite(Number(parcheggio?.lon))
+      ) {
+        alert("Per questo ristorante non è disponibile un parcheggio entro 600 m.");
+        return;
+      }
+
+      const overlay = document.createElement("div");
+      overlay.id = "demoMezziPesanti";
+      overlay.style.cssText =
+        "position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;";
+
+      const nome = escapeHtml(ristorante.nome || "Ristorante");
+      overlay.innerHTML = `
+        <div style="width:min(94vw,460px);background:#fff;border-radius:20px;padding:20px;box-shadow:0 15px 50px rgba(0,0,0,.35);font-family:system-ui,sans-serif">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <div>
+              <div style="font-size:13px;font-weight:800;letter-spacing:1px;color:#075c3b">MODALITÀ DEMO</div>
+              <h2 style="margin:4px 0 0;font-size:23px">🚛 Mezzo pesante</h2>
+            </div>
+            <button type="button" data-demo-close style="border:0;background:#f2f2f2;border-radius:50%;width:38px;height:38px;font-size:22px;cursor:pointer">×</button>
+          </div>
+
+          <p style="margin:16px 0 8px"><strong>${nome}</strong></p>
+          <p style="margin:0 0 16px;color:#444">
+            Parcheggio disponibile a <strong>${Math.round(distanza)} m</strong> dal ristorante.
+          </p>
+
+          <div style="display:grid;gap:10px">
+            <button type="button" data-demo-destination="restaurant" style="height:48px;border:0;border-radius:12px;background:#075c3b;color:#fff;font-weight:800;cursor:pointer">
+              NAVIGA AL RISTORANTE
+            </button>
+            <button type="button" data-demo-destination="parking" style="height:48px;border:1px solid #075c3b;border-radius:12px;background:#fff;color:#075c3b;font-weight:800;cursor:pointer">
+              🅿️ NAVIGA AL PARCHEGGIO
+            </button>
+          </div>
+
+          <p style="margin:14px 0 0;font-size:12px;line-height:1.4;color:#666">
+            Demo: la destinazione parcheggio è limitata a 600 m dal ristorante.
+            Le app esterne possono non applicare automaticamente i profili e le restrizioni specifiche per mezzi pesanti: verificare sempre segnaletica e limiti locali.
+          </p>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      function chiudiDemo() {
+        overlay.remove();
+      }
+
+      overlay.querySelector("[data-demo-close]").addEventListener("click", chiudiDemo);
+
+      overlay.addEventListener("click", function(event) {
+        if (event.target === overlay) chiudiDemo();
+      });
+
+      overlay.querySelectorAll("[data-demo-destination]").forEach(function(action) {
+        action.addEventListener("click", function() {
+          const tipo = action.getAttribute("data-demo-destination");
+
+          let destinazione;
+
+          if (tipo === "parking") {
+            destinazione = {
+              ...ristorante,
+              nome: "Parcheggio vicino a " + (ristorante.nome || "ristorante"),
+              lat: Number(parcheggio.lat),
+              lon: Number(parcheggio.lon),
+              demo_mezzo_pesante: true,
+              destinazione_tipo: "parcheggio"
+            };
+          } else {
+            destinazione = {
+              ...ristorante,
+              demo_mezzo_pesante: true,
+              destinazione_tipo: "ristorante"
+            };
+          }
+
+          if (typeof window.apriNavigazione === "function") {
+            chiudiDemo();
+            window.apriNavigazione(destinazione);
+          } else {
+            alert("Sistema di navigazione non disponibile.");
+          }
+        });
       });
     });
   });
@@ -853,6 +962,25 @@ if (locationButton) {
       locationButton.textContent =
         "RICERCA POSIZIONE...";
 
+      let ultimaPosizioneValida = null;
+
+      function posizioneValida(lat, lng, accuracy) {
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+        if (lat < 35 || lat > 48.8 || lng < 6 || lng > 19) return false;
+        if (!Number.isFinite(accuracy) || accuracy > 5000) return false;
+        if (ultimaPosizioneValida) {
+          const R = 6371000;
+          const dLat = (lat - ultimaPosizioneValida.lat) * Math.PI / 180;
+          const dLng = (lng - ultimaPosizioneValida.lng) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(ultimaPosizioneValida.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+          const distanza = 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const dt = Math.max(1, (Date.now() - ultimaPosizioneValida.time) / 1000);
+          if (distanza / dt > 100) return false;
+        }
+        ultimaPosizioneValida = { lat, lng, time: Date.now() };
+        return true;
+      }
+
       function posizioneTrovata(position) {
 
         const lat =
@@ -863,6 +991,11 @@ if (locationButton) {
 
         const accuracy =
           Number(position.coords.accuracy) || 100;
+
+        if (!posizioneValida(lat, lng, accuracy)) {
+          console.warn("POSIZIONE GPS SCARTATA:", lat, lng, accuracy);
+          return;
+        }
 
         console.log(
           "POSIZIONE GPS:",
@@ -1039,27 +1172,14 @@ if (locationButton) {
 
       }
 
-      // Primo tentativo: rapido e compatibile.
+      // Richiesta iniziale ad alta precisione: niente posizione memorizzata.
       navigator.geolocation.getCurrentPosition(
         posizioneTrovata,
-        function() {
-
-          // Secondo tentativo: GPS più preciso.
-          navigator.geolocation.getCurrentPosition(
-            posizioneTrovata,
-            errorePosizione,
-            {
-              enableHighAccuracy: true,
-              timeout: 20000,
-              maximumAge: 0
-            }
-          );
-
-        },
+        errorePosizione,
         {
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 60000
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 0
         }
       );
 

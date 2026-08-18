@@ -232,7 +232,7 @@
         >
 
           <strong>
-            <img class="menu-item-icon" src="assets/logo-definitivo.png" alt=""> HOME
+            HOME
           </strong>
 
           <span>
@@ -473,28 +473,21 @@
             }
           ).addTo(map);
 
-          const userIcon = L.divIcon({
-            className: "user-location-pin",
-            html: `
-              <svg viewBox="0 0 48 58" xmlns="http://www.w3.org/2000/svg" width="48" height="58" aria-hidden="true">
-                <path d="M24 2C12 2 3 11 3 23c0 15 21 33 21 33s21-18 21-33C45 11 36 2 24 2Z" fill="#075c3b" stroke="#fff" stroke-width="2.5"/>
-                <circle cx="24" cy="23" r="9" fill="none" stroke="#fff" stroke-width="2.5"/>
-                <path d="M17 18v-6M20 18v-7M23 18v-7M26 18v-6M17 18c0 4 2 6 5 7v7M31 14v11M31 25c-2 1-3 3-3 5v2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
-              </svg>
-            `,
-            iconSize: [48, 58],
-            iconAnchor: [24, 56],
-            popupAnchor: [0, -52]
-          });
-
-          window.__1kmHomeUserMarker = L.marker(
+          window.__1kmHomeUserMarker = L.circleMarker(
             [lat, lng],
-            { icon: userIcon, zIndexOffset: 10000 }
+            {
+              radius: 10,
+              color: "#ffffff",
+              weight: 4,
+              fillColor: "#075c3b",
+              fillOpacity: 1,
+              zIndexOffset: 10000
+            }
           ).addTo(map);
 
           window.__1kmHomeUserMarker
             .bindPopup(
-              "<strong>TU SEI QUI</strong><br>" +
+              "<strong>📍 TU SEI QUI</strong><br>" +
               "Precisione GPS circa " +
               Math.round(accuracy) +
               " m"
@@ -517,6 +510,82 @@
           );
         }
 
+
+        // GPS IN MOVIMENTO:
+        // continua ad aggiornare il pin mentre l'utente si sposta.
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(
+            function (position) {
+              const nextLat = Number(position.coords.latitude);
+              const nextLng = Number(position.coords.longitude);
+              const nextAccuracy = Number(position.coords.accuracy) || 100;
+
+              if (!Number.isFinite(nextLat) || !Number.isFinite(nextLng)) return;
+
+              if (nextLat < 35 || nextLat > 48.8 || nextLng < 6 || nextLng > 19) {
+                console.warn("GPS movimento scartato: coordinate fuori area", nextLat, nextLng);
+                return;
+              }
+
+              if (window.__1kmLastGoodPosition) {
+                const R = 6371000;
+                const dLat = (nextLat - window.__1kmLastGoodPosition.lat) * Math.PI / 180;
+                const dLng = (nextLng - window.__1kmLastGoodPosition.lng) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) ** 2 + Math.cos(window.__1kmLastGoodPosition.lat * Math.PI / 180) * Math.cos(nextLat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+                const distanza = 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const dt = Math.max(1, (Date.now() - window.__1kmLastGoodPosition.time) / 1000);
+                if (distanza / dt > 100) {
+                  console.warn("GPS movimento scartato: salto impossibile", distanza, dt);
+                  return;
+                }
+              }
+
+              window.__1kmLastGoodPosition = { lat: nextLat, lng: nextLng, time: Date.now() };
+
+              function aggiornaPinInMovimento() {
+                if (typeof L === "undefined" || typeof map === "undefined") {
+                  setTimeout(aggiornaPinInMovimento, 100);
+                  return;
+                }
+
+                if (window.__1kmHomeUserMarker) {
+                  window.__1kmHomeUserMarker.setLatLng([nextLat, nextLng]);
+                  window.__1kmHomeUserMarker.setPopupContent(
+                    "<strong>📍 TU SEI QUI</strong><br>" +
+                    "Precisione GPS circa " +
+                    Math.round(nextAccuracy) +
+                    " m"
+                  );
+                }
+
+                if (window.__1kmHomeAccuracyCircle) {
+                  window.__1kmHomeAccuracyCircle.setLatLng([nextLat, nextLng]);
+                  window.__1kmHomeAccuracyCircle.setRadius(nextAccuracy);
+                }
+
+                // Centriamo la mappa solo se l'utente è già vicino al centro;
+                // così lo spostamento manuale della mappa non viene continuamente annullato.
+                const centro = map.getCenter();
+                const distanzaCentro = centro.distanceTo([nextLat, nextLng]);
+
+                if (distanzaCentro > 120 && distanzaCentro < 2500) {
+                  map.panTo([nextLat, nextLng], { animate: true, duration: 0.5 });
+                }
+              }
+
+              aggiornaPinInMovimento();
+            },
+            function (error) {
+              console.warn("GPS in movimento non disponibile:", error);
+            },
+            {
+              enableHighAccuracy: true,
+              maximumAge: 3000,
+              timeout: 10000
+            }
+          );
+        }
+
         // Esegui dopo il caricamento di script.js.
         setTimeout(mostraPosizione, 300);
       } catch (error) {
@@ -533,6 +602,54 @@
 
   <script src="collega_navigazione.js"></script>
 
+<script>
+(function () {
+  function addNavigationBrandIcons() {
+    const roots = document.querySelectorAll(
+      '[id*="navig"], [class*="navig"], [id*="navigation"], [class*="navigation"]'
+    );
+
+    roots.forEach(function (root) {
+      const elements = root.querySelectorAll("button, a, div");
+      elements.forEach(function (el) {
+        if (el.dataset.brandIconApplied) return;
+
+        const text = (el.textContent || "").trim().toLowerCase();
+        let slug = "";
+
+        if (text.includes("google maps")) slug = "googlemaps";
+        else if (text.includes("waze")) slug = "waze";
+        else if (text.includes("apple maps") || text.includes("mappe apple")) slug = "apple";
+
+        if (!slug) return;
+
+        const icon = document.createElement("img");
+        icon.src = "https://cdn.simpleicons.org/" + slug;
+        icon.alt = "";
+        icon.width = 30;
+        icon.height = 30;
+        icon.style.cssText = "width:30px;height:30px;object-fit:contain;flex:0 0 30px;";
+
+        el.style.display = "flex";
+        el.style.alignItems = "center";
+        el.style.justifyContent = "center";
+        el.style.gap = "10px";
+        el.style.minHeight = "52px";
+        el.style.boxSizing = "border-box";
+
+        el.insertBefore(icon, el.firstChild);
+        el.dataset.brandIconApplied = "1";
+      });
+    });
+  }
+
+  const observer = new MutationObserver(addNavigationBrandIcons);
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  setTimeout(addNavigationBrandIcons, 300);
+  setTimeout(addNavigationBrandIcons, 1200);
+})();
+</script>
 </body>
 
 </html>
