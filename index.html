@@ -1,35 +1,12 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>1 KM E SI MANGIA</title>
 
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
-  >
-
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
-
   <style>
-
     * {
       box-sizing: border-box;
     }
@@ -40,17 +17,17 @@
 
     body {
       margin: 0;
-      font-family: "Roboto Condensed", Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       background: #f4f6f3;
       color: #154b35;
     }
 
-    /* =====================================================
+    /* =====================================
        HEADER
-       ===================================================== */
+    ===================================== */
 
     .topbar {
-      min-height: 90px;
+      height: 90px;
       background: #075c3b;
       color: white;
 
@@ -64,35 +41,71 @@
       z-index: 20;
     }
 
-    .logo-link {
+    .logo {
       display: flex;
       align-items: center;
-      text-decoration: none;
-      line-height: 0;
+      gap: 15px;
     }
 
-    .site-logo {
-      width: 108px;
-      height: 72px;
-      object-fit: contain;
-      display: block;
+    .logo-pin {
+      width: 42px;
+      height: 52px;
+
+      border: 4px solid white;
+      border-radius: 50% 50% 50% 0;
+
+      transform: rotate(-45deg);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-pin::after {
+      content: "";
+
+      width: 16px;
+      height: 16px;
+
+      border: 4px solid white;
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .logo-text strong {
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+
+    .logo-text span {
+      margin-top: 6px;
+
+      color: #f2a51a;
+
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 4px;
     }
 
     .menu-button {
       border: 0;
       background: transparent;
+
       color: white;
 
       font-size: 32px;
-      line-height: 1;
 
       cursor: pointer;
-      padding: 8px;
     }
 
-    /* =====================================================
+    /* =====================================
        MENU
-       ===================================================== */
+    ===================================== */
 
     .mobile-menu {
       position: fixed;
@@ -107,6 +120,7 @@
       opacity: 0;
 
       transform: translateX(100%);
+
       pointer-events: none;
 
       transition: .25s ease;
@@ -114,15 +128,9 @@
       overflow-y: auto;
     }
 
-    .mobile-menu.active {
-      visibility: visible;
-      opacity: 1;
-      transform: translateX(0);
-      pointer-events: auto;
-    }
-
     .mobile-menu-inner {
       max-width: 700px;
+
       margin-left: auto;
 
       min-height: 100%;
@@ -139,6 +147,7 @@
       border: 2px solid rgba(255,255,255,.6);
 
       background: transparent;
+
       color: white;
 
       font-size: 34px;
@@ -150,30 +159,35 @@
       clear: both;
 
       padding-top: 10px;
-      padding-bottom: 35px;
+      padding-bottom: 40px;
 
       border-bottom: 1px solid rgba(255,255,255,.25);
     }
 
-    .mobile-menu-logo {
+    .mobile-menu-title strong {
       display: block;
 
-      width: 150px;
-      height: auto;
+      font-size: 28px;
+    }
 
-      margin-top: 10px;
+    .mobile-menu-title span {
+      color: #f2a51a;
+
+      font-weight: bold;
+      letter-spacing: 4px;
     }
 
     .menu-links {
-      margin-top: 10px;
+      margin-top: 15px;
     }
 
     .menu-link {
       display: block;
 
-      padding: 22px 0;
+      padding: 25px 0;
 
       color: white;
+
       text-decoration: none;
 
       border-bottom: 1px solid rgba(255,255,255,.18);
@@ -182,19 +196,20 @@
     .menu-link strong {
       display: block;
 
-      margin-bottom: 6px;
+      margin-bottom: 7px;
 
       font-size: 21px;
     }
 
     .menu-link span {
       color: #a9c0b5;
+
       font-size: 15px;
     }
 
-    /* =====================================================
-       HOME
-       ===================================================== */
+    /* =====================================
+       HOME HERO
+    ===================================== */
 
     .home {
       min-height: calc(100vh - 90px);
@@ -214,6 +229,7 @@
 
     .home-box {
       max-width: 1200px;
+
       min-height: 620px;
 
       margin: 0 auto;
@@ -236,7 +252,7 @@
       color: #f2a51a;
 
       font-size: 15px;
-      font-weight: 700;
+      font-weight: bold;
 
       letter-spacing: 4px;
     }
@@ -258,17 +274,14 @@
     .home-description {
       max-width: 700px;
 
-      margin: 35px 0;
+      margin: 35px 0 35px;
 
       color: #edf4f0;
 
       font-size: 21px;
+
       line-height: 1.5;
     }
-
-    /* =====================================================
-       PULSANTI
-       ===================================================== */
 
     .home-buttons {
       display: flex;
@@ -288,19 +301,16 @@
 
       padding: 0 25px;
 
-      border: 0;
-
       text-decoration: none;
 
-      font-family: inherit;
-      font-size: 16px;
-      font-weight: 700;
+      font-weight: bold;
 
       cursor: pointer;
     }
 
     .btn-primary {
       background: #f2a51a;
+
       color: #102d20;
     }
 
@@ -312,14 +322,9 @@
       background: transparent;
     }
 
-    .btn:disabled {
-      opacity: .65;
-      cursor: wait;
-    }
-
-    /* =====================================================
+    /* =====================================
        PUBBLICITÀ
-       ===================================================== */
+    ===================================== */
 
     .advertising {
       max-width: 1000px;
@@ -344,9 +349,9 @@
       letter-spacing: 3px;
     }
 
-    /* =====================================================
+    /* =====================================
        FOOTER
-       ===================================================== */
+    ===================================== */
 
     footer {
       background: #064c32;
@@ -374,24 +379,29 @@
       line-height: 1.6;
     }
 
-    /* =====================================================
+    /* =====================================
        MOBILE
-       ===================================================== */
+    ===================================== */
 
     @media (max-width: 750px) {
 
       .topbar {
-        min-height: 78px;
+        height: 78px;
+
         padding: 0 20px;
       }
 
-      .site-logo {
-        width: 82px;
-        height: 58px;
+      .logo-pin {
+        width: 35px;
+        height: 44px;
       }
 
-      .mobile-menu-logo {
-        width: 135px;
+      .logo-text strong {
+        font-size: 23px;
+      }
+
+      .logo-text span {
+        font-size: 10px;
       }
 
       .home {
@@ -409,11 +419,7 @@
       }
 
       .home h1 {
-        font-size: clamp(
-          52px,
-          15vw,
-          82px
-        );
+        font-size: clamp(52px, 15vw, 82px);
 
         letter-spacing: -2px;
       }
@@ -424,6 +430,7 @@
 
       .home-buttons {
         flex-direction: column;
+
         align-items: stretch;
       }
 
@@ -435,56 +442,46 @@
         margin-left: 15px;
         margin-right: 15px;
       }
-
     }
-
   </style>
-
 </head>
-
 
 <body>
 
-  <!-- =====================================================
+  <!-- =====================================
        HEADER
-       ===================================================== -->
+  ====================================== -->
 
   <header class="topbar">
 
-    <a
-      href="index.html"
-      class="logo-link"
-      aria-label="1 KM E SI MANGIA"
-    >
+    <div class="logo">
 
-      <img
-        src="assets/logo-definitivo.png"
-        alt="1 KM E SI MANGIA"
-        class="site-logo"
-      >
+      <div class="logo-pin"></div>
 
-    </a>
+      <div class="logo-text">
 
+        <strong>1 KM</strong>
+
+        <span>E SI MANGIA</span>
+
+      </div>
+
+    </div>
 
     <button
       class="menu-button"
-      id="menuButton"
       type="button"
       aria-label="Apri menu"
-      aria-expanded="false"
     >
-
       ☰
-
     </button>
 
   </header>
 
 
-  <!-- =====================================================
+  <!-- =====================================
        MENU
-       COME FUNZIONA PER PRIMO
-       ===================================================== -->
+  ====================================== -->
 
   <nav
     class="mobile-menu"
@@ -500,40 +497,26 @@
         type="button"
         aria-label="Chiudi menu"
       >
-
         ×
-
       </button>
-
 
       <div class="mobile-menu-title">
 
-        <img
-          src="assets/logo-definitivo.png"
-          alt="1 KM E SI MANGIA"
-          class="mobile-menu-logo"
-        >
+        <strong>1 KM</strong>
+
+        <span>E SI MANGIA</span>
 
       </div>
 
 
       <div class="menu-links">
 
-        <!-- PRIMO ELEMENTO -->
-
         <a
           href="come-funziona.html"
           class="menu-link"
         >
-
-          <strong>
-            COME FUNZIONA
-          </strong>
-
-          <span>
-            Scopri come utilizzare il servizio
-          </span>
-
+          <strong>COME FUNZIONA</strong>
+          <span>Scopri come utilizzare il servizio</span>
         </a>
 
 
@@ -541,15 +524,8 @@
           href="index.html"
           class="menu-link"
         >
-
-          <strong>
-            HOME
-          </strong>
-
-          <span>
-            La nostra idea
-          </span>
-
+          <strong>HOME</strong>
+          <span>La nostra idea</span>
         </a>
 
 
@@ -557,31 +533,8 @@
           href="uscite.html"
           class="menu-link"
         >
-
-          <strong>
-            ESPLORA LE USCITE
-          </strong>
-
-          <span>
-            Trova l'uscita più vicina
-          </span>
-
-        </a>
-
-
-        <a
-          href="parcheggi.html"
-          class="menu-link"
-        >
-
-          <strong>
-            🚛 PARCHEGGI MEZZI PESANTI
-          </strong>
-
-          <span>
-            Trova un parcheggio per il tuo mezzo
-          </span>
-
+          <strong>ESPLORA LE USCITE</strong>
+          <span>Trova l'uscita più vicina</span>
         </a>
 
 
@@ -589,15 +542,17 @@
           href="distanze.html"
           class="menu-link"
         >
+          <strong>LE DISTANZE</strong>
+          <span>Quanto ti allontani dall'autostrada</span>
+        </a>
 
-          <strong>
-            LE DISTANZE
-          </strong>
 
-          <span>
-            Quanto ti allontani dall'autostrada
-          </span>
-
+        <a
+          href="parcheggi.html"
+          class="menu-link"
+        >
+          <strong>PARCHEGGI MEZZI PESANTI</strong>
+          <span>Trova parcheggi per camion e mezzi pesanti</span>
         </a>
 
 
@@ -605,31 +560,8 @@
           href="contatti.html"
           class="menu-link"
         >
-
-          <strong>
-            CONTATTI
-          </strong>
-
-          <span>
-            Scrivici
-          </span>
-
-        </a>
-
-
-        <a
-          href="fonti-licenze.html"
-          class="menu-link"
-        >
-
-          <strong>
-            FONTI E LICENZE
-          </strong>
-
-          <span>
-            Dati, fonti e informazioni legali
-          </span>
-
+          <strong>CONTATTI</strong>
+          <span>1 KM E SI MANGIA</span>
         </a>
 
       </div>
@@ -639,9 +571,9 @@
   </nav>
 
 
-  <!-- =====================================================
+  <!-- =====================================
        HOME
-       ===================================================== -->
+  ====================================== -->
 
   <main>
 
@@ -652,58 +584,46 @@
         <div class="home-content">
 
           <div class="eyebrow">
-
-            IL TUO PROSSIMO RISTORANTE
-            È PIÙ VICINO DI QUANTO PENSI
-
+            IL TUO PROSSIMO RISTORANTE È PIÙ VICINO DI QUANTO PENSI
           </div>
 
 
           <h1>
-
             ESCI.<br>
             MANGIA.<br>
             RIPARTI.
-
           </h1>
 
 
           <p class="home-description">
-
             Trova ristoranti, trattorie e pizzerie
             a pochi minuti dall'uscita autostradale.
-
           </p>
 
 
           <div class="home-buttons">
 
-            <!-- =================================================
-                 GPS
-                 ================================================= -->
-
-            <button
-              type="button"
-              id="homeLocationButton"
+            <a
+              href="uscite.html"
               class="btn btn-primary"
             >
-
               📍 USA LA MIA POSIZIONE
+            </a>
 
-            </button>
-
-
-            <!-- =================================================
-                 ESPLORA USCITE
-                 ================================================= -->
 
             <a
               href="uscite.html"
               class="btn btn-secondary"
             >
-
               🗺️ ESPLORA LE USCITE
+            </a>
 
+
+            <a
+              href="come-funziona.html"
+              class="btn btn-secondary"
+            >
+              ❓ COME FUNZIONA
             </a>
 
           </div>
@@ -715,62 +635,41 @@
     </section>
 
 
-    <!-- =====================================================
+    <!-- =====================================
          PUBBLICITÀ
-         ===================================================== -->
+    ====================================== -->
 
     <div class="advertising">
-
       SPAZIO PUBBLICITARIO
-
     </div>
 
   </main>
 
 
-  <!-- =====================================================
+  <!-- =====================================
        FOOTER
-       ===================================================== -->
+  ====================================== -->
 
   <footer id="contatti">
 
     <strong>
-
       1 KM E SI MANGIA
-
     </strong>
 
-
     <p>
-
       Mangia bene.<br>
       Perdi poco tempo.<br>
       Riparti.
-
     </p>
 
   </footer>
 
 
-  <!-- =====================================================
-       JAVASCRIPT
-       ===================================================== -->
+  <!-- =====================================
+       MENU JS
+  ====================================== -->
 
   <script src="menu.js"></script>
 
-  <script src="script.js"></script>
-
-  <script src="navigazione.js"></script>
-
-  <script src="gps.js"></script>
-
-  <script src="collega-gps.js"></script>
-
-  <script src="camion-navigazione.js"></script>
-
-  <script src="demo.js"></script>
-
-
 </body>
-
 </html>
