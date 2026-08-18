@@ -81,6 +81,55 @@
         width:135px !important;
       }
     }
+
+
+    /* === MENU MOBILE: PANNELLO COMPLETO E SCORRIBILE === */
+    .mobile-menu{
+      position:fixed !important;
+      inset:0 !important;
+      width:100% !important;
+      height:100dvh !important;
+      max-height:100dvh !important;
+      overflow-y:auto !important;
+      overflow-x:hidden !important;
+      -webkit-overflow-scrolling:touch !important;
+      box-sizing:border-box !important;
+      z-index:9999 !important;
+    }
+
+    .mobile-menu-inner{
+      min-height:100%;
+      max-height:none !important;
+      overflow:visible !important;
+      box-sizing:border-box;
+      padding-bottom:40px;
+    }
+
+    .menu-links{
+      display:flex;
+      flex-direction:column;
+      width:100%;
+      box-sizing:border-box;
+    }
+
+    .menu-link{
+      flex:0 0 auto;
+    }
+
+    body.menu-open{
+      overflow:hidden !important;
+      touch-action:none;
+    }
+
+    @media (max-width:750px){
+      .mobile-menu-inner{
+        padding:18px 18px 44px !important;
+      }
+
+      .menu-links{
+        gap:8px;
+      }
+    }
   </style>
 
 </head>
@@ -428,8 +477,6 @@
        JAVASCRIPT DEL PROGETTO
        ===================================================== -->
 
-  <script src="menu.js"></script>
-
   <script src="script.js"></script>
 
   <!-- =====================================================
@@ -600,7 +647,6 @@
 
   <script src="navigazione.js"></script>
 
-  <script src="collega_navigazione.js"></script>
 
 <script>
 (function () {
