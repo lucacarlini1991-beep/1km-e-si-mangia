@@ -182,47 +182,15 @@
     return L.divIcon({
       className: "gps-user-location-icon",
       html: `
-        <div
-          style="
-            width:46px;
-            height:46px;
-            box-sizing:border-box;
-            border-radius:50% 50% 50% 0;
-            transform:rotate(-45deg);
-            background:#075c3b;
-            border:4px solid #ffffff;
-            box-shadow:0 3px 12px rgba(0,0,0,.40);
-            position:relative;
-          "
+        <img
+          src="assets/pin-posizione.png"
+          alt="Tu sei qui"
+          style="width:52px;height:52px;display:block;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));"
         >
-          <div
-            style="
-              position:absolute;
-              width:18px;
-              height:18px;
-              border-radius:50%;
-              background:#ffffff;
-              left:10px;
-              top:10px;
-            "
-          ></div>
-
-          <div
-            style="
-              position:absolute;
-              width:8px;
-              height:8px;
-              border-radius:50%;
-              background:#075c3b;
-              left:15px;
-              top:15px;
-            "
-          ></div>
-        </div>
       `,
-      iconSize: [46, 46],
-      iconAnchor: [23, 46],
-      popupAnchor: [0, -42]
+      iconSize: [52, 52],
+      iconAnchor: [26, 52],
+      popupAnchor: [0, -48] 
     });
   }
 
