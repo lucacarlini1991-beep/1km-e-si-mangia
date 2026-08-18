@@ -1,891 +1,499 @@
-/* =========================================================
-   1 KM E SI MANGIA
-   gps.js
-   Gestione centralizzata della geolocalizzazione
-
-   Gestisce:
-   - posizione GPS
-   - GPS in movimento
-   - controllo qualità coordinate
-   - filtro dei salti GPS anomali
-   - salvataggio posizione
-   - pin "TU SEI QUI" su Leaflet
-   ========================================================= */
-
-   (function () {
+(function () {
     "use strict";
   
-    const STORAGE_KEY = "1km-posizione";
+    // =========================================================
+    // GPS - 1 KM E SI MANGIA
+    // =========================================================
   
     let watchId = null;
-    let lastPosition = null;
-    let lastAcceptedPosition = null;
+    let posizioneUtente = null;
+    let markerUtente = null;
+    let accuracyCircle = null;
   
-    let map = null;
-    let userMarker = null;
-    let userAccuracyCircle = null;
+    const POSIZIONE_MASSIMA_ACCURATEZZA = 10000; // 10 km
+    const TIMEOUT_GPS = 15000;
   
-    const defaultOptions = {
-      enableHighAccuracy: true,
-      timeout: 20000,
-      maximumAge: 5000,
+    // ---------------------------------------------------------
+    // Trova la mappa Leaflet già presente nella pagina
+    // ---------------------------------------------------------
   
-      // Non accettiamo fix GPS troppo imprecisi.
-      maxAccuracy: 1000,
+    function trovaMappa() {
+      if (window.map && typeof window.map.setView === "function") {
+        return window.map;
+      }
   
-      // Evita salti GPS completamente irreali.
-      maxSpeedKmh: 180,
+      // Cerca eventuali mappe Leaflet presenti nella pagina
+      if (window.L && window.L.Map) {
+        let trovata = null;
   
-      // Aggiornamento grafico minimo.
-      minMoveMeters: 5,
+        document.querySelectorAll(".leaflet-container").forEach(function (elemento) {
+          if (elemento._leaflet_map) {
+            trovata = elemento._leaflet_map;
+          }
+        });
   
-      // La prima posizione valida centra la mappa.
-      centerMap: true,
+        if (trovata) return trovata;
+      }
   
-      zoom: 15,
-  
-      // Il tracking in movimento viene attivato quando richiesto.
-      watch: true
-    };
-  
-    let options = Object.assign({}, defaultOptions);
-  
-    /* =========================================================
-       UTILITÀ
-       ========================================================= */
-  
-    function isFiniteNumber(value) {
-      return Number.isFinite(Number(value));
+      return null;
     }
   
-    function normalizePosition(position) {
+    // ---------------------------------------------------------
+    // Crea/aggiorna il pin "TU SEI QUI"
+    // ---------------------------------------------------------
+  
+    function aggiornaPin(lat, lng, accuracy) {
+      const mappa = trovaMappa();
+  
+      if (!mappa || !window.L) {
+        return;
+      }
+  
+      // Pin grande e ben visibile
+      const iconaUtente = L.divIcon({
+        className: "gps-utente-icon",
+        html: `
+          <div style="
+            width:44px;
+            height:44px;
+            border-radius:50%;
+            background:#006b45;
+            border:4px solid white;
+            box-shadow:0 3px 12px rgba(0,0,0,.45);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            position:relative;
+          ">
+            <div style="
+              width:18px;
+              height:18px;
+              border-radius:50%;
+              background:white;
+              border:5px solid #f5a400;
+            "></div>
+  
+            <div style="
+              position:absolute;
+              bottom:-13px;
+              left:50%;
+              transform:translateX(-50%);
+              width:0;
+              height:0;
+              border-left:9px solid transparent;
+              border-right:9px solid transparent;
+              border-top:15px solid #006b45;
+            "></div>
+          </div>
+        `,
+        iconSize: [44, 58],
+        iconAnchor: [22, 58],
+        popupAnchor: [0, -58]
+      });
+  
+      // Primo rilevamento
+      if (!markerUtente) {
+        markerUtente = L.marker([lat, lng], {
+          icon: iconaUtente,
+          zIndexOffset: 10000
+        }).addTo(mappa);
+  
+        markerUtente.bindPopup(
+          `<strong>📍 TU SEI QUI</strong><br>
+           Precisione GPS circa ${Math.round(accuracy)} m`
+        );
+      } else {
+        markerUtente.setLatLng([lat, lng]);
+  
+        if (markerUtente.getPopup()) {
+          markerUtente.setPopupContent(
+            `<strong>📍 TU SEI QUI</strong><br>
+             Precisione GPS circa ${Math.round(accuracy)} m`
+          );
+        }
+      }
+  
+      // Cerchio della precisione
+      if (!accuracyCircle) {
+        accuracyCircle = L.circle([lat, lng], {
+          radius: accuracy,
+          color: "#006b45",
+          fillColor: "#006b45",
+          fillOpacity: 0.10,
+          weight: 2
+        }).addTo(mappa);
+      } else {
+        accuracyCircle.setLatLng([lat, lng]);
+        accuracyCircle.setRadius(accuracy);
+      }
+    }
+  
+    // ---------------------------------------------------------
+    // Controllo posizione
+    // Evita coordinate palesemente errate
+    // ---------------------------------------------------------
+  
+    function posizioneValida(position) {
       if (!position || !position.coords) {
-        return null;
+        return false;
       }
   
       const lat = Number(position.coords.latitude);
       const lng = Number(position.coords.longitude);
       const accuracy = Number(position.coords.accuracy);
   
-      if (
-        !Number.isFinite(lat) ||
-        !Number.isFinite(lng) ||
-        !Number.isFinite(accuracy)
-      ) {
-        return null;
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return false;
       }
   
-      if (
-        lat < -90 ||
-        lat > 90 ||
-        lng < -180 ||
-        lng > 180
-      ) {
-        return null;
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return false;
       }
   
-      if (
-        accuracy <= 0 ||
-        accuracy > options.maxAccuracy
-      ) {
-        return null;
+      if (!Number.isFinite(accuracy) || accuracy <= 0) {
+        return false;
       }
   
-      return {
+      // Non accettiamo una posizione con precisione completamente inutilizzabile
+      if (accuracy > POSIZIONE_MASSIMA_ACCURATEZZA) {
+        console.warn(
+          "GPS ignorato: precisione insufficiente",
+          accuracy
+        );
+        return false;
+      }
+  
+      return true;
+    }
+  
+    // ---------------------------------------------------------
+    // Posizione ricevuta
+    // ---------------------------------------------------------
+  
+    function riceviPosizione(position, centraMappa) {
+  
+      if (!posizioneValida(position)) {
+        console.warn("Posizione GPS non valida:", position);
+        return;
+      }
+  
+      const lat = Number(position.coords.latitude);
+      const lng = Number(position.coords.longitude);
+      const accuracy = Number(position.coords.accuracy);
+  
+      posizioneUtente = {
         lat: lat,
         lng: lng,
         accuracy: accuracy,
         timestamp: Date.now()
       };
-    }
   
-    function distanceMeters(
-      lat1,
-      lng1,
-      lat2,
-      lng2
-    ) {
-      const R = 6371000;
+      // Salva anche globalmente per gli altri moduli
+      window.posizioneUtente = posizioneUtente;
   
-      const dLat =
-        (lat2 - lat1) *
-        Math.PI /
-        180;
+      aggiornaPin(lat, lng, accuracy);
   
-      const dLng =
-        (lng2 - lng1) *
-        Math.PI /
-        180;
+      const mappa = trovaMappa();
   
-      const a =
-        Math.sin(dLat / 2) *
-        Math.sin(dLat / 2) +
+      // Primo rilevamento: porta la mappa sull'utente
+      if (centraMappa && mappa) {
+        const zoom = accuracy <= 100 ? 15 :
+                     accuracy <= 500 ? 14 :
+                     accuracy <= 2000 ? 12 : 10;
   
-        Math.cos(lat1 * Math.PI / 180) *
-        Math.cos(lat2 * Math.PI / 180) *
+        mappa.setView([lat, lng], zoom, {
+          animate: true
+        });
   
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-  
-      return (
-        2 *
-        R *
-        Math.atan2(
-          Math.sqrt(a),
-          Math.sqrt(1 - a)
-        )
-      );
-    }
-  
-    /* =========================================================
-       CONTROLLO SALTI GPS
-       ========================================================= */
-  
-    function isPlausibleMovement(position) {
-      if (!lastAcceptedPosition) {
-        return true;
-      }
-  
-      const distance = distanceMeters(
-        lastAcceptedPosition.lat,
-        lastAcceptedPosition.lng,
-        position.lat,
-        position.lng
-      );
-  
-      const elapsedSeconds =
-        Math.max(
-          1,
-          (
-            position.timestamp -
-            lastAcceptedPosition.timestamp
-          ) / 1000
-        );
-  
-      const speedKmh =
-        (distance / 1000) /
-        (elapsedSeconds / 3600);
-  
-      if (
-        speedKmh >
-        options.maxSpeedKmh
-      ) {
-        console.warn(
-          "GPS: fix scartato per salto anomalo:",
-          Math.round(distance),
-          "m in",
-          Math.round(elapsedSeconds),
-          "s =",
-          Math.round(speedKmh),
-          "km/h"
-        );
-  
-        return false;
-      }
-  
-      return true;
-    }
-  
-    /* =========================================================
-       SALVATAGGIO POSIZIONE
-       ========================================================= */
-  
-    function savePosition(position) {
-      try {
-        sessionStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(position)
-        );
-      } catch (error) {
-        console.warn(
-          "GPS: impossibile salvare la posizione.",
-          error
-        );
-      }
-    }
-  
-    function readStoredPosition() {
-      try {
-        const raw =
-          sessionStorage.getItem(
-            STORAGE_KEY
-          );
-  
-        if (!raw) {
-          return null;
+        if (markerUtente) {
+          setTimeout(function () {
+            markerUtente.openPopup();
+          }, 500);
         }
-  
-        const position =
-          JSON.parse(raw);
-  
-        if (
-          !position ||
-          !isFiniteNumber(position.lat) ||
-          !isFiniteNumber(position.lng)
-        ) {
-          return null;
-        }
-  
-        return position;
-  
-      } catch (error) {
-        return null;
-      }
-    }
-  
-    /* =========================================================
-       PIN "TU SEI QUI"
-       ========================================================= */
-  
-    function createUserIcon() {
-  
-      if (!window.L) {
-        return null;
       }
   
-      return L.divIcon({
-  
-        className:
-          "gps-user-location-icon",
-  
-        html: `
-          <div
-            style="
-              width:46px;
-              height:46px;
-              box-sizing:border-box;
-              border-radius:50% 50% 50% 0;
-              transform:rotate(-45deg);
-              background:#075c3b;
-              border:4px solid #ffffff;
-              box-shadow:
-                0 3px 12px
-                rgba(0,0,0,.40);
-              position:relative;
-            "
-          >
-  
-            <div
-              style="
-                position:absolute;
-                width:18px;
-                height:18px;
-                border-radius:50%;
-                background:#ffffff;
-                left:10px;
-                top:10px;
-              "
-            ></div>
-  
-            <div
-              style="
-                position:absolute;
-                width:8px;
-                height:8px;
-                border-radius:50%;
-                background:#075c3b;
-                left:15px;
-                top:15px;
-              "
-            ></div>
-  
-          </div>
-        `,
-  
-        iconSize: [
-          46,
-          46
-        ],
-  
-        iconAnchor: [
-          23,
-          46
-        ],
-  
-        popupAnchor: [
-          0,
-          -42
-        ]
-      });
-    }
-  
-    /* =========================================================
-       AGGIORNAMENTO MAPPA
-       ========================================================= */
-  
-    function updateMap(
-      position,
-      centerMap
-    ) {
-  
-      if (
-        !map ||
-        !window.L
-      ) {
-        return;
-      }
-  
-      const latLng = [
-        position.lat,
-        position.lng
-      ];
-  
-      /* PIN */
-  
-      if (userMarker) {
-  
-        userMarker.setLatLng(
-          latLng
-        );
-  
-      } else {
-  
-        userMarker =
-          L.marker(
-            latLng,
-            {
-              icon:
-                createUserIcon(),
-  
-              zIndexOffset:
-                10000,
-  
-              interactive:
-                true
-            }
-          ).addTo(map);
-      }
-  
-      /* CERCHIO PRECISIONE */
-  
-      if (userAccuracyCircle) {
-  
-        userAccuracyCircle
-          .setLatLng(latLng);
-  
-        userAccuracyCircle
-          .setRadius(
-            position.accuracy
-          );
-  
-      } else {
-  
-        userAccuracyCircle =
-          L.circle(
-            latLng,
-            {
-              radius:
-                position.accuracy,
-  
-              color:
-                "#075c3b",
-  
-              weight:
-                2,
-  
-              fillColor:
-                "#075c3b",
-  
-              fillOpacity:
-                0.10,
-  
-              interactive:
-                false
-            }
-          ).addTo(map);
-      }
-  
-      /* POPUP */
-  
-      userMarker.bindPopup(
-        "<strong>📍 TU SEI QUI</strong><br>" +
-        "Precisione GPS circa " +
-        Math.round(
-          position.accuracy
-        ) +
-        " m"
+      // Evento globale per eventuali altri moduli
+      window.dispatchEvent(
+        new CustomEvent("gps:position", {
+          detail: posizioneUtente
+        })
       );
   
-      /* CENTRAMENTO */
-  
-      if (centerMap) {
-  
-        map.setView(
-          latLng,
-          Math.max(
-            14,
-            Math.min(
-              17,
-              Number(options.zoom) || 15
-            )
-          ),
-          {
-            animate: true
-          }
-        );
-      }
-    }
-  
-    /* =========================================================
-       RIMOZIONE PIN
-       ========================================================= */
-  
-    function removeMapPosition() {
-  
-      if (!map) {
-        return;
-      }
-  
-      if (userMarker) {
-  
-        map.removeLayer(
-          userMarker
-        );
-  
-        userMarker = null;
-      }
-  
-      if (userAccuracyCircle) {
-  
-        map.removeLayer(
-          userAccuracyCircle
-        );
-  
-        userAccuracyCircle = null;
-      }
-    }
-  
-    /* =========================================================
-       GESTIONE POSIZIONE
-       ========================================================= */
-  
-    function handlePosition(
-      position
-    ) {
-  
-      const normalized =
-        normalizePosition(
-          position
-        );
-  
-      if (!normalized) {
-  
-        console.warn(
-          "GPS: posizione rifiutata per coordinate o precisione non valide."
-        );
-  
-        return false;
-      }
-  
-      /*
-        Protezione contro il problema che abbiamo visto:
-        GPS che improvvisamente porta l'utente
-        in una posizione completamente sbagliata.
-      */
-  
-      if (
-        !isPlausibleMovement(
-          normalized
-        )
-      ) {
-        return false;
-      }
-  
-      const previous =
-        lastAcceptedPosition;
-  
-      lastPosition =
-        normalized;
-  
-      lastAcceptedPosition =
-        normalized;
-  
-      savePosition(
-        normalized
-      );
-  
-      const movedEnough =
-        !previous ||
-        distanceMeters(
-          previous.lat,
-          previous.lng,
-          normalized.lat,
-          normalized.lng
-        ) >=
-        options.minMoveMeters;
-  
-      if (movedEnough) {
-  
-        updateMap(
-          normalized,
-          options.centerMap &&
-          !previous
-        );
-      }
-  
-      if (
-        typeof options.onPosition ===
-        "function"
-      ) {
-  
-        options.onPosition(
-          normalized
-        );
-      }
-  
-      return true;
-    }
-  
-    /* =========================================================
-       ERRORI GPS
-       ========================================================= */
-  
-    function handleError(
-      error
-    ) {
-  
-      console.error(
+      console.log(
         "GPS:",
-        error &&
-        error.code,
-  
-        error &&
-        error.message
-      );
-  
-      if (
-        typeof options.onError ===
-        "function"
-      ) {
-  
-        options.onError(
-          error
-        );
-      }
-    }
-  
-    /* =========================================================
-       CONFIGURAZIONE
-       ========================================================= */
-  
-    function configure(
-      newOptions
-    ) {
-  
-      options =
-        Object.assign(
-          {},
-          defaultOptions,
-          newOptions || {}
-        );
-  
-      return api;
-    }
-  
-    /* =========================================================
-       COLLEGAMENTO ALLA MAPPA
-       ========================================================= */
-  
-    function attachMap(
-      leafletMap
-    ) {
-  
-      map =
-        leafletMap || null;
-  
-      return api;
-    }
-  
-    /* =========================================================
-       ULTIMA POSIZIONE
-       ========================================================= */
-  
-    function getLastPosition() {
-  
-      return (
-        lastPosition ||
-        readStoredPosition()
+        lat,
+        lng,
+        "precisione:",
+        Math.round(accuracy) + " m"
       );
     }
   
-    /* =========================================================
-       AVVIO GPS
-       ========================================================= */
+    // ---------------------------------------------------------
+    // Errore GPS
+    // ---------------------------------------------------------
   
-    function start(
-      newOptions
-    ) {
+    function erroreGPS(error) {
   
-      configure(
-        newOptions
-      );
+      console.warn("Errore GPS:", error);
   
-      if (
-        !window.isSecureContext
-      ) {
+      let messaggio = "";
   
-        const error =
-          new Error(
-            "La geolocalizzazione richiede HTTPS."
-          );
+      switch (error.code) {
   
-        error.code =
-          "INSECURE_CONTEXT";
+        case 1:
+          messaggio =
+            "Permesso di localizzazione negato. " +
+            "Abilita la posizione nelle impostazioni del dispositivo/browser.";
+          break;
   
-        handleError(
-          error
-        );
+        case 2:
+          messaggio =
+            "Posizione GPS momentaneamente non disponibile. " +
+            "Riprova tra qualche secondo.";
+          break;
   
-        return false;
+        case 3:
+          messaggio =
+            "Il GPS sta impiegando troppo tempo. " +
+            "Riprova in un luogo con una migliore ricezione.";
+          break;
+  
+        default:
+          messaggio =
+            "Impossibile ottenere la posizione GPS.";
       }
   
-      if (
-        !navigator.geolocation
-      ) {
+      // NON usiamo più alert bloccanti.
+      mostraMessaggioGPS(messaggio);
+    }
   
-        const error =
-          new Error(
-            "La geolocalizzazione non è disponibile su questo dispositivo."
-          );
+    // ---------------------------------------------------------
+    // Messaggio discreto
+    // ---------------------------------------------------------
   
-        error.code =
-          "NOT_SUPPORTED";
+    function mostraMessaggioGPS(testo) {
   
-        handleError(
-          error
-        );
+      let box = document.getElementById("gps-messaggio");
   
-        return false;
+      if (!box) {
+  
+        box = document.createElement("div");
+        box.id = "gps-messaggio";
+  
+        box.style.cssText = `
+          position:fixed;
+          left:50%;
+          bottom:25px;
+          transform:translateX(-50%);
+          z-index:99999;
+          background:#006b45;
+          color:white;
+          padding:14px 20px;
+          border-radius:10px;
+          box-shadow:0 4px 18px rgba(0,0,0,.30);
+          font-size:14px;
+          max-width:90%;
+          text-align:center;
+        `;
+  
+        document.body.appendChild(box);
       }
   
-      stop();
+      box.textContent = testo;
+      box.style.display = "block";
   
-      /*
-        Prima lettura:
-        serve per ottenere subito una posizione valida.
-      */
+      clearTimeout(box._timer);
+  
+      box._timer = setTimeout(function () {
+        box.style.display = "none";
+      }, 5000);
+    }
+  
+    // ---------------------------------------------------------
+    // Richiesta posizione singola
+    // ---------------------------------------------------------
+  
+    function ottieniPosizione() {
+  
+      if (!("geolocation" in navigator)) {
+        mostraMessaggioGPS(
+          "La geolocalizzazione non è supportata da questo dispositivo."
+        );
+        return;
+      }
+  
+      mostraMessaggioGPS("📍 Ricerca posizione...");
   
       navigator.geolocation.getCurrentPosition(
+        function (position) {
+          riceviPosizione(position, true);
+          nascondiMessaggioGPS();
+          avviaSeguimento();
+        },
+        erroreGPS,
+        {
+          enableHighAccuracy: true,
+          timeout: TIMEOUT_GPS,
+          maximumAge: 5000
+        }
+      );
+    }
   
+    // ---------------------------------------------------------
+    // Seguimento GPS in movimento
+    // ---------------------------------------------------------
+  
+    function avviaSeguimento() {
+  
+      if (!("geolocation" in navigator)) {
+        return;
+      }
+  
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+  
+      watchId = navigator.geolocation.watchPosition(
         function (position) {
   
-          const accepted =
-            handlePosition(
-              position
-            );
-  
-          /*
-            Solo se abbiamo ottenuto
-            un fix valido avviamo il tracking.
-          */
-  
-          if (
-            accepted &&
-            options.watch
-          ) {
-  
-            startWatch();
-          }
+          // Dopo il primo rilevamento aggiorniamo il pin
+          // senza spostare continuamente la mappa.
+          riceviPosizione(position, false);
         },
-  
         function (error) {
   
-          handleError(
-            error
-          );
+          // Durante il movimento non mostriamo continuamente
+          // messaggi fastidiosi.
+          console.warn("GPS movimento:", error);
         },
-  
         {
-          enableHighAccuracy:
-            options.enableHighAccuracy,
-  
-          timeout:
-            options.timeout,
-  
-          maximumAge:
-            options.maximumAge
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 3000
         }
       );
   
-      return true;
+      console.log("Seguimento GPS attivo");
     }
   
-    /* =========================================================
-       GPS IN MOVIMENTO
-       ========================================================= */
+    // ---------------------------------------------------------
+    // Ferma seguimento
+    // ---------------------------------------------------------
   
-    function startWatch() {
+    function fermaSeguimento() {
   
-      if (
-        !navigator.geolocation
-      ) {
-        return false;
-      }
-  
-      if (
-        watchId !== null
-      ) {
-  
-        navigator.geolocation
-          .clearWatch(
-            watchId
-          );
-  
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
         watchId = null;
       }
   
-      watchId =
-        navigator.geolocation
-          .watchPosition(
-  
-            function (position) {
-  
-              handlePosition(
-                position
-              );
-            },
-  
-            function (error) {
-  
-              handleError(
-                error
-              );
-            },
-  
-            {
-              enableHighAccuracy:
-                true,
-  
-              timeout:
-                20000,
-  
-              maximumAge:
-                2000
-            }
-          );
-  
-      return true;
+      console.log("Seguimento GPS fermato");
     }
   
-    /* =========================================================
-       STOP
-       ========================================================= */
+    // ---------------------------------------------------------
+    // Nasconde messaggio
+    // ---------------------------------------------------------
   
-    function stop() {
+    function nascondiMessaggioGPS() {
   
-      if (
-        watchId !== null &&
-        navigator.geolocation
-      ) {
+      const box = document.getElementById("gps-messaggio");
   
-        navigator.geolocation
-          .clearWatch(
-            watchId
-          );
-  
-        watchId = null;
+      if (box) {
+        box.style.display = "none";
       }
-  
-      return api;
     }
   
-    /* =========================================================
-       CANCELLA POSIZIONE SALVATA
-       ========================================================= */
+    // ---------------------------------------------------------
+    // API globale
+    // ---------------------------------------------------------
   
-    function clearSavedPosition() {
+    window.ottieniPosizione = ottieniPosizione;
+    window.avviaSeguimentoGPS = avviaSeguimento;
+    window.fermaSeguimentoGPS = fermaSeguimento;
   
-      try {
-  
-        sessionStorage.removeItem(
-          STORAGE_KEY
-        );
-  
-      } catch (error) {
-  
-        console.warn(
-          "GPS: impossibile cancellare la posizione.",
-          error
-        );
-      }
-  
-      lastPosition =
-        null;
-  
-      lastAcceptedPosition =
-        null;
-  
-      return api;
-    }
-  
-    /* =========================================================
-       STATO
-       ========================================================= */
-  
-    function isRunning() {
-  
-      return (
-        watchId !== null
-      );
-    }
-  
-    /* =========================================================
-       API PUBBLICA
-       ========================================================= */
-  
-    const api = {
-  
-      configure:
-        configure,
-  
-      attachMap:
-        attachMap,
-  
-      start:
-        start,
-  
-      startWatch:
-        startWatch,
-  
-      stop:
-        stop,
-  
-      getLastPosition:
-        getLastPosition,
-  
-      clearSavedPosition:
-        clearSavedPosition,
-  
-      isRunning:
-        isRunning,
-  
-      updateMap:
-        updateMap,
-  
-      removeMapPosition:
-        removeMapPosition,
-  
-      distanceMeters:
-        distanceMeters
+    window.getPosizioneUtente = function () {
+      return posizioneUtente;
     };
   
-    /*
-      Rendiamo disponibile
-      il gestore globalmente.
+    // ---------------------------------------------------------
+    // Collega automaticamente il pulsante HOME
+    // ---------------------------------------------------------
   
-      Gli altri file potranno usare:
+    function collegaPulsanteGPS() {
   
-      GPSManager.start()
-      GPSManager.attachMap(map)
-      GPSManager.getLastPosition()
-      GPSManager.stop()
-    */
+      const possibiliID = [
+        "usa-posizione",
+        "usaLaMiaPosizione",
+        "btn-posizione",
+        "btnPosizione"
+      ];
   
-    window.GPSManager =
-      api;
+      let button = null;
   
-    console.log(
-      "GPS Manager caricato."
-    );
+      for (const id of possibiliID) {
+        button = document.getElementById(id);
+        if (button) break;
+      }
+  
+      // Se non trova l'ID, cerca il pulsante dal testo
+      if (!button) {
+  
+        const buttons = document.querySelectorAll(
+          "button, a"
+        );
+  
+        for (const elemento of buttons) {
+  
+          const testo = (
+            elemento.textContent || ""
+          ).toLowerCase();
+  
+          if (
+            testo.includes("usa la mia posizione") ||
+            testo.includes("usa la mia posizione")
+          ) {
+            button = elemento;
+            break;
+          }
+        }
+      }
+  
+      if (!button) {
+        console.warn(
+          "GPS: pulsante 'USA LA MIA POSIZIONE' non trovato."
+        );
+        return;
+      }
+  
+      // Evita doppio collegamento
+      if (button.dataset.gpsCollegato === "true") {
+        return;
+      }
+  
+      button.dataset.gpsCollegato = "true";
+  
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
+        ottieniPosizione();
+      });
+  
+      console.log("GPS: pulsante collegato");
+    }
+  
+    // ---------------------------------------------------------
+    // Avvio
+    // ---------------------------------------------------------
+  
+    if (document.readyState === "loading") {
+  
+      document.addEventListener(
+        "DOMContentLoaded",
+        collegaPulsanteGPS
+      );
+  
+    } else {
+  
+      collegaPulsanteGPS();
+    }
   
   })();
