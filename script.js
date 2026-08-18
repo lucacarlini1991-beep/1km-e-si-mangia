@@ -150,13 +150,27 @@ function creaPopupRistorante(ristorante) {
     ? `<small>🅿️ Parcheggio ${ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente"}</small>`
     : `<small>🅿️ Parcheggio da verificare</small>`;
 
+  // Usiamo l'ID del ristorante per collegare il popup alla navigazione.
+  const ristoranteId = escapeHtml(
+    ristorante.id != null ? String(ristorante.id) : String(ristorante.nome || "")
+  );
+
   return `
-    <div style="min-width:190px;line-height:1.4">
-      <strong>${nome}</strong>
+    <div class="popup-ristorante-1km" style="min-width:210px;line-height:1.4;text-align:center">
+      <strong style="display:block;font-size:16px;margin-bottom:5px">${nome}</strong>
       ${ristorante.cucina ? `<small>🍽️ ${escapeHtml(ristorante.cucina)}</small>` : ""}
       ${distanza}
       ${parcheggio}
       ${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}
+
+      <button
+        type="button"
+        class="btn-naviga-ristorante"
+        data-naviga-ristorante="${ristoranteId}"
+        style="display:block;width:100%;margin-top:12px;padding:10px 12px;border:0;border-radius:9px;background:#075c3b;color:#fff;font-size:14px;font-weight:800;cursor:pointer"
+      >
+        🧭 NAVIGA
+      </button>
     </div>
   `;
 }
@@ -351,6 +365,42 @@ document.addEventListener("click", function(event) {
   }
 
   mostraTuttiRistoranti(uscita);
+}, true);
+
+
+// =====================================================
+// NAVIGAZIONE DAL POPUP DEL RISTORANTE
+// =====================================================
+
+// Il popup viene creato dinamicamente da Leaflet, quindi usiamo
+// la delega degli eventi invece di collegare il click al momento
+// della creazione del bottone.
+document.addEventListener("click", function(event) {
+  const button = event.target.closest("[data-naviga-ristorante]");
+  if (!button) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const id = button.getAttribute("data-naviga-ristorante");
+
+  const ristorante = ristorantiDatabase.find(function(item) {
+    const itemId = item?.id != null ? String(item.id) : String(item?.nome || "");
+    return itemId === String(id);
+  });
+
+  if (!ristorante) {
+    console.error("Navigazione: ristorante non trovato:", id);
+    return;
+  }
+
+  if (typeof window.apriNavigazione !== "function") {
+    alert("La navigazione non è disponibile. Ricarica la pagina.");
+    console.error("window.apriNavigazione non disponibile");
+    return;
+  }
+
+  window.apriNavigazione(ristorante);
 }, true);
 
 
