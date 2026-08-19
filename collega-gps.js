@@ -45,7 +45,7 @@
           alert(message);
         }
       });
-      window.GPSManager.start({ watch: true });
+      window.GPSManager.start();
     }
 
     if (button) {
@@ -58,7 +58,7 @@
     // la posizione viene richiesta una sola volta in Home e poi il GPS
     // continua ad aggiornarsi qui senza chiedere un secondo consenso.
     const params = new URLSearchParams(window.location.search);
-    if (params.get("posizione") === "1") {
+    if (params.get("posizione") === "1" || params.get("gps") === "1") {
       setTimeout(function () {
         startGPS(true);
       }, 150);
