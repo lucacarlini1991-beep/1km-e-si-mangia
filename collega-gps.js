@@ -1,144 +1,506 @@
 /* =========================================================
    1 KM E SI MANGIA - collega-gps.js
-   GPS della pagina USCITE.
-   Il pulsante deve essere realmente cliccabile e deve:
-   - chiedere il permesso al browser
-   - ottenere la posizione
-   - mostrare il pin TU SEI QUI usando assets/pin-posizione.png
-   - centrare la mappa
-   - continuare ad aggiornare la posizione mentre ci si muove
+   GPS PAGINA USCITE
+
+   - Il GPS parte SOLO quando si preme il pulsante
+   - Funziona con Safari / iPhone
+   - Richiede posizione precisa
+   - Rifiuta coordinate palesemente errate
+   - Mostra il pin TU SEI QUI
+   - Centra la mappa
+   - Continua ad aggiornare la posizione mentre ci si muove
    ========================================================= */
-(function () {
-  "use strict";
 
-  function initGPSButton() {
-    const button = document.getElementById("locationButton");
-    if (!button) {
-      console.warn("GPS: locationButton non trovato.");
-      return;
-    }
-
+   (function () {
+    "use strict";
+  
+    let watchId = null;
     let searching = false;
-
-    function setButton(text, disabled) {
-      button.disabled = !!disabled;
-      button.textContent = text;
-    }
-
-    function showPosition(position) {
-      if (!window.GPSManager) return;
-
-      const accepted = window.GPSManager.updateMap(
-        {
-          lat: Number(position.coords.latitude),
-          lng: Number(position.coords.longitude),
-          accuracy: Number(position.coords.accuracy),
-          timestamp: Date.now()
-        },
-        true
-      );
-
-      try {
-        sessionStorage.setItem("1km-posizione", JSON.stringify({
-          lat: Number(position.coords.latitude),
-          lng: Number(position.coords.longitude),
-          accuracy: Number(position.coords.accuracy),
-          timestamp: Date.now()
-        }));
-      } catch (e) {}
-
-      setButton("📍 POSIZIONE TROVATA", false);
-      searching = false;
-      return accepted;
-    }
-
-    function errorMessage(error) {
-      if (error && error.code === 1) {
-        return "Permesso di posizione negato. Su iPhone consenti la posizione al browser per questo sito e riprova.";
+  
+    function initGPSButton() {
+  
+      const button = document.getElementById("locationButton");
+  
+      if (!button) {
+        console.warn("GPS: locationButton non trovato.");
+        return;
       }
-      if (error && error.code === 2) {
-        return "Posizione non disponibile. Controlla GPS/localizzazione e riprova.";
+  
+      const TESTO = "📍 USA LA MIA POSIZIONE";
+  
+      function setButton(text, disabled) {
+        button.disabled = !!disabled;
+        button.textContent = text;
       }
-      if (error && error.code === 3) {
-        return "La ricerca della posizione ha impiegato troppo tempo. Riprova tra qualche secondo.";
-      }
-      if (error && error.code === "INSECURE_CONTEXT") {
-        return "La geolocalizzazione richiede HTTPS. Usa il sito Vercel.";
-      }
-      return "Non siamo riusciti a ottenere la tua posizione. Riprova.";
-    }
-      // La richiesta GPS viene gestita dal GPSManager.
-      window.GPSManager.start({
-        enableHighAccuracy: true,
-        timeout: 45000,
-        maximumAge: 10000,
-        watch: true,
-        centerMap: true,
-
-        onPosition: function (position) {
+  
+      function salvaPosizione(position) {
+  
+        const lat = Number(position.coords.latitude);
+        const lng = Number(position.coords.longitude);
+        const accuracy = Number(position.coords.accuracy);
+  
+        console.log("📍 GPS RICEVUTO");
+        console.log("Latitudine:", lat);
+        console.log("Longitudine:", lng);
+        console.log("Precisione:", accuracy, "metri");
+  
+        /*
+         * CONTROLLO FONDAMENTALE
+         *
+         * Se Safari restituisce una posizione con precisione
+         * enorme (es. 273 km), NON la utilizziamo.
+         */
+        if (!Number.isFinite(lat) ||
+            !Number.isFinite(lng) ||
+            !Number.isFinite(accuracy)) {
+  
+          console.warn("GPS: coordinate non valide.");
+          setButton(TESTO, false);
           searching = false;
-          setButton("📍 POSIZIONE TROVATA", false);
-          console.log("GPS posizione ricevuta:", position);
-        },
-
-        onError: function (error) {
-          searching = false;
-          setButton("📍 USA LA MIA POSIZIONE", false);
-          console.error("GPS errore:", error);
-
-          alert(errorMessage(error));
+  
+          alert("La posizione ricevuta non è valida. Riprova.");
+          return;
         }
-      });
-      setButton("📍 RICERCA POSIZIONE...", true);
-
-          // Prima lettura esplicita: il click avvia direttamente la richiesta GPS
-    navigator.geolocation.getCurrentPosition(
-      function (position) {
-        showPosition(position);
-
-        // Dopo il primo fix continuiamo ad aggiornare la posizione
-        window.GPSManager.startWatch();
-      },
-      function (error) {
+  
+        if (accuracy > 1000) {
+  
+          console.warn(
+            "GPS: posizione troppo imprecisa:",
+            accuracy,
+            "metri"
+          );
+  
+          setButton(TESTO, false);
+          searching = false;
+  
+          alert(
+            "La posizione ricevuta non è abbastanza precisa.\n\n" +
+            "Precisione attuale: circa " +
+            Math.round(accuracy / 1000) +
+            " km.\n\n" +
+            "Su iPhone attiva:\n" +
+            "Impostazioni → Privacy e sicurezza → Localizzazione → Safari → Posizione precisa.\n\n" +
+            "Poi torna sul sito e riprova."
+          );
+  
+          return;
+        }
+  
+        const data = {
+          lat: lat,
+          lng: lng,
+          accuracy: accuracy,
+          timestamp: Date.now()
+        };
+  
+        /*
+         * Salviamo la posizione per eventuali altre pagine.
+         */
+        try {
+          sessionStorage.setItem(
+            "1km-posizione",
+            JSON.stringify(data)
+          );
+        } catch (e) {
+          console.warn("GPS: impossibile salvare posizione.", e);
+        }
+  
+        /*
+         * Aggiorniamo la mappa.
+         */
+        if (window.GPSManager &&
+            typeof window.GPSManager.updateMap === "function") {
+  
+          window.GPSManager.updateMap(data, true);
+  
+        } else {
+  
+          console.warn(
+            "GPSManager non disponibile."
+          );
+        }
+  
+        setButton("📍 POSIZIONE TROVATA", false);
         searching = false;
-        setButton("📍 USA LA MIA POSIZIONE", false);
-        console.error("GPS errore:", error);
-        alert(errorMessage(error));
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0
+  
+        console.log(
+          "📍 POSIZIONE ACCETTATA:",
+          data
+        );
       }
-    );
-
-    button.addEventListener("click", startGPS);
-    window.avviaGPS = startGPS;
-    // Se la Home ha già ottenuto la posizione, visualizzala subito.
-    try {
-      const raw = sessionStorage.getItem("1km-posizione");
-      if (raw && window.GPSManager && window.appMap) {
-        const saved = JSON.parse(raw);
-        if (saved && Number.isFinite(Number(saved.lat)) && Number.isFinite(Number(saved.lng))) {
-          window.GPSManager.updateMap({
-            lat: Number(saved.lat),
-            lng: Number(saved.lng),
-            accuracy: Number(saved.accuracy) || 30,
-            timestamp: Number(saved.timestamp) || Date.now()
-          }, true);
-          setButton("📍 POSIZIONE TROVATA", false);
+  
+  
+      function erroreGPS(error) {
+  
+        searching = false;
+        setButton(TESTO, false);
+  
+        console.error(
+          "GPS ERROR:",
+          error
+        );
+  
+        if (!error) {
+          alert(
+            "Non siamo riusciti a ottenere la tua posizione."
+          );
+          return;
+        }
+  
+        if (error.code === 1) {
+  
+          alert(
+            "Hai negato l'accesso alla posizione.\n\n" +
+            "Su iPhone vai in:\n" +
+            "Impostazioni → Privacy e sicurezza → Localizzazione → Safari\n\n" +
+            "e consenti l'accesso alla posizione."
+          );
+  
+        } else if (error.code === 2) {
+  
+          alert(
+            "La posizione non è disponibile.\n\n" +
+            "Controlla che la Localizzazione sia attiva sull'iPhone e riprova."
+          );
+  
+        } else if (error.code === 3) {
+  
+          alert(
+            "Il GPS sta impiegando troppo tempo.\n\n" +
+            "Assicurati di avere una buona visuale del cielo e riprova."
+          );
+  
+        } else {
+  
+          alert(
+            "Non siamo riusciti a ottenere la tua posizione.\n\n" +
+            "Riprova."
+          );
         }
       }
-    } catch (e) {
-      console.warn("GPS: posizione salvata non leggibile.", e);
+  
+  
+      function avviaGPS() {
+  
+        /*
+         * Evita doppi click.
+         */
+        if (searching) {
+          console.log("GPS: ricerca già in corso.");
+          return;
+        }
+  
+        /*
+         * Controllo browser.
+         */
+        if (!navigator.geolocation) {
+  
+          alert(
+            "La geolocalizzazione non è disponibile su questo dispositivo."
+          );
+  
+          return;
+        }
+  
+        /*
+         * HTTPS obbligatorio.
+         */
+        if (!window.isSecureContext) {
+  
+          alert(
+            "La posizione richiede una connessione HTTPS.\n\n" +
+            "Apri il sito pubblicato su Vercel."
+          );
+  
+          return;
+        }
+  
+        searching = true;
+  
+        setButton(
+          "📍 RICERCA GPS...",
+          true
+        );
+  
+        console.log(
+          "📍 AVVIO GPS DA CLICK UTENTE"
+        );
+  
+        /*
+         * FERMIAMO EVENTUALE WATCH PRECEDENTE.
+         */
+        if (watchId !== null) {
+  
+          navigator.geolocation.clearWatch(
+            watchId
+          );
+  
+          watchId = null;
+        }
+  
+  
+        /*
+         * PRIMA POSIZIONE.
+         *
+         * maximumAge: 0
+         * = non utilizzare una posizione vecchia.
+         *
+         * enableHighAccuracy: true
+         * = chiediamo la massima precisione disponibile.
+         */
+        navigator.geolocation.getCurrentPosition(
+  
+          function (position) {
+  
+            console.log(
+              "📍 PRIMO FIX GPS:",
+              position.coords
+            );
+  
+            salvaPosizione(position);
+  
+            /*
+             * Se la posizione è stata accettata,
+             * iniziamo il tracking.
+             */
+            if (!searching) {
+  
+              avviaTracking();
+            }
+          },
+  
+          erroreGPS,
+  
+          {
+            enableHighAccuracy: true,
+            timeout: 60000,
+            maximumAge: 0
+          }
+        );
+      }
+  
+  
+      function avviaTracking() {
+  
+        /*
+         * Se esiste già un tracking lo fermiamo.
+         */
+        if (watchId !== null) {
+  
+          navigator.geolocation.clearWatch(
+            watchId
+          );
+        }
+  
+        console.log(
+          "📍 TRACKING GPS ATTIVO"
+        );
+  
+        watchId = navigator.geolocation.watchPosition(
+  
+          function (position) {
+  
+            const accuracy =
+              Number(position.coords.accuracy);
+  
+            console.log(
+              "📍 AGGIORNAMENTO GPS:",
+              position.coords.latitude,
+              position.coords.longitude,
+              "precisione:",
+              accuracy,
+              "m"
+            );
+  
+            /*
+             * Ignoriamo aggiornamenti totalmente
+             * inutilizzabili.
+             */
+            if (
+              !Number.isFinite(accuracy) ||
+              accuracy > 1000
+            ) {
+              console.warn(
+                "GPS: aggiornamento ignorato, precisione:",
+                accuracy
+              );
+  
+              return;
+            }
+  
+            const data = {
+  
+              lat: Number(
+                position.coords.latitude
+              ),
+  
+              lng: Number(
+                position.coords.longitude
+              ),
+  
+              accuracy: accuracy,
+  
+              timestamp: Date.now()
+            };
+  
+            try {
+  
+              sessionStorage.setItem(
+                "1km-posizione",
+                JSON.stringify(data)
+              );
+  
+            } catch (e) {}
+  
+            if (
+              window.GPSManager &&
+              typeof window.GPSManager.updateMap === "function"
+            ) {
+  
+              /*
+               * true = aggiorna anche la mappa.
+               */
+              window.GPSManager.updateMap(
+                data,
+                false
+              );
+            }
+  
+            setButton(
+              "📍 POSIZIONE TROVATA",
+              false
+            );
+          },
+  
+          function (error) {
+  
+            console.warn(
+              "GPS tracking error:",
+              error
+            );
+  
+            /*
+             * Non cancelliamo immediatamente il tracking
+             * per errori temporanei.
+             */
+          },
+  
+          {
+            enableHighAccuracy: true,
+            timeout: 60000,
+            maximumAge: 0
+          }
+        );
+      }
+  
+  
+      /*
+       * IMPORTANTE:
+       *
+       * Il pulsante può essere chiamato sia normalmente
+       * sia dall'HTML con:
+       *
+       * onclick="window.avviaGPS()"
+       */
+      window.avviaGPS = avviaGPS;
+  
+  
+      /*
+       * Event listener normale.
+       */
+      button.addEventListener(
+        "click",
+        avviaGPS
+      );
+  
+  
+      /*
+       * Recuperiamo una posizione già ottenuta
+       * nella stessa sessione, ma SOLO se è precisa.
+       */
+      try {
+  
+        const raw =
+          sessionStorage.getItem(
+            "1km-posizione"
+          );
+  
+        if (raw) {
+  
+          const saved =
+            JSON.parse(raw);
+  
+          if (
+            saved &&
+            Number.isFinite(Number(saved.lat)) &&
+            Number.isFinite(Number(saved.lng)) &&
+            Number.isFinite(Number(saved.accuracy)) &&
+            Number(saved.accuracy) <= 1000
+          ) {
+  
+            console.log(
+              "📍 Posizione salvata trovata:",
+              saved
+            );
+  
+            if (
+              window.GPSManager &&
+              typeof window.GPSManager.updateMap === "function"
+            ) {
+  
+              window.GPSManager.updateMap(
+                {
+                  lat: Number(saved.lat),
+                  lng: Number(saved.lng),
+                  accuracy: Number(saved.accuracy),
+                  timestamp:
+                    Number(saved.timestamp) ||
+                    Date.now()
+                },
+                true
+              );
+  
+              setButton(
+                "📍 POSIZIONE TROVATA",
+                false
+              );
+            }
+          }
+        }
+  
+      } catch (e) {
+  
+        console.warn(
+          "GPS: impossibile leggere posizione salvata."
+        );
+      }
+  
+  
+      console.log(
+        "✅ COLLEGA-GPS.JS ATTIVO"
+      );
+  
+      console.log(
+        "📍 GPS parte SOLO premendo il pulsante."
+      );
     }
-
-    console.log("COLLEGA-GPS.JS ATTIVO: pulsante GPS collegato correttamente.");
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initGPSButton);
-  } else {
-    initGPSButton();
-  }
-})();
+  
+  
+    /*
+     * Avvio quando la pagina è pronta.
+     */
+    if (
+      document.readyState === "loading"
+    ) {
+  
+      document.addEventListener(
+        "DOMContentLoaded",
+        initGPSButton
+      );
+  
+    } else {
+  
+      initGPSButton();
+    }
+  
+  })();
