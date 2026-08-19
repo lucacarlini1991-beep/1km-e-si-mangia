@@ -1,72 +1,149 @@
-/* 1 KM E SI MANGIA - collegamento GPS
-   Gestisce il pulsante della pagina USCITE e il passaggio GPS dalla Home.
-*/
+/* =========================================================
+   1 KM E SI MANGIA - collega-gps.js
+   GPS della pagina USCITE.
+   Il pulsante deve essere realmente cliccabile e deve:
+   - chiedere il permesso al browser
+   - ottenere la posizione
+   - mostrare il pin TU SEI QUI usando assets/pin-posizione.png
+   - centrare la mappa
+   - continuare ad aggiornare la posizione mentre ci si muove
+   ========================================================= */
 (function () {
   "use strict";
 
-  function init() {
+  function initGPSButton() {
     const button = document.getElementById("locationButton");
-    const map = window.appMap;
-
-    if (window.GPSManager && map) window.GPSManager.attachMap(map);
-
-    function setButton(text, disabled) {
-      if (!button) return;
-      button.textContent = text;
-      button.disabled = !!disabled;
+    if (!button) {
+      console.warn("GPS: locationButton non trovato.");
+      return;
     }
 
-    function startGPS(fromHome) {
-      if (!window.GPSManager) {
-        if (button) setButton("GPS NON DISPONIBILE", true);
-        console.error("GPSManager non disponibile");
+    let searching = false;
+
+    function setButton(text, disabled) {
+      button.disabled = !!disabled;
+      button.textContent = text;
+    }
+
+    function showPosition(position) {
+      if (!window.GPSManager) return;
+
+      const accepted = window.GPSManager.updateMap(
+        {
+          lat: Number(position.coords.latitude),
+          lng: Number(position.coords.longitude),
+          accuracy: Number(position.coords.accuracy),
+          timestamp: Date.now()
+        },
+        true
+      );
+
+      try {
+        sessionStorage.setItem("1km-posizione", JSON.stringify({
+          lat: Number(position.coords.latitude),
+          lng: Number(position.coords.longitude),
+          accuracy: Number(position.coords.accuracy),
+          timestamp: Date.now()
+        }));
+      } catch (e) {}
+
+      setButton("📍 POSIZIONE TROVATA", false);
+      searching = false;
+      return accepted;
+    }
+
+    function errorMessage(error) {
+      if (error && error.code === 1) {
+        return "Permesso di posizione negato. Su iPhone consenti la posizione al browser per questo sito e riprova.";
+      }
+      if (error && error.code === 2) {
+        return "Posizione non disponibile. Controlla GPS/localizzazione e riprova.";
+      }
+      if (error && error.code === 3) {
+        return "La ricerca della posizione ha impiegato troppo tempo. Riprova tra qualche secondo.";
+      }
+      if (error && error.code === "INSECURE_CONTEXT") {
+        return "La geolocalizzazione richiede HTTPS. Usa il sito Vercel.";
+      }
+      return "Non siamo riusciti a ottenere la tua posizione. Riprova.";
+    }
+
+    function startGPS() {
+      if (searching) return;
+
+      if (!window.isSecureContext) {
+        alert(errorMessage({ code: "INSECURE_CONTEXT" }));
         return;
       }
 
+      if (!navigator.geolocation) {
+        alert("La geolocalizzazione non è disponibile su questo dispositivo.");
+        return;
+      }
+
+      if (!window.GPSManager) {
+        alert("Modulo GPS non disponibile. Ricarica la pagina e riprova.");
+        return;
+      }
+
+      // Il modulo principale crea la mappa prima di questo file.
+      if (window.appMap) {
+        window.GPSManager.attachMap(window.appMap);
+      }
+
+      searching = true;
       setButton("📍 RICERCA POSIZIONE...", true);
-      window.GPSManager.configure({
-        watch: true,
-        centerMap: true,
-        zoom: 15,
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 2000,
-        onPosition: function (position) {
-          setButton("📍 POSIZIONE TROVATA", false);
-          console.log("GPS posizione:", position);
+
+      // Prima lettura esplicita: così il click produce immediatamente un fix
+      // e il browser mostra la richiesta di autorizzazione quando necessaria.
+      navigator.geolocation.getCurrentPosition(
+        function (position) {
+          showPosition(position);
+
+          // Poi manteniamo la posizione aggiornata in movimento.
+          window.GPSManager.startWatch();
         },
-        onError: function (error) {
+        function (error) {
+          searching = false;
           setButton("📍 USA LA MIA POSIZIONE", false);
-          let message = "Non siamo riusciti a ottenere la tua posizione.";
-          if (error && error.code === 1) message = "Permesso di posizione negato. Consenti la posizione al browser e riprova.";
-          else if (error && error.code === 2) message = "Posizione non disponibile. Controlla GPS e riprova.";
-          else if (error && error.code === 3) message = "La ricerca della posizione ha impiegato troppo tempo. Riprova.";
-          else if (error && error.code === "INSECURE_CONTEXT") message = "La geolocalizzazione richiede HTTPS. Usa Vercel.";
-          alert(message);
+          console.error("GPS errore:", error);
+          alert(errorMessage(error));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 30000,
+          maximumAge: 0
         }
-      });
-      window.GPSManager.start();
+      );
     }
 
-    if (button) {
-      button.addEventListener("click", function () {
-        startGPS(false);
-      });
+    button.addEventListener("click", startGPS);
+
+    // Se la Home ha già ottenuto la posizione, visualizzala subito.
+    try {
+      const raw = sessionStorage.getItem("1km-posizione");
+      if (raw && window.GPSManager && window.appMap) {
+        const saved = JSON.parse(raw);
+        if (saved && Number.isFinite(Number(saved.lat)) && Number.isFinite(Number(saved.lng))) {
+          window.GPSManager.updateMap({
+            lat: Number(saved.lat),
+            lng: Number(saved.lng),
+            accuracy: Number(saved.accuracy) || 30,
+            timestamp: Number(saved.timestamp) || Date.now()
+          }, true);
+          setButton("📍 POSIZIONE TROVATA", false);
+        }
+      }
+    } catch (e) {
+      console.warn("GPS: posizione salvata non leggibile.", e);
     }
 
-    // Se arriviamo dalla Home dopo aver premuto USA LA MIA POSIZIONE,
-    // la posizione viene richiesta una sola volta in Home e poi il GPS
-    // continua ad aggiornarsi qui senza chiedere un secondo consenso.
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("posizione") === "1" || params.get("gps") === "1") {
-      setTimeout(function () {
-        startGPS(true);
-      }, 150);
-    }
-
-    console.log("COLLEGA-GPS.JS ATTIVO");
+    console.log("COLLEGA-GPS.JS ATTIVO: pulsante GPS collegato correttamente.");
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
-  else init();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initGPSButton);
+  } else {
+    initGPSButton();
+  }
 })();

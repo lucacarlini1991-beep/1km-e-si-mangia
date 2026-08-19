@@ -925,6 +925,184 @@ if (mapButton) {
 
 
 // =====================================================
+// MENU PRINCIPALE - GESTIONE UNIFICATA
+// =====================================================
+
+
+(function () {
+
+  function initMenu() {
+
+    const menuButton = document.querySelector(".menu-button");
+
+    // Supportiamo entrambe le versioni che abbiamo usato:
+    // #mobileMenu / .mobile-menu
+    // #siteMenu / .site-menu
+    const menuPanel =
+      document.getElementById("mobileMenu") ||
+      document.querySelector(".mobile-menu") ||
+      document.getElementById("siteMenu") ||
+      document.querySelector(".site-menu");
+
+    const menuClose =
+      document.getElementById("menuClose") ||
+      document.querySelector(".menu-close") ||
+      document.querySelector(".site-menu-close");
+
+    const overlay =
+      document.querySelector(".site-menu-overlay") ||
+      document.querySelector(".mobile-menu-overlay");
+
+    if (!menuButton || !menuPanel) {
+      console.warn("MENU: elementi non trovati", {
+        menuButton: !!menuButton,
+        menuPanel: !!menuPanel
+      });
+      return;
+    }
+
+    let aperto = false;
+
+    function openMenu() {
+
+      aperto = true;
+
+      menuPanel.classList.add("open");
+      menuPanel.classList.add("active");
+
+      menuPanel.setAttribute("aria-hidden", "false");
+
+      menuButton.setAttribute("aria-expanded", "true");
+
+      document.body.classList.add("menu-open");
+
+      // Forziamo anche lo stile essenziale in modo che il menu
+      // funzioni anche se una vecchia regola CSS è rimasta nel file.
+      menuPanel.style.visibility = "visible";
+      menuPanel.style.opacity = "1";
+      menuPanel.style.pointerEvents = "auto";
+      menuPanel.style.zIndex = "9999";
+
+      if (overlay) {
+        overlay.classList.add("open");
+        overlay.classList.add("active");
+        overlay.style.visibility = "visible";
+        overlay.style.opacity = "1";
+        overlay.style.pointerEvents = "auto";
+        overlay.style.zIndex = "9998";
+      }
+
+      console.log("MENU APERTO");
+    }
+
+    function closeMenu() {
+
+      aperto = false;
+
+      menuPanel.classList.remove("open");
+      menuPanel.classList.remove("active");
+
+      menuPanel.setAttribute("aria-hidden", "true");
+
+      menuButton.setAttribute("aria-expanded", "false");
+
+      document.body.classList.remove("menu-open");
+
+      menuPanel.style.visibility = "hidden";
+      menuPanel.style.opacity = "0";
+      menuPanel.style.pointerEvents = "none";
+
+      if (overlay) {
+        overlay.classList.remove("open");
+        overlay.classList.remove("active");
+        overlay.style.visibility = "hidden";
+        overlay.style.opacity = "0";
+        overlay.style.pointerEvents = "none";
+      }
+
+      console.log("MENU CHIUSO");
+    }
+
+    // Stato iniziale
+    closeMenu();
+
+    // Pulsante hamburger
+    menuButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (aperto) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    // Pulsante X
+    if (menuClose) {
+      menuClose.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeMenu();
+      });
+    }
+
+    // Overlay
+    if (overlay) {
+      overlay.addEventListener("click", function () {
+        closeMenu();
+      });
+    }
+
+    // ESC
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    });
+
+    // Link del menu
+    const menuLinks = menuPanel.querySelectorAll(".menu-link");
+
+    menuLinks.forEach(function (link) {
+
+      link.addEventListener("click", function (event) {
+
+        const target = link.getAttribute("href");
+
+        closeMenu();
+
+        if (target && target.startsWith("#")) {
+
+          const elemento = document.querySelector(target);
+
+          if (elemento) {
+            event.preventDefault();
+
+            setTimeout(function () {
+              elemento.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+              });
+            }, 150);
+          }
+        }
+      });
+    });
+
+    console.log("MENU PRINCIPALE ATTIVO");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMenu);
+  } else {
+    initMenu();
+  }
+
+})();
+
+
+// =====================================================
 // RESIZE MAPPA
 // =====================================================
 

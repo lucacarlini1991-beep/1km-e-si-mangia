@@ -45,14 +45,8 @@
         else if (error.code === 2) alert("Posizione non disponibile. Controlla il GPS e riprova.");
         else if (error.code === 3) alert("La ricerca della posizione ha impiegato troppo tempo. Riprova.");
         else alert("Non siamo riusciti a ottenere la tua posizione.");
-
-        // Anche se il primo fix non arriva, apriamo comunque la mappa:
-        // la pagina USCITE farà un nuovo tentativo GPS senza lasciare l'utente bloccato sulla Home.
-        setTimeout(function () {
-          window.location.href = "uscite.html?gps=1";
-        }, 250);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
     );
   });
 })();

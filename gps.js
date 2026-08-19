@@ -179,18 +179,14 @@
   function createUserIcon() {
     if (!window.L) return null;
 
-    return L.divIcon({
-      className: "gps-user-location-icon",
-      html: `
-        <img
-          src="assets/pin-posizione.png"
-          alt="Tu sei qui"
-          style="width:52px;height:52px;display:block;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));"
-        >
-      `,
-      iconSize: [52, 52],
-      iconAnchor: [26, 52],
-      popupAnchor: [0, -48] 
+    // Usa il vero asset del progetto, non un pin disegnato in CSS/SVG.
+    return L.icon({
+      iconUrl: "assets/pin-posizione.png",
+      iconRetinaUrl: "assets/pin-posizione.png",
+      iconSize: [48, 48],
+      iconAnchor: [24, 48],
+      popupAnchor: [0, -44],
+      className: "gps-user-location-icon"
     });
   }
 
