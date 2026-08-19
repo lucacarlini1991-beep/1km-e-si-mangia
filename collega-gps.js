@@ -91,26 +91,28 @@
       });
       setButton("📍 RICERCA POSIZIONE...", true);
 
-      window.GPSManager.start({
+          // Prima lettura esplicita: il click avvia direttamente la richiesta GPS
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        showPosition(position);
+
+        // Dopo il primo fix continuiamo ad aggiornare la posizione
+        window.GPSManager.startWatch();
+      },
+      function (error) {
+        searching = false;
+        setButton("📍 USA LA MIA POSIZIONE", false);
+        console.error("GPS errore:", error);
+        alert(errorMessage(error));
+      },
+      {
         enableHighAccuracy: true,
-        timeout: 45000,
-        maximumAge: 10000,
-        watch: true,
-        centerMap: true,
+        timeout: 30000,
+        maximumAge: 0
+      }
+    );
 
-        onPosition: function (position) {
-          searching = false;
-          setButton("📍 POSIZIONE TROVATA", false);
-          console.log("GPS posizione ricevuta:", position);
-        },
-
-        onError: function (error) {
-          searching = false;
-          setButton("📍 USA LA MIA POSIZIONE", false);
-          console.error("GPS errore:", error);
-          alert(errorMessage(error));
-        }
-      });
+    button.addEventListener("click", startGPS);
 
     // Se la Home ha già ottenuto la posizione, visualizzala subito.
     try {
