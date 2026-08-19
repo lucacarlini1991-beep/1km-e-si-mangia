@@ -592,7 +592,7 @@ function coordinateNavigazione(
       document.createElement("img");
 
     immagine.src =
-      "assets/navigazione/" +
+      "assets/"+
       nomeFile +
       "?v=20260819";
 
