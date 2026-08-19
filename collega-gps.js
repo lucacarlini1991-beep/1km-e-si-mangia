@@ -67,57 +67,50 @@
       }
       return "Non siamo riusciti a ottenere la tua posizione. Riprova.";
     }
+      // La richiesta GPS viene gestita dal GPSManager.
+      window.GPSManager.start({
+        enableHighAccuracy: true,
+        timeout: 45000,
+        maximumAge: 10000,
+        watch: true,
+        centerMap: true,
 
-    function startGPS() {
-      if (searching) return;
+        onPosition: function (position) {
+          searching = false;
+          setButton("📍 POSIZIONE TROVATA", false);
+          console.log("GPS posizione ricevuta:", position);
+        },
 
-      if (!window.isSecureContext) {
-        alert(errorMessage({ code: "INSECURE_CONTEXT" }));
-        return;
-      }
+        onError: function (error) {
+          searching = false;
+          setButton("📍 USA LA MIA POSIZIONE", false);
+          console.error("GPS errore:", error);
 
-      if (!navigator.geolocation) {
-        alert("La geolocalizzazione non è disponibile su questo dispositivo.");
-        return;
-      }
-
-      if (!window.GPSManager) {
-        alert("Modulo GPS non disponibile. Ricarica la pagina e riprova.");
-        return;
-      }
-
-      // Il modulo principale crea la mappa prima di questo file.
-      if (window.appMap) {
-        window.GPSManager.attachMap(window.appMap);
-      }
-
-      searching = true;
+          alert(errorMessage(error));
+        }
+      });
       setButton("📍 RICERCA POSIZIONE...", true);
 
-      // Prima lettura esplicita: così il click produce immediatamente un fix
-      // e il browser mostra la richiesta di autorizzazione quando necessaria.
-      navigator.geolocation.getCurrentPosition(
-        function (position) {
-          showPosition(position);
+      window.GPSManager.start({
+        enableHighAccuracy: true,
+        timeout: 45000,
+        maximumAge: 10000,
+        watch: true,
+        centerMap: true,
 
-          // Poi manteniamo la posizione aggiornata in movimento.
-          window.GPSManager.startWatch();
+        onPosition: function (position) {
+          searching = false;
+          setButton("📍 POSIZIONE TROVATA", false);
+          console.log("GPS posizione ricevuta:", position);
         },
-        function (error) {
+
+        onError: function (error) {
           searching = false;
           setButton("📍 USA LA MIA POSIZIONE", false);
           console.error("GPS errore:", error);
           alert(errorMessage(error));
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 30000,
-          maximumAge: 0
         }
-      );
-    }
-
-    button.addEventListener("click", startGPS);
+      });
 
     // Se la Home ha già ottenuto la posizione, visualizzala subito.
     try {
