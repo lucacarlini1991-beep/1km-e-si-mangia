@@ -577,115 +577,52 @@ function coordinateNavigazione(
   
   
   // =====================================================
-  // ICONA GOOGLE MAPS
+  // ICONE NAVIGAZIONE - ASSET LOCALI
   // =====================================================
-  
-  function creaIconaGoogleMaps() {
-  
+
+  function creaIconaNavigazioneAsset(nomeFile, alt) {
+
     const contenitore =
-      document.createElement(
-        "div"
-      );
-  
-  
+      document.createElement("div");
+
     contenitore.className =
       "navigazione-icona-1km";
-  
-  
+
     const immagine =
-      document.createElement(
-        "img"
-      );
-  
-  
+      document.createElement("img");
+
     immagine.src =
-      "assets/google-maps.svg";
-  
-  
-    immagine.alt =
-      "Google Maps";
-  
-  
+      "assets/navigazione/" +
+      nomeFile +
+      "?v=20260819";
+
+    immagine.alt = alt;
+    immagine.loading = "eager";
+
     immagine.onerror =
       function() {
-  
-        immagine.remove();
-  
-  
-        const fallback =
-          document.createElement(
-            "span"
-          );
-  
-  
-        fallback.className =
-          "navigazione-icona-neutra-1km";
-  
-  
-        fallback.textContent =
-          "🗺️";
-  
-  
-        contenitore.appendChild(
-          fallback
+        console.warn(
+          "Icona navigazione non trovata:",
+          nomeFile
         );
-  
       };
-  
-  
-    contenitore.appendChild(
-      immagine
-    );
-  
-  
+
+    contenitore.appendChild(immagine);
+
     return contenitore;
-  
   }
-  
-  
+
   // =====================================================
-  // ICONA NEUTRA
+  // ICONA GOOGLE MAPS
   // =====================================================
-  
-  function creaIconaNeutra(
-    simbolo
-  ) {
-  
-    const contenitore =
-      document.createElement(
-        "div"
-      );
-  
-  
-    contenitore.className =
-      "navigazione-icona-1km";
-  
-  
-    const icona =
-      document.createElement(
-        "span"
-      );
-  
-  
-    icona.className =
-      "navigazione-icona-neutra-1km";
-  
-  
-    icona.textContent =
-      simbolo;
-  
-  
-    contenitore.appendChild(
-      icona
+
+  function creaIconaGoogleMaps() {
+    return creaIconaNavigazioneAsset(
+      "google-maps.svg",
+      "Google Maps"
     );
-  
-  
-    return contenitore;
-  
   }
-  
-  
-  // =====================================================
+
   // CREA OPZIONE NAVIGAZIONE
   // =====================================================
   
@@ -1036,8 +973,9 @@ function apriNavigazione(
 
       "Apri Waze e naviga",
 
-      creaIconaNeutra(
-        "🚗"
+      creaIconaNavigazioneAsset(
+        "waze.svg",
+        "Waze"
       ),
 
       function() {
@@ -1065,8 +1003,9 @@ function apriNavigazione(
 
       "Apri Mappe e naviga",
 
-      creaIconaNeutra(
-        ""
+      creaIconaNavigazioneAsset(
+        "apple-maps.svg",
+        "Apple Maps"
       ),
 
       function() {
