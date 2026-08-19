@@ -39,7 +39,10 @@ const map = L.map("map", {
   scrollWheelZoom: true
 
 });
-
+// Collega la mappa al GPS Manager
+if (window.GPSManager) {
+  window.GPSManager.attachMap(map);
+}
 // API per i moduli esterni (GPS, ecc.)
 window.appMap = map;
 if (window.GPSManager) {
