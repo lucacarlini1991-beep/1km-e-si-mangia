@@ -113,7 +113,7 @@
     );
 
     button.addEventListener("click", startGPS);
-
+    window.avviaGPS = startGPS;
     // Se la Home ha già ottenuto la posizione, visualizzala subito.
     try {
       const raw = sessionStorage.getItem("1km-posizione");
