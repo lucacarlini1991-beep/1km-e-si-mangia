@@ -32,8 +32,8 @@
 
   const defaultOptions = {
     enableHighAccuracy: true,
-    timeout: 20000,
-    maximumAge: 5000,
+    timeout: 45000,
+    maximumAge: 10000,
 
     // Non accettiamo fix con precisione dichiarata peggiore di questo valore.
     // Un fix molto impreciso può essere la causa di posizioni completamente errate.
