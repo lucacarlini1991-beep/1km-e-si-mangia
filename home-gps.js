@@ -1,129 +1,117 @@
-/* 1 KM E SI MANGIA - GPS Home
-   Richiesta posizione dalla Home.
-   Salva le coordinate e apre USCITE.
-   Gestione ottimizzata per iPhone / Safari.
-*/
+/* =========================================================
+   1 KM E SI MANGIA - GPS HOME
+   Un solo gestore GPS per la Home.
+   ========================================================= */
 
-(function () {
-  "use strict";
-
-  const button = document.getElementById("homeLocationButton");
-
-  if (!button) return;
-
-  const TESTO_ORIGINALE = "📍 USA LA MIA POSIZIONE";
-
-  function salvaPosizioneEApri(position) {
-    const data = {
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
-      accuracy: position.coords.accuracy,
-      timestamp: Date.now()
-    };
-
-    console.log("📍 POSIZIONE TROVATA:", data);
-
-    try {
-      sessionStorage.setItem(
-        "1km-posizione",
-        JSON.stringify(data)
-      );
-    } catch (e) {
-      console.warn("Impossibile salvare la posizione:", e);
-    }
-
-    window.location.href = "uscite.html?posizione=1";
-  }
-
-  function errorePosizione(error) {
-    console.warn(
-      "Errore geolocalizzazione:",
-      error.code,
-      error.message
-    );
-
-    button.disabled = false;
-    button.textContent = TESTO_ORIGINALE;
-
-    if (error.code === 1) {
-      alert(
-        "La posizione è stata negata. " +
-        "Controlla i permessi di localizzazione di Safari " +
-        "nelle impostazioni dell'iPhone e riprova."
-      );
-    } else if (error.code === 2) {
-      alert(
-        "Non riesco a determinare la posizione. " +
-        "Controlla che la Localizzazione sia attiva sul tuo iPhone e riprova."
-      );
-    } else if (error.code === 3) {
-      alert(
-        "Il GPS sta impiegando troppo tempo. " +
-        "Riprova tra qualche secondo."
-      );
-    } else {
-      alert(
-        "Non siamo riusciti a ottenere la tua posizione. Riprova."
-      );
-    }
-  }
-
-  function trovaPosizione() {
-    if (!navigator.geolocation) {
-      alert(
-        "La geolocalizzazione non è disponibile su questo dispositivo."
-      );
-      return;
-    }
-
-    if (!window.isSecureContext) {
-      alert(
-        "La posizione richiede una connessione HTTPS. " +
-        "Apri 1 KM E SI MANGIA dal sito Vercel."
-      );
-      return;
-    }
-
-    button.disabled = true;
-    button.textContent = "📍 RICERCA POSIZIONE...";
-
-    console.log("📍 Avvio richiesta GPS");
-
-    navigator.geolocation.getCurrentPosition(
-      salvaPosizioneEApri,
-
-      function (error) {
-        console.warn(
-          "Primo tentativo GPS fallito:",
-          error.code,
-          error.message
-        );
-
-        if (error.code === 2 || error.code === 3) {
-          console.log("📍 Avvio secondo tentativo GPS");
-
-          navigator.geolocation.getCurrentPosition(
-            salvaPosizioneEApri,
-            errorePosizione,
-            {
-              enableHighAccuracy: false,
-              timeout: 30000,
-              maximumAge: 120000
-            }
+   (function () {
+    "use strict";
+  
+    function initHomeGPS() {
+      const button = document.getElementById("homeLocationButton");
+  
+      if (!button) {
+        console.warn("HOME GPS: pulsante non trovato.");
+        return;
+      }
+  
+      const TESTO = "📍 USA LA MIA POSIZIONE";
+  
+      function resetButton() {
+        button.disabled = false;
+        button.textContent = TESTO;
+      }
+  
+      function salvaEApri(position) {
+        const data = {
+          lat: Number(position.coords.latitude),
+          lng: Number(position.coords.longitude),
+          accuracy: Number(position.coords.accuracy),
+          timestamp: Date.now()
+        };
+  
+        console.log("📍 HOME GPS POSIZIONE:", data);
+  
+        try {
+          sessionStorage.setItem(
+            "1km-posizione",
+            JSON.stringify(data)
+          );
+        } catch (e) {
+          console.warn("GPS: impossibile salvare posizione", e);
+        }
+  
+        window.location.href = "uscite.html?posizione=1";
+      }
+  
+      function errore(error) {
+        console.error("HOME GPS:", error);
+  
+        resetButton();
+  
+        if (error && error.code === 1) {
+          alert(
+            "Permesso di posizione negato. " +
+            "Su iPhone consenti la posizione per questo sito e riprova."
+          );
+        } else if (error && error.code === 2) {
+          alert(
+            "Posizione non disponibile. " +
+            "Controlla la Localizzazione dell'iPhone e riprova."
+          );
+        } else if (error && error.code === 3) {
+          alert(
+            "La ricerca della posizione sta impiegando troppo tempo. " +
+            "Riprova."
           );
         } else {
-          errorePosizione(error);
+          alert(
+            "Non siamo riusciti a ottenere la tua posizione. Riprova."
+          );
         }
-      },
-
-      {
-        enableHighAccuracy: true,
-        timeout: 45000,
-        maximumAge: 10000
       }
-    );
-  }
-
-  button.addEventListener("click", trovaPosizione);
-
-})();
+  
+      function trovaPosizione() {
+        if (button.disabled) return;
+  
+        if (!window.isSecureContext) {
+          alert(
+            "La geolocalizzazione richiede HTTPS. " +
+            "Apri il sito pubblicato su Vercel."
+          );
+          return;
+        }
+  
+        if (!navigator.geolocation) {
+          alert(
+            "La geolocalizzazione non è disponibile su questo dispositivo."
+          );
+          return;
+        }
+  
+        button.disabled = true;
+        button.textContent = "📍 RICERCA POSIZIONE...";
+  
+        console.log("📍 HOME: richiesta GPS avviata");
+  
+        navigator.geolocation.getCurrentPosition(
+          salvaEApri,
+          errore,
+          {
+            enableHighAccuracy: true,
+            timeout: 45000,
+            maximumAge: 0
+          }
+        );
+      }
+  
+      button.addEventListener("click", trovaPosizione);
+  
+      console.log("HOME GPS ATTIVO");
+    }
+  
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initHomeGPS);
+    } else {
+      initHomeGPS();
+    }
+  })();
