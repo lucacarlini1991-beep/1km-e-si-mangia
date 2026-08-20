@@ -4,154 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Esplora le uscite | 1 KM E SI MANGIA</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <link rel="stylesheet" href="styles.css">
-
 <style>
-  #map { width: 100%; height: 560px; min-height: 560px; }
-  .map-section { min-height: 0 !important; }
-
-  #locationButton {
-    position: relative;
-    z-index: 99999;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: transparent;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  @media (max-width: 750px) {
-    #map { height: 65vh; min-height: 420px; }
-  }
-
-  .site-logo {
-    display:block;
-    width:125px;
-    height:56px;
-    object-fit:contain;
-  }
-
-  @media (max-width:750px) {
-    .site-logo {
-      width:82px;
-      height:58px;
-      object-fit:contain;
-    }
-  }
+#map{width:100%;height:560px;min-height:560px}.map-section{min-height:0!important}@media(max-width:750px){#map{height:65vh;min-height:420px}}.site-logo{display:block;width:125px;height:56px;object-fit:contain}@media(max-width:750px){.site-logo{width:82px;height:58px;object-fit:contain}}
+#locationButton{position:relative;z-index:1000;pointer-events:auto;margin:0 0 18px;padding:14px 22px;border:0;border-radius:10px;background:#075c3b;color:#fff;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.16);touch-action:manipulation}
 </style>
 </head>
-
 <body>
-
-<header class="topbar">
-  <a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
-    <img src="assets/logo-definitivo.png?v=20260819" alt="1 KM E SI MANGIA" class="site-logo">
-  </a>
-
-  <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
-</header>
-
-<nav class="mobile-menu" id="mobileMenu" aria-hidden="true">
-  <div class="mobile-menu-inner">
-    <button class="menu-close" id="menuClose" type="button" aria-label="Chiudi menu">×</button>
-
-    <div class="mobile-menu-title">
-      <strong>1 KM</strong>
-      <span>E SI MANGIA</span>
-    </div>
-
-    <div class="menu-links">
-      <a href="come-funziona.html" class="menu-link menu-link-how">
-        <strong>COME FUNZIONA</strong>
-        <span>Scopri come utilizzare il servizio</span>
-      </a>
-
-      <a href="index.html" class="menu-link">
-        <strong>HOME</strong>
-        <span>La nostra idea</span>
-      </a>
-
-      <a href="uscite.html" class="menu-link">
-        <strong>ESPLORA LE USCITE</strong>
-        <span>Trova l'uscita più vicina</span>
-      </a>
-
-      <a href="parcheggi.html" class="menu-link">
-        <strong>PARCHEGGI MEZZI PESANTI</strong>
-        <span>Trova un parcheggio per il tuo mezzo</span>
-      </a>
-
-      <a href="distanze.html" class="menu-link">
-        <strong>LE DISTANZE</strong>
-        <span>Quanto ti allontani dall'autostrada</span>
-      </a>
-
-      <a href="contatti.html" class="menu-link">
-        <strong>CONTATTI</strong>
-        <span>Scrivici</span>
-      </a>
-
-      <a href="fonti-licenze.html" class="menu-link">
-        <strong>FONTI E LICENZE</strong>
-        <span>Dati, fonti e informazioni legali</span>
-      </a>
-    </div>
-  </div>
-</nav>
-
-<main>
-  <section class="map-section" id="mapSection">
-    <div class="map-header">
-      <div class="map-label">1 KM E SI MANGIA</div>
-      <h1>ESPLORA LE USCITE</h1>
-      <p>Avvicinati sulla mappa per visualizzare le singole uscite autostradali.</p>
-
-      <button
-        type="button"
-        id="locationButton"
-        onclick="window.avviaGPS && window.avviaGPS(); return false;"
-        style="margin:0 0 18px;padding:14px 22px;border:0;border-radius:10px;background:#075c3b;color:#fff;font-weight:700;font-size:16px;box-shadow:0 3px 10px rgba(0,0,0,.16);"
-      >📍 USA LA MIA POSIZIONE</button>
-    </div>
-
-    <div id="map"></div>
-
-    <div class="map-legend">
-      <div>
-        <span class="legend-dot"></span>
-        <span>Uscita autostradale</span>
-      </div>
-      <div>
-        <span class="legend-route"></span>
-        <span>Autostrada</span>
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer id="footer">
-  <strong>1 KM E SI MANGIA</strong>
-  <p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p>
-</footer>
-
+<header class="topbar"><a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA"><img src="assets/logo-definitivo.png?v=20260819" alt="1 KM E SI MANGIA" class="site-logo"></a><button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button></header>
+<nav class="mobile-menu" id="mobileMenu" aria-hidden="true"><div class="mobile-menu-inner"><button class="menu-close" id="menuClose" type="button" aria-label="Chiudi menu">×</button><div class="mobile-menu-title"><strong>1 KM</strong><span>E SI MANGIA</span></div><div class="menu-links">
+<a href="come-funziona.html" class="menu-link menu-link-how"><strong>COME FUNZIONA</strong><span>Scopri come utilizzare il servizio</span></a>
+<a href="index.html" class="menu-link"><strong>HOME</strong><span>La nostra idea</span></a>
+<a href="uscite.html" class="menu-link"><strong>ESPLORA LE USCITE</strong><span>Trova l'uscita più vicina</span></a>
+<a href="parcheggi.html" class="menu-link"><strong>PARCHEGGI MEZZI PESANTI</strong><span>Trova un parcheggio per il tuo mezzo</span></a>
+<a href="distanze.html" class="menu-link"><strong>LE DISTANZE</strong><span>Quanto ti allontani dall'autostrada</span></a>
+<a href="contatti.html" class="menu-link"><strong>CONTATTI</strong><span>Scrivici</span></a>
+<a href="fonti-licenze.html" class="menu-link"><strong>FONTI E LICENZE</strong><span>Dati, fonti e informazioni legali</span></a>
+</div></div></nav>
+<main><section class="map-section" id="mapSection"><div class="map-header"><div class="map-label">1 KM E SI MANGIA</div><h1>ESPLORA LE USCITE</h1><p>Avvicinati sulla mappa per visualizzare le singole uscite autostradali.</p><button type="button" id="locationButton">📍 USA LA MIA POSIZIONE</button></div><div id="map"></div><div class="map-legend"><div><span class="legend-dot"></span><span>Uscita autostradale</span></div><div><span class="legend-route"></span><span>Autostrada</span></div></div></section></main>
+<footer id="footer"><strong>1 KM E SI MANGIA</strong><p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-
-<script src="gps.js?v=20260819"></script>
-<script src="script.js?v=20260819"></script>
-<script src="collega-gps.js?v=20260819-2300"></script>
-<script src="navigazione.js"></script>
-<script src="collega_navigazione.js"></script>
-<script src="camion-navigazione.js"></script>
-<script src="demo.js"></script>
-
-</body>
-</html>
+<script src="gps.js?v=20260820"></script>
+<script src="script.js?v=20260820"></script>
+<script src="collega-gps.js?v=20260820"></script>
+<script src="navigazione.js"></script><script src="collega_navigazione.js"></script><script src="camion-navigazione.js"></script><script src="demo.js"></script>
+</body></html>

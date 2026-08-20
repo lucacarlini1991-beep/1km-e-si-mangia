@@ -1,189 +1,31 @@
-/* =========================================================
-   1 KM E SI MANGIA
-   collega-gps.js
-
-   UNICO COMPITO:
-   collegare il pulsante USCITE al GPSManager.
-   ========================================================= */
-
-   (function () {
-    "use strict";
-  
-    function initGPSButton() {
-  
-      const button =
-        document.getElementById("locationButton");
-  
-      if (!button) {
-        console.error(
-          "GPS: locationButton non trovato."
-        );
-        return;
-      }
-  
-      /*
-       * La mappa viene esposta da script.js come window.appMap.
-       */
-      if (
-        window.GPSManager &&
-        window.appMap &&
-        typeof window.GPSManager.attachMap === "function"
-      ) {
-        window.GPSManager.attachMap(
-          window.appMap
-        );
-  
-        console.log(
-          "✅ GPS: mappa collegata."
-        );
-      } else {
-        console.warn(
-          "GPS: mappa o GPSManager non ancora disponibili."
-        );
-      }
-  
-      /*
-       * Evitiamo qualunque onclick HTML.
-       */
-      button.removeAttribute("onclick");
-  
-      button.style.pointerEvents = "auto";
-      button.style.touchAction = "manipulation";
-      button.style.cursor = "pointer";
-  
-      let working = false;
-  
-      function resetButton() {
-  
-        working = false;
-  
-        button.disabled = false;
-  
-        button.textContent =
-          "📍 USA LA MIA POSIZIONE";
-      }
-  
-      function startGPS() {
-  
-        if (working) return;
-  
-        console.log(
-          "📍 USCITE: CLICK GPS RICEVUTO"
-        );
-  
-        if (!window.isSecureContext) {
-  
-          alert(
-            "La geolocalizzazione richiede HTTPS.\n\n" +
-            "Apri il sito pubblicato su Vercel."
-          );
-  
-          return;
-        }
-  
-        if (!navigator.geolocation) {
-  
-          alert(
-            "La geolocalizzazione non è disponibile su questo dispositivo."
-          );
-  
-          return;
-        }
-  
-        if (
-          !window.GPSManager ||
-          typeof window.GPSManager.start !== "function"
-        ) {
-  
-          alert(
-            "Modulo GPS non disponibile.\n\n" +
-            "Ricarica la pagina e riprova."
-          );
-  
-          return;
-        }
-  
-        /*
-         * IMPORTANTISSIMO:
-         * la richiesta parte direttamente dal TAP.
-         */
-        working = true;
-  
-        button.disabled = true;
-  
-        button.textContent =
-          "📍 RICERCA POSIZIONE...";
-  
-        console.log(
-          "📍 USCITE: avvio GPSManager.start()"
-        );
-  
-        window.GPSManager.start({
-  
-          enableHighAccuracy: true,
-  
-          timeout: 60000,
-  
-          maximumAge: 0,
-  
-          watch: true,
-  
-          centerMap: true
-  
-        });
-      }
-  
-      /*
-       * Un solo listener.
-       */
-      button.addEventListener(
-        "click",
-        function (event) {
-  
-          event.preventDefault();
-          event.stopPropagation();
-  
-          startGPS();
-  
-        },
-        false
-      );
-  
-      /*
-       * Compatibilità con l'HTML precedente.
-       */
-      window.avviaGPS = startGPS;
-  
-      console.log(
-        "================================="
-      );
-  
-      console.log(
-        "✅ USCITE GPS PRONTO"
-      );
-  
-      console.log(
-        "📍 Pulsante collegato"
-      );
-  
-      console.log(
-        "================================="
-      );
+/* 1 KM E SI MANGIA - collega-gps.js */
+(function(){
+  "use strict";
+  function init(){
+    const b=document.getElementById("locationButton"); if(!b)return;
+    if(window.GPSManager&&window.appMap&&typeof window.GPSManager.attachMap==="function")window.GPSManager.attachMap(window.appMap);
+    let working=false;
+    function saved(){
+      try{
+        const r=sessionStorage.getItem("1km-posizione"); if(!r)return false; const p=JSON.parse(r);
+        const lat=Number(p.lat),lng=Number(p.lng),accuracy=Number(p.accuracy);
+        if(!Number.isFinite(lat)||!Number.isFinite(lng)||!Number.isFinite(accuracy)||accuracy<=0||accuracy>1000){sessionStorage.removeItem("1km-posizione");return false;}
+        if(!window.GPSManager)return false;
+        if(!window.GPSManager.updateMap({lat,lng,accuracy,timestamp:Number(p.timestamp)||Date.now()},true))return false;
+        b.disabled=false;b.textContent="📍 POSIZIONE TROVATA";
+        if(typeof window.GPSManager.startWatch==="function")window.GPSManager.startWatch();
+        return true;
+      }catch(e){console.warn("GPS: posizione Home non leggibile.",e);return false;}
     }
-  
-    if (
-      document.readyState === "loading"
-    ) {
-  
-      document.addEventListener(
-        "DOMContentLoaded",
-        initGPSButton
-      );
-  
-    } else {
-  
-      initGPSButton();
-  
+    function start(e){
+      if(e){e.preventDefault();e.stopPropagation();} if(working)return;
+      if(new URLSearchParams(location.search).get("gps")==="1"&&saved())return;
+      if(!window.GPSManager||typeof window.GPSManager.start!=="function"){alert("Modulo GPS non disponibile.\n\nRicarica la pagina e riprova.");return;}
+      working=true;b.disabled=true;b.textContent="📍 RICERCA POSIZIONE...";window.GPSManager.start({enableHighAccuracy:true,timeout:60000,maximumAge:0});setTimeout(function(){working=false;},1000);
     }
-  
-  })();
+    b.addEventListener("click",start,false); window.avviaGPS=start;
+    if(new URLSearchParams(location.search).get("gps")==="1")setTimeout(saved,100);
+    console.log("✅ USCITE GPS: unico listener attivo");
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
