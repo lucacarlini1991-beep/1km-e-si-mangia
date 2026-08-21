@@ -666,11 +666,13 @@ function creaIconaGoogleMaps() {
 
 
 // =====================================================
-// ICONE NEUTRE
+// ICONE SVG DA ASSETS
 // =====================================================
 
-function creaIconaNeutra(
-  simbolo
+function creaIconaSVG(
+  percorso,
+  alt,
+  fallback
 ) {
 
   const contenitore =
@@ -678,32 +680,73 @@ function creaIconaNeutra(
       "div"
     );
 
-
   contenitore.className =
     "navigazione-icona-1km";
 
-
-  const icona =
+  const immagine =
     document.createElement(
-      "span"
+      "img"
     );
 
+  immagine.src =
+    percorso;
 
-  icona.className =
-    "navigazione-icona-neutra-1km";
+  immagine.alt =
+    alt;
 
+  immagine.loading =
+    "eager";
 
-  icona.textContent =
-    simbolo;
+  immagine.decoding =
+    "async";
 
+  immagine.onerror =
+    function() {
+
+      immagine.remove();
+
+      const fallbackElement =
+        document.createElement(
+          "span"
+        );
+
+      fallbackElement.className =
+        "navigazione-icona-neutra-1km";
+
+      fallbackElement.textContent =
+        fallback;
+
+      contenitore.appendChild(
+        fallbackElement
+      );
+
+    };
 
   contenitore.appendChild(
-    icona
+    immagine
   );
 
-
   return contenitore;
+}
 
+
+function creaIconaWaze() {
+
+  return creaIconaSVG(
+    "assets/waze.svg",
+    "Waze",
+    "🚗"
+  );
+}
+
+
+function creaIconaAppleMaps() {
+
+  return creaIconaSVG(
+    "assets/apple-maps.svg",
+    "Apple Maps",
+    "🧭"
+  );
 }
 
 
@@ -1056,9 +1099,7 @@ function apriNavigazione(
 
       "Apri Waze e naviga",
 
-      creaIconaNeutra(
-        "🚗"
-      ),
+      creaIconaWaze(),
 
       function() {
 
@@ -1085,9 +1126,7 @@ function apriNavigazione(
 
       "Apri Mappe e naviga",
 
-      creaIconaNeutra(
-        "🧭"
-      ),
+      creaIconaAppleMaps(),
 
       function() {
 
