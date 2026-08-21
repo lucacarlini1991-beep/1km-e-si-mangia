@@ -40,12 +40,6 @@ const map = L.map("map", {
 
 });
 
-// API per i moduli esterni (GPS, ecc.)
-window.appMap = map;
-if (window.GPSManager) {
-  window.GPSManager.attachMap(map);
-}
-
 
 // =====================================================
 // OPENSTREETMAP
@@ -147,24 +141,122 @@ function ristorantiPerUscita(uscita) {
   return ristorantiPerUscitaMap.get(String(uscita.id)) || [];
 }
 
+const recensioniKey = (ristorante) => `1km-recensioni-${String(ristorante?.id || ristorante?.osm_id || ristorante?.nome || "ristorante")}`;
+
+function leggiRecensioni(ristorante) {
+  try {
+    const raw = localStorage.getItem(recensioniKey(ristorante));
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data : [];
+  } catch (_) { return []; }
+}
+
+function datiValutazione(ristorante) {
+  const recensioni = leggiRecensioni(ristorante);
+  if (!recensioni.length) return { media: null, totale: 0 };
+  const media = recensioni.reduce((sum, r) => sum + Number(r.stelle || 0), 0) / recensioni.length;
+  return { media: Math.round(media * 10) / 10, totale: recensioni.length };
+}
+
+function stelleHtml(media) {
+  if (media == null) return `<span style="letter-spacing:1px;color:#9aa7a2">☆☆☆☆☆</span>`;
+  const rounded = Math.round(media);
+  return `<span style="letter-spacing:1px;color:#f5a719">${"★".repeat(rounded)}${"☆".repeat(5-rounded)}</span>`;
+}
+
+function nomeGiornoItalia() {
+  return ["Su","Mo","Tu","We","Th","Fr","Sa"][new Date().getDay()];
+}
+
+function giornoInRegola(rule, day) {
+  if (!rule) return false;
+  if (rule === day) return true;
+  const parts = rule.split("-");
+  if (parts.length !== 2) return false;
+  const giorni = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+  let a = giorni.indexOf(parts[0]), b = giorni.indexOf(parts[1]), x = giorni.indexOf(day);
+  if (a < 0 || b < 0 || x < 0) return false;
+  if (a <= b) return x >= a && x <= b;
+  return x >= a || x <= b;
+}
+
+function statoApertura(apertura) {
+  if (!apertura) return { label: "ORARI NON DISPONIBILI", color: "#65736e" };
+  if (String(apertura).trim() === "24/7") return { label: "🟢 APERTO 24 ORE SU 24", color: "#16834b" };
+  const day = nomeGiornoItalia();
+  const now = new Date();
+  const minuti = now.getHours() * 60 + now.getMinutes();
+  const regole = String(apertura).split(";").map(x => x.trim()).filter(Boolean);
+  let aperto = false, prossimo = null;
+  for (const regola of regole) {
+    const m = regola.match(/^(Mo|Tu|We|Th|Fr|Sa|Su)(?:-(Mo|Tu|We|Th|Fr|Sa|Su))?\s+(.+)$/i);
+    if (!m) continue;
+    const giorno = m[1].replace(/^./, c => c.toUpperCase()) + (m[2] ? "-" + m[2].replace(/^./, c => c.toUpperCase()) : "");
+    if (!giornoInRegola(giorno, day)) continue;
+    if (/off/i.test(m[3])) continue;
+    const fasce = m[3].split(",").map(x => x.trim());
+    for (const fascia of fasce) {
+      const tm = fascia.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+      if (!tm) continue;
+      const inizio = Number(tm[1])*60+Number(tm[2]);
+      let fine = Number(tm[3])*60+Number(tm[4]);
+      if (fine === 0) fine = 1440;
+      const dentro = fine >= inizio ? minuti >= inizio && minuti <= fine : (minuti >= inizio || minuti <= fine);
+      if (dentro) { aperto = true; prossimo = `${tm[3].padStart(2,"0")}:${tm[4]}`; }
+    }
+  }
+  if (aperto) return { label: prossimo ? `🟢 APERTO · chiude alle ${prossimo}` : "🟢 APERTO", color: "#16834b" };
+  return { label: "🔴 CHIUSO", color: "#b23a2b" };
+}
+
+function bloccoRistoranteExtra(ristorante) {
+  const valutazione = datiValutazione(ristorante);
+  const stato = statoApertura(ristorante.apertura);
+  return `
+    <div style="margin-top:9px;padding-top:9px;border-top:1px solid #e5e5e5;display:grid;gap:5px">
+      <strong style="color:${stato.color};font-size:13px">${stato.label}</strong>
+      ${ristorante.apertura ? `<small>🕐 ${escapeHtml(ristorante.apertura)}</small>` : ""}
+      <div style="font-size:13px"><strong>${stelleHtml(valutazione.media)}</strong> <span style="color:#66736f">${valutazione.media != null ? valutazione.media + " / 5 · " + valutazione.totale + " valutazioni" : "Nessuna valutazione"}</span></div>
+      <button type="button" data-recensione-id="${escapeHtml(ristorante.id || ristorante.osm_id || ristorante.nome)}" style="margin-top:3px;border:0;border-radius:9px;background:#f5a719;color:#073f2e;padding:8px 10px;font-weight:800;cursor:pointer">⭐ VALUTA / LASCIA UN'INFORMAZIONE</button>
+    </div>`;
+}
+
 function creaPopupRistorante(ristorante) {
   const nome = escapeHtml(ristorante.nome || "Ristorante");
   const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
-    ? `<small>📏 ${Math.round(Number(ristorante.uscita.distanza_m))} m dall'uscita</small>`
-    : "";
+    ? `<small>📍 ${Math.round(Number(ristorante.uscita.distanza_m))} m dall'uscita</small>` : "";
   const parcheggio = ristorante.parcheggio?.presente === true
     ? `<small>🅿️ Parcheggio ${ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente"}</small>`
     : `<small>🅿️ Parcheggio da verificare</small>`;
+  return `<div style="min-width:210px;line-height:1.4"><strong>${nome}</strong>${ristorante.cucina ? `<small>🍽️ ${escapeHtml(ristorante.cucina)}</small>` : ""}${distanza}${parcheggio}${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}${bloccoRistoranteExtra(ristorante)}</div>`;
+}
 
-  return `
-    <div style="min-width:190px;line-height:1.4">
-      <strong>${nome}</strong>
-      ${ristorante.cucina ? `<small>🍽️ ${escapeHtml(ristorante.cucina)}</small>` : ""}
-      ${distanza}
-      ${parcheggio}
-      ${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}
-    </div>
-  `;
+function apriRecensione(ristorante) {
+  document.getElementById("recensioneModal1km")?.remove();
+  const recensioni = leggiRecensioni(ristorante);
+  const valutazione = datiValutazione(ristorante);
+  const modal = document.createElement("div");
+  modal.id = "recensioneModal1km";
+  modal.style.cssText = "position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,sans-serif;";
+  modal.innerHTML = `<div style="width:min(94vw,520px);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><div style="font-size:12px;color:#f5a719;font-weight:800;letter-spacing:2px">1 KM E SI MANGIA</div><h2 style="margin:4px 0">${escapeHtml(ristorante.nome || "Ristorante")}</h2></div><button id="chiudiRecensione1km" type="button" style="border:0;background:#eee;border-radius:50%;width:36px;height:36px;font-size:20px">×</button></div><div style="margin:12px 0 18px;font-size:14px">${valutazione.media != null ? `${stelleHtml(valutazione.media)} <strong>${valutazione.media}/5</strong> · ${valutazione.totale} valutazioni` : "Ancora nessuna valutazione"}</div><div style="padding:14px;background:#f4f7f5;border-radius:12px"><strong>La tua esperienza</strong><div id="stelleInput1km" style="font-size:30px;letter-spacing:3px;margin:7px 0;cursor:pointer" aria-label="Scegli da 1 a 5 stelle">☆☆☆☆☆</div><textarea id="testoRecensione1km" maxlength="500" placeholder="Es. parcheggio comodo, servizio veloce, adatto a camion..." style="width:100%;min-height:90px;border:1px solid #ccd8d3;border-radius:10px;padding:10px;font:inherit;resize:vertical"></textarea><button id="salvaRecensione1km" type="button" style="width:100%;margin-top:10px;border:0;border-radius:10px;background:#075c3b;color:#fff;padding:12px;font-weight:800">PUBBLICA ANONIMAMENTE</button></div><div style="margin-top:18px"><strong>Esperienze degli utenti</strong>${recensioni.length ? recensioni.slice(-8).reverse().map(r => `<div style="border-bottom:1px solid #e7ece9;padding:12px 0"><div>${stelleHtml(Number(r.stelle))}</div><div style="margin-top:4px;color:#53635e">${escapeHtml(r.testo || "")}</div><small style="color:#8a9692">Utente anonimo · ${escapeHtml(r.data || "")}</small></div>`).join("") : `<p style="color:#687772">Nessuna esperienza ancora. Sii il primo.</p>`}</div><small style="display:block;margin-top:15px;color:#8a9692">Le informazioni inserite qui sono salvate anonimamente su questo dispositivo. Per renderle visibili a tutti gli utenti servirà il database online.</small></div>`;
+  document.body.appendChild(modal);
+  let stelle = 0;
+  const input = modal.querySelector("#stelleInput1km");
+  function aggiorna() { input.textContent = "★".repeat(stelle) + "☆".repeat(5-stelle); input.style.color = "#f5a719"; }
+  input.addEventListener("click", e => { const rect=input.getBoundingClientRect(); stelle=Math.min(5,Math.max(1,Math.ceil(((e.clientX-rect.left)/rect.width)*5))); aggiorna(); });
+  modal.querySelector("#chiudiRecensione1km").onclick = () => modal.remove();
+  modal.addEventListener("click", e => { if(e.target===modal) modal.remove(); });
+  modal.querySelector("#salvaRecensione1km").onclick = () => {
+    const testo = modal.querySelector("#testoRecensione1km").value.trim();
+    if (!stelle) return alert("Scegli da 1 a 5 stelle.");
+    if (testo.length < 3) return alert("Scrivi almeno qualche parola sulla tua esperienza.");
+    const elenco = leggiRecensioni(ristorante);
+    elenco.push({ stelle, testo, data: new Date().toLocaleDateString("it-IT") });
+    try { localStorage.setItem(recensioniKey(ristorante), JSON.stringify(elenco)); } catch (_) {}
+    modal.remove();
+    if (window._ristorantiRefresh) window._ristorantiRefresh();
+    alert("Grazie! La tua informazione è stata salvata in forma anonima.");
+  };
 }
 
 function creaMarkerRistorante(ristorante) {
@@ -187,6 +279,7 @@ function chiudiPannelloRistoranti() {
 
 function mostraTuttiRistoranti(uscita) {
   if (!uscita) return;
+  window._ultimaUscitaRistoranti = uscita;
 
   const ristoranti = ristorantiPerUscita(uscita);
   ristorantiLayer.clearLayers();
@@ -242,15 +335,14 @@ function mostraTuttiRistoranti(uscita) {
               ${ristorante.cucina ? `<div style="font-size:12px;color:#555;margin-top:3px">🍽️ ${escapeHtml(ristorante.cucina)}</div>` : ""}
             </div>
             ${typeof ristorante.lat === "number" && typeof ristorante.lon === "number"
-              ? `<button type="button" data-ristorante-index="${index}" style="box-sizing:border-box;min-width:132px;height:42px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true"><path d="M9 3 6 29M23 3l3 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 4v5M16 13v5M16 22v6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 4"/></svg> NAVIGA</button>` + (ristorante.parcheggio?.presente === true && Number.isFinite(Number(ristorante.parcheggio.distanza_m)) && Number(ristorante.parcheggio.distanza_m) <= 600
-                ? ` <button type="button" data-demo-ristorante-index="${index}" style="box-sizing:border-box;min-width:132px;height:42px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #075c3b;border-radius:10px;background:#fff;color:#075c3b;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap">🚛 DEMO</button>`
-                : "")
+              ? `<button type="button" data-ristorante-index="${index}" style="border:0;border-radius:10px;background:#075c3b;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer">📍 MAPPA</button>`
               : ""}
           </div>
           <div style="font-size:12px;color:#555;margin-top:7px;display:grid;gap:3px">
-            ${distanza ? `<span>📏 ${distanza}</span>` : ""}
+            ${distanza ? `<span>📍 ${distanza}</span>` : ""}
             <span>${parcheggio}</span>
             ${ristorante.telefono ? `<span>📞 ${escapeHtml(ristorante.telefono)}</span>` : ""}
+            ${bloccoRistoranteExtra(ristorante)}
           </div>
         </div>
       `;
@@ -284,17 +376,6 @@ function mostraTuttiRistoranti(uscita) {
       if (!ristorante) return;
 
       chiudiPannelloRistoranti();
-
-      // Il pulsante della scheda ristorante porta direttamente
-      // alla scelta dell'app di navigazione.
-      // navigazione.js espone apriNavigazione().
-      if (typeof window.apriNavigazione === "function") {
-        window.apriNavigazione(ristorante);
-        return;
-      }
-
-      // Fallback: se navigazione.js non fosse ancora disponibile,
-      // manteniamo comunque il comportamento precedente.
       map.setView([ristorante.lat, ristorante.lon], 17, { animate: true });
 
       ristorantiLayer.eachLayer(function(layer) {
@@ -309,117 +390,18 @@ function mostraTuttiRistoranti(uscita) {
     });
   });
 
-
-  // =====================================================
-  // MODALITÀ DEMO MEZZI PESANTI
-  // =====================================================
-  panel.querySelectorAll("[data-demo-ristorante-index]").forEach(function(button) {
-    button.addEventListener("click", function() {
-      const index = Number(button.getAttribute("data-demo-ristorante-index"));
-      const ristorante = ristoranti[index];
-      if (!ristorante) return;
-
-      const parcheggio = ristorante.parcheggio;
-      const distanza = Number(parcheggio?.distanza_m);
-
-      if (
-        parcheggio?.presente !== true ||
-        !Number.isFinite(distanza) ||
-        distanza > 600 ||
-        !Number.isFinite(Number(parcheggio?.lat)) ||
-        !Number.isFinite(Number(parcheggio?.lon))
-      ) {
-        alert("Per questo ristorante non è disponibile un parcheggio entro 600 m.");
-        return;
-      }
-
-      const overlay = document.createElement("div");
-      overlay.id = "demoMezziPesanti";
-      overlay.style.cssText =
-        "position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;";
-
-      const nome = escapeHtml(ristorante.nome || "Ristorante");
-      overlay.innerHTML = `
-        <div style="width:min(94vw,460px);background:#fff;border-radius:20px;padding:20px;box-shadow:0 15px 50px rgba(0,0,0,.35);font-family:system-ui,sans-serif">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-            <div>
-              <div style="font-size:13px;font-weight:800;letter-spacing:1px;color:#075c3b">MODALITÀ DEMO</div>
-              <h2 style="margin:4px 0 0;font-size:23px">🚛 Mezzo pesante</h2>
-            </div>
-            <button type="button" data-demo-close style="border:0;background:#f2f2f2;border-radius:50%;width:38px;height:38px;font-size:22px;cursor:pointer">×</button>
-          </div>
-
-          <p style="margin:16px 0 8px"><strong>${nome}</strong></p>
-          <p style="margin:0 0 16px;color:#444">
-            Parcheggio disponibile a <strong>${Math.round(distanza)} m</strong> dal ristorante.
-          </p>
-
-          <div style="display:grid;gap:10px">
-            <button type="button" data-demo-destination="restaurant" style="height:48px;border:0;border-radius:12px;background:#075c3b;color:#fff;font-weight:800;cursor:pointer">
-              NAVIGA AL RISTORANTE
-            </button>
-            <button type="button" data-demo-destination="parking" style="height:48px;border:1px solid #075c3b;border-radius:12px;background:#fff;color:#075c3b;font-weight:800;cursor:pointer">
-              🅿️ NAVIGA AL PARCHEGGIO
-            </button>
-          </div>
-
-          <p style="margin:14px 0 0;font-size:12px;line-height:1.4;color:#666">
-            Demo: la destinazione parcheggio è limitata a 600 m dal ristorante.
-            Le app esterne possono non applicare automaticamente i profili e le restrizioni specifiche per mezzi pesanti: verificare sempre segnaletica e limiti locali.
-          </p>
-        </div>
-      `;
-
-      document.body.appendChild(overlay);
-
-      function chiudiDemo() {
-        overlay.remove();
-      }
-
-      overlay.querySelector("[data-demo-close]").addEventListener("click", chiudiDemo);
-
-      overlay.addEventListener("click", function(event) {
-        if (event.target === overlay) chiudiDemo();
-      });
-
-      overlay.querySelectorAll("[data-demo-destination]").forEach(function(action) {
-        action.addEventListener("click", function() {
-          const tipo = action.getAttribute("data-demo-destination");
-
-          let destinazione;
-
-          if (tipo === "parking") {
-            destinazione = {
-              ...ristorante,
-              nome: "Parcheggio vicino a " + (ristorante.nome || "ristorante"),
-              lat: Number(parcheggio.lat),
-              lon: Number(parcheggio.lon),
-              demo_mezzo_pesante: true,
-              destinazione_tipo: "parcheggio"
-            };
-          } else {
-            destinazione = {
-              ...ristorante,
-              demo_mezzo_pesante: true,
-              destinazione_tipo: "ristorante"
-            };
-          }
-
-          if (typeof window.apriNavigazione === "function") {
-            chiudiDemo();
-            window.apriNavigazione(destinazione);
-          } else {
-            alert("Sistema di navigazione non disponibile.");
-          }
-        });
-      });
-    });
-  });
-
   console.log("Ristoranti mostrati:", ristoranti.length, "Marker:", markerCount, "Uscita:", uscita.nome);
 }
 
 window.mostraTuttiRistoranti = mostraTuttiRistoranti;
+
+document.addEventListener("click", function(event) {
+  const btn = event.target.closest && event.target.closest("[data-recensione-id]");
+  if (!btn) return;
+  const id = btn.getAttribute("data-recensione-id");
+  const r = ristorantiDatabase.find(x => String(x.id || x.osm_id || x.nome) === String(id));
+  if (r) apriRecensione(r);
+});
 
 // Carica e indicizza il database ristoranti per ID uscita.
 fetch("./ristoranti.json")
@@ -451,6 +433,9 @@ fetch("./ristoranti.json")
       }
     });
 
+    window._ristorantiRefresh = function() {
+      if (window._ultimaUscitaRistoranti) mostraTuttiRistoranti(window._ultimaUscitaRistoranti);
+    };
     console.log("DATABASE RISTORANTI - caricati:", ristorantiDatabase.length);
     console.log("Uscite con ristoranti:", ristorantiPerUscitaMap.size);
   })
@@ -698,7 +683,7 @@ function creaPopup(uscita) {
   popup += `
 
       <small>
-        🛣️ Uscita autostradale
+        📍 Uscita autostradale
       </small>
 
       <button
@@ -706,7 +691,7 @@ function creaPopup(uscita) {
         data-ristoranti-uscita="${escapeHtml(uscita.id)}"
         style="margin-top:10px;width:100%;padding:9px;border:0;border-radius:8px;cursor:pointer;background:#075c3b;color:#fff;font-weight:700;"
       >
-        🍴 MOSTRA RISTORANTI
+        🍝 MOSTRA RISTORANTI
       </button>
 
     </div>
@@ -919,6 +904,286 @@ if (mapButton) {
 
     }
 
+  );
+
+}
+
+
+// =====================================================
+// GEOLOCALIZZAZIONE
+// =====================================================
+
+const locationButton =
+  document.getElementById(
+    "locationButton"
+  );
+
+let userMarker = null;
+let userAccuracyCircle = null;
+
+if (locationButton) {
+
+  locationButton.addEventListener(
+    "click",
+    function() {
+
+      if (!window.isSecureContext) {
+
+        alert(
+          "La posizione può essere usata solo tramite HTTPS. " +
+          "Apri il sito dalla versione Vercel."
+        );
+
+        return;
+
+      }
+
+      if (!navigator.geolocation) {
+
+        alert(
+          "La geolocalizzazione non è disponibile " +
+          "su questo dispositivo/browser."
+        );
+
+        return;
+
+      }
+
+      locationButton.disabled = true;
+      locationButton.textContent =
+        "📍 RICERCA POSIZIONE...";
+
+      function posizioneTrovata(position) {
+
+        const lat =
+          position.coords.latitude;
+
+        const lng =
+          position.coords.longitude;
+
+        const accuracy =
+          Number(position.coords.accuracy) || 100;
+
+        console.log(
+          "POSIZIONE GPS:",
+          lat,
+          lng,
+          "precisione:",
+          accuracy,
+          "metri"
+        );
+
+        // ---------------------------------------
+        // RIMUOVI VECCHIA POSIZIONE
+        // ---------------------------------------
+
+        if (userMarker) {
+
+          map.removeLayer(
+            userMarker
+          );
+
+        }
+
+        if (userAccuracyCircle) {
+
+          map.removeLayer(
+            userAccuracyCircle
+          );
+
+        }
+
+        // ---------------------------------------
+        // PIN "TU SEI QUI"
+        // ---------------------------------------
+
+        const userIcon =
+          L.divIcon({
+            className:
+              "user-location-pin",
+            html: `
+              <div
+                style="
+                  width:34px;
+                  height:34px;
+                  border-radius:50% 50% 50% 0;
+                  background:#075c3b;
+                  border:4px solid #fff;
+                  box-shadow:0 2px 10px rgba(0,0,0,.35);
+                  transform:rotate(-45deg);
+                  position:relative;
+                "
+              >
+                <div
+                  style="
+                    position:absolute;
+                    width:10px;
+                    height:10px;
+                    border-radius:50%;
+                    background:#fff;
+                    top:8px;
+                    left:8px;
+                  "
+                ></div>
+              </div>
+            `,
+            iconSize: [42, 42],
+            iconAnchor: [21, 42],
+            popupAnchor: [0, -38]
+          });
+
+        userMarker =
+          L.marker(
+            [lat, lng],
+            {
+              icon: userIcon,
+              zIndexOffset: 10000
+            }
+          ).addTo(map);
+
+        // ---------------------------------------
+        // CERCHIO DI PRECISIONE GPS
+        // ---------------------------------------
+
+        userAccuracyCircle =
+          L.circle(
+            [lat, lng],
+            {
+              radius: accuracy,
+              color: "#075c3b",
+              weight: 2,
+              fillColor: "#075c3b",
+              fillOpacity: 0.12
+            }
+          ).addTo(map);
+
+        userMarker
+          .bindPopup(
+            "<strong>📍 TU SEI QUI</strong><br>" +
+            "Precisione GPS circa " +
+            Math.round(accuracy) +
+            " m"
+          )
+          .openPopup();
+
+        // ---------------------------------------
+        // PORTA LA MAPPA SULL'UTENTE
+        // ---------------------------------------
+
+        if (mapSection) {
+
+          mapSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        }
+
+        // Dopo lo scroll Leaflet deve ricalcolare
+        // le dimensioni del contenitore.
+        setTimeout(
+          function() {
+
+            map.invalidateSize();
+
+            map.setView(
+              [lat, lng],
+              Math.max(
+                14,
+                Math.min(
+                  17,
+                  Math.round(
+                    17 -
+                    Math.log2(
+                      Math.max(
+                        1,
+                        accuracy / 50
+                      )
+                    )
+                  )
+                )
+              ),
+              {
+                animate: true
+              }
+            );
+
+          },
+          450
+        );
+
+        locationButton.disabled = false;
+
+        locationButton.textContent =
+          "📍 POSIZIONE TROVATA";
+
+      }
+
+      function errorePosizione(error) {
+
+        console.error(
+          "ERRORE GPS:",
+          error.code,
+          error.message
+        );
+
+        let messaggio =
+          "Non siamo riusciti a ottenere la tua posizione.";
+
+        if (error.code === 1) {
+
+          messaggio =
+            "Permesso di posizione negato. " +
+            "Consenti la posizione al browser e riprova.";
+
+        } else if (error.code === 2) {
+
+          messaggio =
+            "Posizione non disponibile. " +
+            "Controlla GPS e connessione e riprova.";
+
+        } else if (error.code === 3) {
+
+          messaggio =
+            "La ricerca della posizione ha impiegato troppo tempo. " +
+            "Riprova tra qualche secondo.";
+
+        }
+
+        alert(messaggio);
+
+        locationButton.disabled = false;
+
+        locationButton.textContent =
+          "📍 USA LA MIA POSIZIONE";
+
+      }
+
+      // Primo tentativo: rapido e compatibile.
+      navigator.geolocation.getCurrentPosition(
+        posizioneTrovata,
+        function() {
+
+          // Secondo tentativo: GPS più preciso.
+          navigator.geolocation.getCurrentPosition(
+            posizioneTrovata,
+            errorePosizione,
+            {
+              enableHighAccuracy: true,
+              timeout: 20000,
+              maximumAge: 0
+            }
+          );
+
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 60000
+        }
+      );
+
+    }
   );
 
 }
