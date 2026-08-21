@@ -329,57 +329,10 @@ function apriRecensione(ristorante) {
   document.body.appendChild(modal);
   let stelle = 0;
   const input = modal.querySelector("#stelleInput1km");
-
-  function aggiorna() {
-    input.innerHTML = "";
-    input.style.letterSpacing = "0";
-    input.style.display = "flex";
-    input.style.gap = "0";
-    input.style.width = "fit-content";
-    input.style.touchAction = "manipulation";
-
-    for (let i = 1; i <= 5; i++) {
-      const stella = document.createElement("button");
-      stella.type = "button";
-      stella.textContent = i <= stelle ? "★" : "☆";
-      stella.setAttribute("aria-label", `${i} ${i === 1 ? "stella" : "stelle"}`);
-      stella.style.cssText = `
-        border: none;
-        background: transparent;
-        padding: 0;
-        margin: 0;
-        width: 38px;
-        height: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 34px;
-        line-height: 1;
-        color: #f5a719;
-        cursor: pointer;
-        appearance: none;
-        -webkit-appearance: none;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-      `;
-
-      const scegliStelle = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        stelle = i;
-        aggiorna();
-      };
-
-      stella.addEventListener("click", scegliStelle);
-      stella.addEventListener("pointerup", (e) => {
-        if (e.pointerType === "touch") scegliStelle(e);
-      });
-
-      input.appendChild(stella);
-    }
-  }
-
-  aggiorna();
+  function aggiorna() { input.textContent = "★".repeat(stelle) + "☆".repeat(5-stelle); input.style.color = "#f5a719"; }
+  input.addEventListener("click", e => { const rect=input.getBoundingClientRect(); stelle=Math.min(5,Math.max(1,Math.ceil(((e.clientX-rect.left)/rect.width)*5))); aggiorna(); });
+  modal.querySelector("#chiudiRecensione1km").onclick = () => modal.remove();
+  modal.addEventListener("click", e => { if(e.target===modal) modal.remove(); });
 
   caricaRecensioniOnline(ristorante).then(() => {
     if (!document.body.contains(modal)) return;
@@ -692,6 +645,10 @@ function mostraTuttiRistoranti(uscita) {
       });
     });
   });
+
+  // Espone solo lo stato corrente necessario ai moduli aggiuntivi.
+  window._ristorantiCorrenti = ristoranti;
+  window._uscitaCorrente = uscita;
 
   console.log("Ristoranti mostrati:", ristoranti.length, "Marker:", markerCount, "Uscita:", uscita.nome);
 }
