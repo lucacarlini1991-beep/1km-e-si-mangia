@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Il mio mezzo | 1 KM E SI MANGIA</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f3;color:#154b35}
+    .topbar{height:90px;background:#075c3b;display:flex;align-items:center;justify-content:space-between;padding:0 6%}
+    .logo-link img{width:125px;height:auto;display:block}
+    .menu-button{border:0;background:transparent;color:#fff;font-size:32px;cursor:pointer}
+    main{max-width:900px;margin:0 auto;padding:55px 20px 80px}
+    .eyebrow{color:#f2a51a;font-weight:700;letter-spacing:4px;font-size:14px;margin-bottom:12px}
+    h1{font-size:clamp(42px,8vw,76px);line-height:.9;margin:0 0 18px;color:#073f2e}
+    .intro{font-size:18px;line-height:1.5;color:#5f7069;max-width:700px;margin-bottom:30px}
+    .card{background:#fff;border:1px solid #dce5e1;padding:30px;box-shadow:0 8px 25px rgba(0,0,0,.06)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    label{display:block;font-weight:700;color:#073f2e;margin-bottom:8px}
+    .unit{font-weight:400;color:#7a8782;font-size:13px}
+    input{width:100%;height:54px;border:1px solid #ccd8d2;border-radius:8px;padding:0 15px;font-size:18px;color:#173f31;background:#fbfcfb}
+    input:focus{outline:2px solid #f2a51a;border-color:#f2a51a}
+    .hint{font-size:13px;color:#78857f;margin-top:7px;line-height:1.4}
+    .actions{margin-top:25px;display:flex;gap:12px;flex-wrap:wrap}
+    button.save{min-height:56px;border:0;background:#075c3b;color:#fff;padding:0 28px;font-weight:700;font-size:16px;cursor:pointer;border-radius:7px}
+    button.reset{min-height:56px;border:2px solid #075c3b;background:#fff;color:#075c3b;padding:0 24px;font-weight:700;font-size:16px;cursor:pointer;border-radius:7px}
+    .status{margin-top:20px;padding:16px;background:#eef5f1;border-left:4px solid #f2a51a;color:#38584b;line-height:1.5;display:none}
+    .note{margin-top:22px;color:#718078;font-size:14px;line-height:1.5}
+    footer{background:#064c32;color:#fff;text-align:center;padding:45px 20px}
+    footer strong{display:block;margin-bottom:12px;font-size:22px}
+    footer p{margin:0;color:#b9cbc2;line-height:1.6}
+    .mobile-menu{position:fixed;inset:0;background:#064c32;color:#fff;z-index:100;visibility:hidden;opacity:0;transform:translateX(100%);pointer-events:none;transition:.25s ease;overflow-y:auto}
+    .mobile-menu.open,.mobile-menu.active{visibility:visible;opacity:1;transform:translateX(0);pointer-events:auto}
+    .mobile-menu-inner{max-width:700px;margin-left:auto;min-height:100%;padding:35px 7%}
+    .menu-close{float:right;width:52px;height:52px;border:2px solid rgba(255,255,255,.6);background:transparent;color:#fff;font-size:34px;cursor:pointer}
+    .mobile-menu-title{clear:both;padding-top:10px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.25)}
+    .mobile-menu-title strong{display:block;font-size:28px}.mobile-menu-title span{color:#f2a51a;font-weight:bold;letter-spacing:4px}
+    .menu-links{margin-top:15px}.menu-link{display:block;padding:22px 0;color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.18)}
+    .menu-link strong{display:block;margin-bottom:6px;font-size:20px}.menu-link span{color:#a9c0b5;font-size:14px}
+    @media(max-width:700px){.topbar{height:78px;padding:0 20px}.logo-link img{width:95px}.grid{grid-template-columns:1fr}.card{padding:22px}main{padding:38px 16px 60px}.actions button{width:100%}}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
+    <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA">
+  </a>
+  <button class="menu-button" type="button" aria-label="Apri menu" aria-controls="mobileMenu">☰</button>
+</header>
+<nav id="mobileMenu" class="mobile-menu" aria-hidden="true">
+  <div class="mobile-menu-inner">
+    <button id="menuClose" class="menu-close" type="button" aria-label="Chiudi menu">×</button>
+    <div class="mobile-menu-title"><strong>1 KM</strong><span>E SI MANGIA</span></div>
+    <div class="menu-links">
+      <a href="index.html" class="menu-link"><strong>HOME</strong><span>La nostra idea</span></a>
+      <a href="uscite.html" class="menu-link"><strong>ESPLORA LE USCITE</strong><span>Trova l'uscita più vicina</span></a>
+      <a href="come-funziona.html" class="menu-link"><strong>COME FUNZIONA</strong><span>Scopri come utilizzare il servizio</span></a>
+      <a href="distanze.html" class="menu-link"><strong>LE DISTANZE</strong><span>Quanto ti allontani dall'autostrada</span></a>
+      <a href="parcheggi.html" class="menu-link"><strong>PARCHEGGI MEZZI PESANTI</strong><span>Trova parcheggi per camion e mezzi pesanti</span></a>
+      <a href="mezzo.html" class="menu-link"><strong>🚛 IL MIO MEZZO</strong><span>Inserisci le dimensioni del tuo camion</span></a>
+      <a href="contatti.html" class="menu-link"><strong>CONTATTI</strong><span>Scrivici</span></a>
+    </div>
+  </div>
+</nav>
+<main>
+  <div class="eyebrow">1 KM E SI MANGIA</div>
+  <h1>IL MIO<br>MEZZO</h1>
+  <p class="intro">Inserisci le dimensioni del tuo camion. Le informazioni vengono salvate solo su questo dispositivo e potranno essere utilizzate dal servizio per valutare la compatibilità con strade, accessi e parcheggi.</p>
+  <section class="card">
+    <div class="grid">
+      <div><label for="lunghezza">Lunghezza totale <span class="unit">(metri)</span></label><input id="lunghezza" type="number" min="1" max="30" step="0.01" inputmode="decimal"><div class="hint">Esempio: 16,50 m per un autoarticolato.</div></div>
+      <div><label for="larghezza">Larghezza <span class="unit">(metri)</span></label><input id="larghezza" type="number" min="1" max="5" step="0.01" inputmode="decimal"><div class="hint">Considera la larghezza effettiva del mezzo.</div></div>
+      <div><label for="altezza">Altezza <span class="unit">(metri)</span></label><input id="altezza" type="number" min="1" max="6" step="0.01" inputmode="decimal"><div class="hint">Serve soprattutto per controllare eventuali limiti di altezza.</div></div>
+      <div><label for="peso">Peso totale <span class="unit">(kg)</span></label><input id="peso" type="number" min="1" max="100000" step="100" inputmode="numeric"><div class="hint">Peso complessivo del mezzo a pieno carico.</div></div>
+    </div>
+    <div class="actions"><button class="save" id="saveMezzo" type="button">🚛 SALVA IL MIO MEZZO</button><button class="reset" id="resetMezzo" type="button">RIPRISTINA DATI STANDARD</button></div>
+    <div class="status" id="statusMezzo" role="status"></div>
+    <div class="note"><strong>Nota:</strong> il profilo non rende automaticamente sicuro un percorso. Quando mancano dati affidabili sulle restrizioni, il servizio continuerà a indicare la situazione come “da verificare”.</div>
+  </section>
+</main>
+<footer><strong>1 KM E SI MANGIA</strong><p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p></footer>
+<script src="menu.js"></script>
+<script src="mezzo.js"></script>
+</body>
+</html>
