@@ -328,85 +328,68 @@ function apriRecensione(ristorante) {
   modal.innerHTML = `<div style="width:min(94vw,520px);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><div style="font-size:12px;color:#f5a719;font-weight:800;letter-spacing:2px">1 KM E SI MANGIA</div><h2 style="margin:4px 0">${escapeHtml(ristorante.nome || "Ristorante")}</h2></div><button id="chiudiRecensione1km" type="button" style="border:0;background:#eee;border-radius:50%;width:36px;height:36px;font-size:20px">×</button></div><div data-online-summary style="margin:12px 0 18px;font-size:14px">${valutazione.media != null ? `${stelleHtml(valutazione.media)} <strong>${valutazione.media}/5</strong> · ${valutazione.totale} valutazioni` : "Ancora nessuna valutazione"}</div><div style="padding:14px;background:#f4f7f5;border-radius:12px"><strong>La tua esperienza</strong><div id="stelleInput1km" style="font-size:30px;letter-spacing:3px;margin:7px 0;cursor:pointer" aria-label="Scegli da 1 a 5 stelle">☆☆☆☆☆</div><textarea id="testoRecensione1km" maxlength="500" placeholder="Es. parcheggio comodo, servizio veloce, adatto a camion..." style="width:100%;min-height:90px;border:1px solid #ccd8d3;border-radius:10px;padding:10px;font:inherit;resize:vertical"></textarea><button id="salvaRecensione1km" type="button" style="width:100%;margin-top:10px;border:0;border-radius:10px;background:#075c3b;color:#fff;padding:12px;font-weight:800">PUBBLICA ANONIMAMENTE</button></div><div data-online-list style="margin-top:18px"><strong>Esperienze degli utenti</strong>${recensioni.length ? recensioni.slice(-8).reverse().map(r => `<div style="border-bottom:1px solid #e7ece9;padding:12px 0"><div>${stelleHtml(Number(r.stelle))}</div><div style="margin-top:4px;color:#53635e">${escapeHtml(r.testo || "")}</div><small style="color:#8a9692">Utente anonimo · ${escapeHtml(r.data || "")}</small></div>`).join("") : `<p style="color:#687772">Nessuna esperienza ancora. Sii il primo.</p>`}</div><small style="display:block;margin-top:15px;color:#8a9692">Le informazioni vengono pubblicate in forma anonima e sono condivise con gli altri utenti.</small></div>`;
   document.body.appendChild(modal);
   let stelle = 0;
-const input = modal.querySelector("#stelleInput1km");
+  const input = modal.querySelector("#stelleInput1km");
 
-function aggiorna() {
-  input.textContent = "★".repeat(stelle) + "☆".repeat(5 - stelle);
-  input.style.color = "#f5a719";
-}
+  function aggiorna() {
+    input.innerHTML = "";
+    input.style.letterSpacing = "0";
+    input.style.display = "flex";
+    input.style.gap = "0";
+    input.style.width = "fit-content";
+    input.style.touchAction = "manipulation";
 
-input.addEventListener("click", function (e) {
-  const star = e.target;
+    for (let i = 1; i <= 5; i++) {
+      const stella = document.createElement("button");
+      stella.type = "button";
+      stella.textContent = i <= stelle ? "★" : "☆";
+      stella.setAttribute("aria-label", `${i} ${i === 1 ? "stella" : "stelle"}`);
+      stella.style.cssText = `
+        border: none;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        width: 38px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        line-height: 1;
+        color: #f5a719;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      `;
 
-  if (star !== input) return;
+      const scegliStelle = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        stelle = i;
+        aggiorna();
+      };
 
-  const rect = input.getBoundingClientRect();
+      stella.addEventListener("click", scegliStelle);
+      stella.addEventListener("pointerup", (e) => {
+        if (e.pointerType === "touch") scegliStelle(e);
+      });
 
-  // Larghezza reale di una stella
-  const starWidth = rect.width / 5;
-
-  stelle = Math.floor((e.clientX - rect.left) / starWidth) + 1;
-
-  stelle = Math.max(1, Math.min(5, stelle));
+      input.appendChild(stella);
+    }
+  }
 
   aggiorna();
-});
 
   caricaRecensioniOnline(ristorante).then(() => {
     if (!document.body.contains(modal)) return;
     const latest = recensioniCache(ristorante);
     const latestVal = datiValutazione(ristorante);
-    let stelle = 0;
-    const input = modal.querySelector("#stelleInput1km");
-  
-    function aggiorna() {
-      input.innerHTML = Array.from({ length: 5 }, (_, i) =>
-        `<span data-star="${i + 1}" style="display:inline-block;cursor:pointer;padding:0 3px;">${i < stelle ? "★" : "☆"}</span>`
-      ).join("");
-      input.style.color = "#f5a719";
-    }
-  
-    input.addEventListener("click", e => {
-      const star = e.target.closest("[data-star]");
-      if (!star) return;
-      stelle = Number(star.dataset.star);
-      aggiorna();
-    });
-    function aggiorna() {
-      input.innerHTML = "";
-  
-      for (let i = 1; i <= 5; i++) {
-        const stella = document.createElement("button");
-  
-        stella.type = "button";
-        stella.textContent = i <= stelle ? "★" : "☆";
-  
-        stella.style.cssText = `
-          border: none;
-          background: transparent;
-          padding: 0 3px;
-          margin: 0;
-          font-size: 34px;
-          line-height: 1;
-          color: #f5a719;
-          cursor: pointer;
-          appearance: none;
-          -webkit-appearance: none;
-        `;
-  
-        stella.addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-  
-          stelle = i;
-          aggiorna();
-        });
-  
-        input.appendChild(stella);
-      }
-    }
-  
-    aggiorna();    aggiorna();  });
+    const summary = modal.querySelector("[data-online-summary]");
+    if (summary) summary.innerHTML = latestVal.media != null ? `${stelleHtml(latestVal.media)} <strong>${latestVal.media}/5</strong> · ${latestVal.totale} valutazioni` : "Ancora nessuna valutazione";
+    const list = modal.querySelector("[data-online-list]");
+    if (list) list.innerHTML = latest.length ? latest.slice(0,8).map(r => `<div style="border-bottom:1px solid #e7ece9;padding:12px 0"><div>${stelleHtml(Number(r.stelle))}</div><div style="margin-top:4px;color:#53635e">${escapeHtml(r.testo || "")}</div><small style="color:#8a9692">Utente anonimo · ${escapeHtml(r.data || "")}</small></div>`).join("") : `<p style="color:#687772">Nessuna esperienza ancora. Sii il primo.</p>`;
+  });
 
   modal.querySelector("#salvaRecensione1km").onclick = async () => {
     const testo = modal.querySelector("#testoRecensione1km").value.trim();
