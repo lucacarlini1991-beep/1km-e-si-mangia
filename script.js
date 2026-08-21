@@ -8,6 +8,13 @@
 // CONFIGURAZIONE
 // =====================================================
 
+const SUPABASE_CONFIG = {
+  url: "https://pyiheodneyvtcotuonpt.supabase.co",
+  key: "sb_publishable_6FGQBm1zXfwY8zVSuNmTlA_DRW5DMfQ"
+};
+
+const recensioniOnlineCache = new Map();
+
 const CONFIG = {
 
   distanzaMassimaRistoranteKm: 2,
@@ -143,7 +150,11 @@ function ristorantiPerUscita(uscita) {
 
 const recensioniKey = (ristorante) => `1km-recensioni-${String(ristorante?.id || ristorante?.osm_id || ristorante?.nome || "ristorante")}`;
 
-function leggiRecensioni(ristorante) {
+function idRistorante(ristorante) {
+  return String(ristorante?.id || ristorante?.osm_id || ristorante?.nome || "ristorante");
+}
+
+function leggiRecensioniLocali(ristorante) {
   try {
     const raw = localStorage.getItem(recensioniKey(ristorante));
     const data = raw ? JSON.parse(raw) : [];
@@ -151,8 +162,84 @@ function leggiRecensioni(ristorante) {
   } catch (_) { return []; }
 }
 
+function recensioniCache(ristorante) {
+  const id = idRistorante(ristorante);
+  return recensioniOnlineCache.has(id)
+    ? recensioniOnlineCache.get(id)
+    : leggiRecensioniLocali(ristorante);
+}
+
+function salvaCacheRecensioni(ristorante, recensioni) {
+  recensioniOnlineCache.set(idRistorante(ristorante), recensioni);
+}
+
+async function caricaRecensioniOnline(ristorante) {
+  const id = idRistorante(ristorante);
+  try {
+    const url = `${SUPABASE_CONFIG.url}/rest/v1/restaurant_reviews?select=id,restaurant_id,rating,comment,created_at&restaurant_id=eq.${encodeURIComponent(id)}&is_published=eq.true&order=created_at.desc&limit=50`;
+    const response = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_CONFIG.key,
+        Authorization: `Bearer ${SUPABASE_CONFIG.key}`
+      }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const rows = await response.json();
+    const recensioni = Array.isArray(rows) ? rows.map(r => ({
+      id: r.id,
+      stelle: Number(r.rating),
+      testo: r.comment,
+      data: r.created_at ? new Date(r.created_at).toLocaleDateString("it-IT") : ""
+    })) : [];
+    salvaCacheRecensioni(ristorante, recensioni);
+    return recensioni;
+  } catch (error) {
+    console.warn("Recensioni online non disponibili, uso quelle locali:", error);
+    return recensioniCache(ristorante);
+  }
+}
+
+async function inviaRecensioneOnline(ristorante, stelle, testo) {
+  const id = idRistorante(ristorante);
+  const url = `${SUPABASE_CONFIG.url}/rest/v1/restaurant_reviews`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_CONFIG.key,
+      Authorization: `Bearer ${SUPABASE_CONFIG.key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation"
+    },
+    body: JSON.stringify({
+      restaurant_id: id,
+      rating: stelle,
+      comment: testo,
+      is_published: true
+    })
+  });
+  if (!response.ok) {
+    const details = await response.text().catch(() => "");
+    throw new Error(`HTTP ${response.status} ${details}`);
+  }
+  const rows = await response.json();
+  const nuova = Array.isArray(rows) && rows[0] ? rows[0] : {
+    stelle,
+    testo,
+    data: new Date().toLocaleDateString("it-IT")
+  };
+  const recensioni = recensioniCache(ristorante);
+  recensioni.unshift({
+    id: nuova.id,
+    stelle: Number(nuova.rating ?? stelle),
+    testo: nuova.comment ?? testo,
+    data: nuova.created_at ? new Date(nuova.created_at).toLocaleDateString("it-IT") : new Date().toLocaleDateString("it-IT")
+  });
+  salvaCacheRecensioni(ristorante, recensioni);
+  return recensioni;
+}
+
 function datiValutazione(ristorante) {
-  const recensioni = leggiRecensioni(ristorante);
+  const recensioni = recensioniCache(ristorante);
   if (!recensioni.length) return { media: null, totale: 0 };
   const media = recensioni.reduce((sum, r) => sum + Number(r.stelle || 0), 0) / recensioni.length;
   return { media: Math.round(media * 10) / 10, totale: recensioni.length };
@@ -163,7 +250,6 @@ function stelleHtml(media) {
   const rounded = Math.round(media);
   return `<span style="letter-spacing:1px;color:#f5a719">${"★".repeat(rounded)}${"☆".repeat(5-rounded)}</span>`;
 }
-
 function nomeGiornoItalia() {
   return ["Su","Mo","Tu","We","Th","Fr","Sa"][new Date().getDay()];
 }
@@ -233,12 +319,12 @@ function creaPopupRistorante(ristorante) {
 
 function apriRecensione(ristorante) {
   document.getElementById("recensioneModal1km")?.remove();
-  const recensioni = leggiRecensioni(ristorante);
+  const recensioni = recensioniCache(ristorante);
   const valutazione = datiValutazione(ristorante);
   const modal = document.createElement("div");
   modal.id = "recensioneModal1km";
   modal.style.cssText = "position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,sans-serif;";
-  modal.innerHTML = `<div style="width:min(94vw,520px);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><div style="font-size:12px;color:#f5a719;font-weight:800;letter-spacing:2px">1 KM E SI MANGIA</div><h2 style="margin:4px 0">${escapeHtml(ristorante.nome || "Ristorante")}</h2></div><button id="chiudiRecensione1km" type="button" style="border:0;background:#eee;border-radius:50%;width:36px;height:36px;font-size:20px">×</button></div><div style="margin:12px 0 18px;font-size:14px">${valutazione.media != null ? `${stelleHtml(valutazione.media)} <strong>${valutazione.media}/5</strong> · ${valutazione.totale} valutazioni` : "Ancora nessuna valutazione"}</div><div style="padding:14px;background:#f4f7f5;border-radius:12px"><strong>La tua esperienza</strong><div id="stelleInput1km" style="font-size:30px;letter-spacing:3px;margin:7px 0;cursor:pointer" aria-label="Scegli da 1 a 5 stelle">☆☆☆☆☆</div><textarea id="testoRecensione1km" maxlength="500" placeholder="Es. parcheggio comodo, servizio veloce, adatto a camion..." style="width:100%;min-height:90px;border:1px solid #ccd8d3;border-radius:10px;padding:10px;font:inherit;resize:vertical"></textarea><button id="salvaRecensione1km" type="button" style="width:100%;margin-top:10px;border:0;border-radius:10px;background:#075c3b;color:#fff;padding:12px;font-weight:800">PUBBLICA ANONIMAMENTE</button></div><div style="margin-top:18px"><strong>Esperienze degli utenti</strong>${recensioni.length ? recensioni.slice(-8).reverse().map(r => `<div style="border-bottom:1px solid #e7ece9;padding:12px 0"><div>${stelleHtml(Number(r.stelle))}</div><div style="margin-top:4px;color:#53635e">${escapeHtml(r.testo || "")}</div><small style="color:#8a9692">Utente anonimo · ${escapeHtml(r.data || "")}</small></div>`).join("") : `<p style="color:#687772">Nessuna esperienza ancora. Sii il primo.</p>`}</div><small style="display:block;margin-top:15px;color:#8a9692">Le informazioni inserite qui sono salvate anonimamente su questo dispositivo. Per renderle visibili a tutti gli utenti servirà il database online.</small></div>`;
+  modal.innerHTML = `<div style="width:min(94vw,520px);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><div style="font-size:12px;color:#f5a719;font-weight:800;letter-spacing:2px">1 KM E SI MANGIA</div><h2 style="margin:4px 0">${escapeHtml(ristorante.nome || "Ristorante")}</h2></div><button id="chiudiRecensione1km" type="button" style="border:0;background:#eee;border-radius:50%;width:36px;height:36px;font-size:20px">×</button></div><div data-online-summary style="margin:12px 0 18px;font-size:14px">${valutazione.media != null ? `${stelleHtml(valutazione.media)} <strong>${valutazione.media}/5</strong> · ${valutazione.totale} valutazioni` : "Ancora nessuna valutazione"}</div><div style="padding:14px;background:#f4f7f5;border-radius:12px"><strong>La tua esperienza</strong><div id="stelleInput1km" style="font-size:30px;letter-spacing:3px;margin:7px 0;cursor:pointer" aria-label="Scegli da 1 a 5 stelle">☆☆☆☆☆</div><textarea id="testoRecensione1km" maxlength="500" placeholder="Es. parcheggio comodo, servizio veloce, adatto a camion..." style="width:100%;min-height:90px;border:1px solid #ccd8d3;border-radius:10px;padding:10px;font:inherit;resize:vertical"></textarea><button id="salvaRecensione1km" type="button" style="width:100%;margin-top:10px;border:0;border-radius:10px;background:#075c3b;color:#fff;padding:12px;font-weight:800">PUBBLICA ANONIMAMENTE</button></div><div data-online-list style="margin-top:18px"><strong>Esperienze degli utenti</strong>${recensioni.length ? recensioni.slice(-8).reverse().map(r => `<div style="border-bottom:1px solid #e7ece9;padding:12px 0"><div>${stelleHtml(Number(r.stelle))}</div><div style="margin-top:4px;color:#53635e">${escapeHtml(r.testo || "")}</div><small style="color:#8a9692">Utente anonimo · ${escapeHtml(r.data || "")}</small></div>`).join("") : `<p style="color:#687772">Nessuna esperienza ancora. Sii il primo.</p>`}</div><small style="display:block;margin-top:15px;color:#8a9692">Le informazioni vengono pubblicate in forma anonima e sono condivise con gli altri utenti.</small></div>`;
   document.body.appendChild(modal);
   let stelle = 0;
   const input = modal.querySelector("#stelleInput1km");
@@ -246,16 +332,35 @@ function apriRecensione(ristorante) {
   input.addEventListener("click", e => { const rect=input.getBoundingClientRect(); stelle=Math.min(5,Math.max(1,Math.ceil(((e.clientX-rect.left)/rect.width)*5))); aggiorna(); });
   modal.querySelector("#chiudiRecensione1km").onclick = () => modal.remove();
   modal.addEventListener("click", e => { if(e.target===modal) modal.remove(); });
-  modal.querySelector("#salvaRecensione1km").onclick = () => {
+
+  caricaRecensioniOnline(ristorante).then(() => {
+    if (!document.body.contains(modal)) return;
+    const latest = recensioniCache(ristorante);
+    const latestVal = datiValutazione(ristorante);
+    const summary = modal.querySelector("[data-online-summary]");
+    if (summary) summary.innerHTML = latestVal.media != null ? `${stelleHtml(latestVal.media)} <strong>${latestVal.media}/5</strong> · ${latestVal.totale} valutazioni` : "Ancora nessuna valutazione";
+    const list = modal.querySelector("[data-online-list]");
+    if (list) list.innerHTML = latest.length ? latest.slice(0,8).map(r => `<div style="border-bottom:1px solid #e7ece9;padding:12px 0"><div>${stelleHtml(Number(r.stelle))}</div><div style="margin-top:4px;color:#53635e">${escapeHtml(r.testo || "")}</div><small style="color:#8a9692">Utente anonimo · ${escapeHtml(r.data || "")}</small></div>`).join("") : `<p style="color:#687772">Nessuna esperienza ancora. Sii il primo.</p>`;
+  });
+
+  modal.querySelector("#salvaRecensione1km").onclick = async () => {
     const testo = modal.querySelector("#testoRecensione1km").value.trim();
+    const bottone = modal.querySelector("#salvaRecensione1km");
     if (!stelle) return alert("Scegli da 1 a 5 stelle.");
     if (testo.length < 3) return alert("Scrivi almeno qualche parola sulla tua esperienza.");
-    const elenco = leggiRecensioni(ristorante);
-    elenco.push({ stelle, testo, data: new Date().toLocaleDateString("it-IT") });
-    try { localStorage.setItem(recensioniKey(ristorante), JSON.stringify(elenco)); } catch (_) {}
-    modal.remove();
-    if (window._ristorantiRefresh) window._ristorantiRefresh();
-    alert("Grazie! La tua informazione è stata salvata in forma anonima.");
+    bottone.disabled = true;
+    bottone.textContent = "PUBBLICAZIONE...";
+    try {
+      await inviaRecensioneOnline(ristorante, stelle, testo);
+      modal.remove();
+      if (window._ristorantiRefresh) window._ristorantiRefresh();
+      alert("Grazie! La tua valutazione è stata pubblicata in forma anonima.");
+    } catch (error) {
+      console.error("Errore pubblicazione recensione:", error);
+      bottone.disabled = false;
+      bottone.textContent = "PUBBLICA ANONIMAMENTE";
+      alert("Non è stato possibile pubblicare ora la valutazione. Riprova tra poco.");
+    }
   };
 }
 
