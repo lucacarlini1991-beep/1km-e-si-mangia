@@ -1880,3 +1880,58 @@ body.menu-open {
   }
 
 }
+/* =====================================================
+   FIX DEFINITIVO LOGO
+   ===================================================== */
+
+   .logo-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: auto !important;
+    height: auto !important;
+    text-decoration: none !important;
+    line-height: 0 !important;
+  }
+  
+  .site-logo {
+    width: 108px !important;
+    height: 72px !important;
+    max-width: 108px !important;
+    max-height: 72px !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+  
+  .mobile-menu-logo {
+    display: block !important;
+    width: 150px !important;
+    height: auto !important;
+    max-width: 150px !important;
+    max-height: 150px !important;
+    object-fit: contain !important;
+    margin: 10px 0 0 !important;
+  }
+  
+  .mobile-menu-title {
+    width: 100% !important;
+    height: auto !important;
+    overflow: hidden !important;
+  }
+  
+  @media (max-width: 750px) {
+  
+    .site-logo {
+      width: 82px !important;
+      height: 58px !important;
+      max-width: 82px !important;
+      max-height: 58px !important;
+    }
+  
+    .mobile-menu-logo {
+      width: 135px !important;
+      max-width: 135px !important;
+      max-height: 135px !important;
+    }
+  
+  }
