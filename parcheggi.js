@@ -183,51 +183,38 @@
     msg.textContent='✓ MEZZO SALVATO — dimensioni memorizzate su questo dispositivo.';msg.style.color='#176534';
     if(state.selectedExit) searchParking(state.selectedExit);
   }
+  function handleNearestFromPosition(pos){
+    const here={lat:Number(pos.lat),lon:Number(pos.lon)};
+    let best=null,bestD=Infinity;
+    state.exits.forEach(e=>{
+      const d=distance(here,{lat:Number(e.lat),lon:Number(e.lon)});
+      if(d<bestD){bestD=d;best=e;}
+    });
+    if(!best){status('Nessuna uscita trovata',true);return;}
+    state.map.flyTo([Number(best.lat),Number(best.lon)],13,{duration:.8});
+    searchParking(best);
+    status('Posizione trovata · '+best.nome);
+  }
+
   function locate(){
+    const b=$('mpLocate');
     if(!window.GPSCamionManager){
-      status('Modulo GPS camion non disponibile · ricarica la pagina',true);
+      status('GPS camion non disponibile: ricarica la pagina',true);
       return;
     }
-
-    if(!state.exits.length){
-      status('Sto ancora caricando le uscite · riprova tra un istante',true);
-      return;
-    }
-
-    window.GPSCamionManager.attachMap(state.map);
-
+    busy(b,true,'📍 CERCO LA POSIZIONE…','📍 USA LA MIA POSIZIONE');
     window.GPSCamionManager.start({
-      enableHighAccuracy:true,
-      timeout:60000,
-      maximumAge:0,
-      onPosition:function(pos){
-        const here={lat:pos.lat,lon:pos.lng};
-        let best=null;
-        let bestD=Infinity;
-
-        state.exits.forEach(function(e){
-          const d=distance(here,{lat:Number(e.lat),lon:Number(e.lon)});
-          if(d<bestD){
-            bestD=d;
-            best=e;
-          }
-        });
-
-        if(best){
-          state.map.flyTo([Number(best.lat),Number(best.lon)],13,{duration:.8});
-          searchParking(best);
-          status('Posizione camion trovata · '+(best.nome||'uscita più vicina'));
-        }else{
-          status('Nessuna uscita trovata',true);
-        }
+      onSuccess:function(pos){
+        handleNearestFromPosition(pos);
+        busy(b,false,'','📍 USA LA MIA POSIZIONE');
       },
       onError:function(err){
         console.warn('GPS camion:',err);
-        if(err.code==='INSECURE_CONTEXT') status('Il GPS richiede HTTPS · su Vercel funzionerà correttamente',true);
-        else if(err.code===1) status('Posizione negata dal browser',true);
-        else if(err.code===2) status('Posizione non disponibile',true);
-        else if(err.code===3) status('GPS in timeout · riprova',true);
-        else status('Impossibile ottenere la posizione',true);
+        let text='Posizione non disponibile';
+        if(err && err.code===1) text='Posizione negata dal browser';
+        else if(err && err.code===3) text='Ricerca della posizione troppo lenta · riprova';
+        status(text,true);
+        busy(b,false,'','📍 USA LA MIA POSIZIONE');
       }
     });
   }
@@ -241,36 +228,18 @@
   });
 
   function start(){
-    try {
-      status('Avvio mappa parcheggi…');
-      const ok=initMap();
-      if(!ok)return;
-      loadProfile();
-
-      const locateBtn=$('mpLocate');
-      const nearestBtn=$('mpNearestExit');
-      const refreshBtn=$('mpRefresh');
-      const saveBtn=$('mpSave');
-
-      locateBtn?.addEventListener('click',locate);
-      nearestBtn?.addEventListener('click',()=>{
-        if(state.selectedExit){
-          searchParking(state.selectedExit);
-        }else{
-          locate();
-        }
-      });
-      refreshBtn?.addEventListener('click',()=>state.selectedExit?searchParking(state.selectedExit):loadExits());
-      saveBtn?.addEventListener('click',saveProfile);
-
-      loadExits();
-      status('Mappa pronta · caricamento uscite…');
-    } catch (error) {
-      console.error('PARCHEGGI BOOT ERROR',error);
-      status('Errore avvio pagina parcheggi · ricarica la pagina',true);
-    }
+    const ok=initMap();if(!ok)return;
+    if(window.GPSCamionManager) window.GPSCamionManager.attachMap(state.map);
+    loadProfile();
+    $('mpLocate')?.addEventListener('click',locate);
+    $('mpNearestExit')?.addEventListener('click',()=>{
+      if(state.selectedExit) searchParking(state.selectedExit);
+      else locate();
+    });
+    $('mpRefresh')?.addEventListener('click',()=>state.selectedExit?searchParking(state.selectedExit):loadExits());
+    $('mpSave')?.addEventListener('click',saveProfile);
+    loadExits();
   }
 
-  // Il file viene caricato in fondo alla pagina con defer: il DOM è già disponibile.
-  start();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

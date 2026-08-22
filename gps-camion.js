@@ -1,51 +1,34 @@
-/* 1 KM E SI MANGIA - gps-camion.js
- * GPS DEDICATO ALLA PAGINA PARCHEGGI MEZZI PESANTI
- * Non modifica e non condivide lo stato con gps.js / GPSManager.
- */
+/* 1 KM E SI MANGIA — gps-camion.js
+   GPS indipendente per Parcheggi Mezzi Pesanti.
+   NON modifica e NON usa GPSManager/gps.js.
+*/
 (function () {
-  "use strict";
+  'use strict';
 
-  const STORAGE_KEY = "1km-posizione-camion";
-  const BUTTON_ID = "mpLocate";
+  const STORAGE_KEY = '1km-posizione-camion';
+  const options = {
+    enableHighAccuracy: true,
+    timeout: 60000,
+    maximumAge: 0,
+    maxAccuracy: 1000,
+    zoom: 13
+  };
 
   let map = null;
   let marker = null;
   let accuracyCircle = null;
   let watchId = null;
-  let lastPosition = null;
-  let options = {
-    enableHighAccuracy: true,
-    timeout: 60000,
-    maximumAge: 0,
-    maxAccuracy: 1000,
-    zoom: 15
-  };
+  let running = false;
 
   function normalize(position) {
     if (!position || !position.coords) return null;
-
     const lat = Number(position.coords.latitude);
-    const lng = Number(position.coords.longitude);
+    const lon = Number(position.coords.longitude);
     const accuracy = Number(position.coords.accuracy);
-
-    if (
-      !Number.isFinite(lat) ||
-      !Number.isFinite(lng) ||
-      !Number.isFinite(accuracy) ||
-      lat < -90 || lat > 90 ||
-      lng < -180 || lng > 180 ||
-      accuracy <= 0 ||
-      accuracy > options.maxAccuracy
-    ) {
-      return null;
-    }
-
-    return {
-      lat,
-      lng,
-      accuracy,
-      timestamp: Date.now()
-    };
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(accuracy)) return null;
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+    if (accuracy <= 0 || accuracy > options.maxAccuracy) return null;
+    return { lat, lon, accuracy, timestamp: Date.now() };
   }
 
   function save(position) {
@@ -54,221 +37,128 @@
     } catch (_) {}
   }
 
-  function getMap() {
-    if (map) return map;
-    if (window.appMap && typeof window.appMap.setView === "function") {
-      map = window.appMap;
+  function read() {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const value = JSON.parse(raw);
+      if (!value || !Number.isFinite(Number(value.lat)) || !Number.isFinite(Number(value.lon))) return null;
+      return value;
+    } catch (_) {
+      return null;
     }
-    return map;
-  }
-
-  function attachMap(leafletMap) {
-    map = leafletMap || null;
-    return api;
   }
 
   function icon() {
     if (!window.L) return null;
-
     return L.divIcon({
-      className: "gps-camion-user-location-icon",
-      html: '<div style="width:24px;height:24px;border-radius:50%;background:#f6a916;border:4px solid #fff;box-shadow:0 2px 9px rgba(0,0,0,.35);box-sizing:border-box;"></div>',
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-      popupAnchor: [0, -14]
+      className: 'gps-camion-location-icon',
+      html: '<div style="width:42px;height:42px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#f6a916;border:4px solid #fff;box-shadow:0 3px 12px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:21px">🚛</span></div>',
+      iconSize: [42, 42],
+      iconAnchor: [21, 42],
+      popupAnchor: [0, -38]
     });
   }
 
-  function updateMap(position, center) {
-    const leafletMap = getMap();
-    if (!leafletMap || !window.L) return false;
-
-    const latLng = [position.lat, position.lng];
-
+  function draw(position, center) {
+    if (!map || !window.L) return false;
+    const latLng = [position.lat, position.lon];
     if (!marker) {
-      marker = L.marker(latLng, {
-        icon: icon(),
-        zIndexOffset: 10000,
-        interactive: true
-      }).addTo(leafletMap);
+      marker = L.marker(latLng, { icon: icon(), zIndexOffset: 12000 }).addTo(map);
     } else {
       marker.setLatLng(latLng);
     }
-
     if (!accuracyCircle) {
       accuracyCircle = L.circle(latLng, {
         radius: position.accuracy,
-        color: "#f6a916",
+        color: '#f6a916',
         weight: 2,
-        fillColor: "#f6a916",
+        fillColor: '#f6a916',
         fillOpacity: 0.10,
         interactive: false
-      }).addTo(leafletMap);
+      }).addTo(map);
     } else {
       accuracyCircle.setLatLng(latLng);
       accuracyCircle.setRadius(position.accuracy);
     }
-
-    marker.bindPopup(
-      "<strong>📍 POSIZIONE CAMION</strong><br>" +
-      "Precisione GPS circa " + Math.round(position.accuracy) + " m"
-    );
-
+    marker.bindPopup('<strong>🚛 POSIZIONE DEL MEZZO</strong><br>Precisione circa ' + Math.round(position.accuracy) + ' m');
     if (center) {
-      leafletMap.setView(
-        latLng,
-        Number(options.zoom) || 15,
-        { animate: true }
-      );
+      map.setView(latLng, Math.max(12, Math.min(16, Number(options.zoom) || 13)), { animate: true });
     }
-
     return true;
   }
 
-  function removeMapPosition() {
-    const leafletMap = getMap();
-    if (!leafletMap) return;
+  function attachMap(leafletMap) {
+    map = leafletMap || null;
+    const saved = read();
+    if (map && saved) draw(saved, false);
+    return api;
+  }
 
-    if (marker) {
-      leafletMap.removeLayer(marker);
-      marker = null;
+  function handle(position, callbacks, center) {
+    const normalized = normalize(position);
+    if (!normalized) {
+      callbacks?.onError?.(new Error('La posizione GPS del mezzo non è valida.'));
+      return false;
     }
-    if (accuracyCircle) {
-      leafletMap.removeLayer(accuracyCircle);
-      accuracyCircle = null;
-    }
-  }
-
-  function resetButton() {
-    const button = document.getElementById(BUTTON_ID);
-    if (!button) return;
-    button.disabled = false;
-    button.textContent = "📍 USA LA MIA POSIZIONE";
-  }
-
-  function setSearchingButton() {
-    const button = document.getElementById(BUTTON_ID);
-    if (!button) return;
-    button.disabled = true;
-    button.textContent = "📍 RICERCA POSIZIONE...";
-  }
-
-  function buildError(error) {
-    const e = error instanceof Error ? error : new Error("GPS non disponibile");
-    e.code = error && typeof error.code === "number" ? error.code : e.code;
-    return e;
+    save(normalized);
+    draw(normalized, center);
+    callbacks?.onSuccess?.(normalized);
+    return true;
   }
 
   function stop() {
     if (watchId !== null && navigator.geolocation) {
       navigator.geolocation.clearWatch(watchId);
-      watchId = null;
     }
+    watchId = null;
+    running = false;
     return api;
   }
 
-  function handleError(error, callbacks) {
-    const e = buildError(error);
-    console.warn("GPS camion:", e.code, e.message);
-    resetButton();
-
-    if (callbacks && typeof callbacks.onError === "function") {
-      callbacks.onError(e);
-      return;
-    }
-
-    let message = "Non siamo riusciti a ottenere la posizione del camion.";
-    if (e.code === 1) {
-      message = "Permesso di posizione negato.\n\nControlla le autorizzazioni di localizzazione del browser e attiva la posizione precisa.";
-    } else if (e.code === 2) {
-      message = "La posizione non è disponibile.\n\nControlla la Localizzazione del dispositivo e riprova.";
-    } else if (e.code === 3) {
-      message = "Il GPS sta impiegando troppo tempo.\n\nRiprova tra qualche secondo.";
-    }
-    alert(message);
-  }
-
-  function startWatch(callbacks) {
-    if (!navigator.geolocation) return false;
-
-    stop();
-    watchId = navigator.geolocation.watchPosition(
-      function (position) {
-        const normalized = normalize(position);
-        if (!normalized) return;
-        lastPosition = normalized;
-        save(normalized);
-        updateMap(normalized, false);
-
-        if (callbacks && typeof callbacks.onWatchPosition === "function") {
-          callbacks.onWatchPosition(normalized);
-        }
-      },
-      function (error) {
-        if (callbacks && typeof callbacks.onWatchError === "function") {
-          callbacks.onWatchError(buildError(error));
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0
-      }
-    );
-
-    return true;
-  }
-
-  function start(newOptions) {
-    const callbacks = newOptions || {};
-    options = Object.assign({}, options, callbacks);
-
+  function start(callbacks) {
+    callbacks = callbacks || {};
     if (!window.isSecureContext) {
-      const e = new Error("La geolocalizzazione richiede HTTPS.");
-      e.code = "INSECURE_CONTEXT";
-      handleError(e, callbacks);
+      const error = new Error('La geolocalizzazione richiede HTTPS.');
+      error.code = 'INSECURE_CONTEXT';
+      callbacks.onError?.(error);
       return false;
     }
-
     if (!navigator.geolocation) {
-      const e = new Error("Geolocalizzazione non disponibile.");
-      e.code = "NOT_SUPPORTED";
-      handleError(e, callbacks);
+      const error = new Error('La geolocalizzazione non è disponibile su questo dispositivo.');
+      error.code = 'NOT_SUPPORTED';
+      callbacks.onError?.(error);
       return false;
     }
 
-    getMap();
     stop();
-    setSearchingButton();
+    running = true;
+    callbacks.onStart?.();
 
     navigator.geolocation.getCurrentPosition(
       function (position) {
-        const normalized = normalize(position);
-        if (!normalized) {
-          handleError({ code: 2, message: "Coordinate GPS non valide" }, callbacks);
+        if (!handle(position, callbacks, true)) {
+          running = false;
           return;
         }
-
-        lastPosition = normalized;
-        save(normalized);
-        updateMap(normalized, false);
-        resetButton();
-
-        if (callbacks && typeof callbacks.onPosition === "function") {
-          callbacks.onPosition(normalized);
-        }
-
-        if (callbacks.watch !== false) {
-          startWatch(callbacks);
-        }
+        watchId = navigator.geolocation.watchPosition(
+          function (next) { handle(next, callbacks, false); },
+          function (error) { callbacks.onError?.(error); },
+          {
+            enableHighAccuracy: options.enableHighAccuracy,
+            timeout: options.timeout,
+            maximumAge: options.maximumAge
+          }
+        );
       },
       function (error) {
-        handleError(error, callbacks);
+        running = false;
+        callbacks.onError?.(error);
       },
       {
-        enableHighAccuracy: true,
-        timeout: Number(options.timeout) || 60000,
-        maximumAge: Number(options.maximumAge) || 0
+        enableHighAccuracy: options.enableHighAccuracy,
+        timeout: options.timeout,
+        maximumAge: options.maximumAge
       }
     );
 
@@ -276,41 +166,14 @@
   }
 
   function getLastPosition() {
-    if (lastPosition) return lastPosition;
-    try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  function clearSavedPosition() {
-    stop();
-    try {
-      sessionStorage.removeItem(STORAGE_KEY);
-    } catch (_) {}
-    lastPosition = null;
-    removeMapPosition();
-    return api;
+    return read();
   }
 
   function isRunning() {
-    return watchId !== null;
+    return running;
   }
 
-  const api = {
-    attachMap,
-    start,
-    startWatch,
-    stop,
-    updateMap,
-    removeMapPosition,
-    getLastPosition,
-    clearSavedPosition,
-    isRunning
-  };
-
+  const api = { attachMap, start, stop, getLastPosition, isRunning, updateMap: draw };
   window.GPSCamionManager = api;
-  console.log("✅ GPS CAMION CARICATO — stato separato da GPSManager");
+  console.log('GPS camion caricato.');
 })();

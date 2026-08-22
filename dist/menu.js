@@ -1,44 +1,57 @@
+/* 1 KM E SI MANGIA - MENU UNIFICATO */
 (function () {
-  function initMenu() {
-    const menuButton = document.querySelector(".menu-button");
-    const mobileMenu = document.getElementById("mobileMenu");
-    const menuClose = document.getElementById("menuClose");
+  "use strict";
 
-    if (!menuButton || !mobileMenu || !menuClose) {
-      console.warn("MENU: elementi non trovati");
+  function initMenu() {
+    const button = document.getElementById("menuButton") || document.querySelector(".menu-button");
+    const menu = document.getElementById("mobileMenu") || document.querySelector(".mobile-menu") || document.getElementById("menuOverlay") || document.querySelector(".menu-overlay");
+    const close = document.getElementById("menuClose") || document.querySelector(".menu-close");
+
+    if (!button || !menu) {
+      console.warn("MENU: elementi non trovati.");
       return;
     }
 
-    function openMenu() {
-      mobileMenu.style.visibility = "visible";
-      mobileMenu.style.opacity = "1";
-      mobileMenu.style.transform = "translateX(0)";
-      mobileMenu.style.pointerEvents = "auto";
-      mobileMenu.setAttribute("aria-hidden", "false");
+    function openMenu(event) {
+      if (event) { event.preventDefault(); event.stopPropagation(); }
+      menu.classList.add("open", "active");
+      menu.setAttribute("aria-hidden", "false");
+      button.setAttribute("aria-expanded", "true");
+      menu.style.visibility = "visible";
+      menu.style.opacity = "1";
+      menu.style.pointerEvents = "auto";
+      document.body.classList.add("menu-open");
+      document.body.style.overflow = "hidden";
     }
 
-    function closeMenu() {
-      mobileMenu.style.visibility = "hidden";
-      mobileMenu.style.opacity = "0";
-      mobileMenu.style.transform = "translateX(100%)";
-      mobileMenu.style.pointerEvents = "none";
-      mobileMenu.setAttribute("aria-hidden", "true");
+    function closeMenu(event) {
+      if (event) { event.preventDefault(); event.stopPropagation(); }
+      menu.classList.remove("open", "active");
+      menu.setAttribute("aria-hidden", "true");
+      button.setAttribute("aria-expanded", "false");
+      menu.style.visibility = "hidden";
+      menu.style.opacity = "0";
+      menu.style.pointerEvents = "none";
+      document.body.classList.remove("menu-open");
+      document.body.style.overflow = "";
     }
 
-    menuButton.addEventListener("click", openMenu);
-    menuClose.addEventListener("click", closeMenu);
+    closeMenu();
 
-    // IMPORTANTE:
-    // NON blocchiamo i link del menu.
-    // Lasciamo al browser la normale navigazione
-    // verso contatti.html, distanze.html, ecc.
-    const menuLinks = mobileMenu.querySelectorAll("a");
+    button.addEventListener("click", openMenu);
+    if (close) close.addEventListener("click", closeMenu);
 
-    menuLinks.forEach(function (link) {
-      link.addEventListener("click", function () {
-        closeMenu();
-      });
+    menu.addEventListener("click", function (event) {
+      if (event.target === menu) closeMenu();
+      const link = event.target.closest && event.target.closest("a");
+      if (link) closeMenu();
     });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeMenu();
+    });
+
+    console.log("MENU UNIFICATO ATTIVO");
   }
 
   if (document.readyState === "loading") {

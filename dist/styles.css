@@ -1880,3 +1880,129 @@ body.menu-open {
   }
 
 }
+/* =====================================================
+   FIX DEFINITIVO LOGO
+   ===================================================== */
+
+   .logo-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: auto !important;
+    height: auto !important;
+    text-decoration: none !important;
+    line-height: 0 !important;
+  }
+  
+  .site-logo {
+    width: 108px !important;
+    height: 72px !important;
+    max-width: 108px !important;
+    max-height: 72px !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+  
+  .mobile-menu-logo {
+    display: block !important;
+    width: 150px !important;
+    height: auto !important;
+    max-width: 150px !important;
+    max-height: 150px !important;
+    object-fit: contain !important;
+    margin: 10px 0 0 !important;
+  }
+  
+  .mobile-menu-title {
+    width: 100% !important;
+    height: auto !important;
+    overflow: hidden !important;
+  }
+  
+  @media (max-width: 750px) {
+  
+    .site-logo {
+      width: 82px !important;
+      height: 58px !important;
+      max-width: 82px !important;
+      max-height: 58px !important;
+    }
+  
+    .mobile-menu-logo {
+      width: 135px !important;
+      max-width: 135px !important;
+      max-height: 135px !important;
+    }
+  
+  }
+/* =========================================================
+   LOGO USCITE AUTOSTRADALI
+   Unico marchio per tutto ciò che riguarda "Esplora le uscite".
+   L'immagine viene caricata da assets/uscite-autostradali.png.
+   ========================================================= */
+.uscite-logo-mark {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  background: url('assets/uscite-autostradali.png') center / contain no-repeat;
+  vertical-align: middle;
+}
+
+.menu-link .uscite-logo-mark,
+.menu-links a .uscite-logo-mark {
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+  margin-right: 10px;
+}
+
+.uscite-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.uscite-menu-title strong {
+  display: inline-flex;
+  align-items: center;
+}
+
+.uscite-hero-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.uscite-hero-title .uscite-logo-mark {
+  width: 54px;
+  height: 54px;
+  flex-basis: 54px;
+}
+
+.btn-icon .uscite-logo-mark {
+  width: 42px;
+  height: 42px;
+}
+
+@media (max-width: 750px) {
+  .uscite-logo-mark {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+
+  .menu-link .uscite-logo-mark,
+  .menu-links a .uscite-logo-mark {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    margin-right: 8px;
+  }
+
+  .uscite-hero-title .uscite-logo-mark {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+}

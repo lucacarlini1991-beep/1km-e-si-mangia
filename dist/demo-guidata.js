@@ -1,0 +1,23 @@
+/* 1 KM E SI MANGIA - DEMO GUIDATA INTERNA */
+(function(){
+  'use strict';
+  function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function dist(a,b){const R=6371000,la=a.lat*Math.PI/180,lb=b.lat*Math.PI/180,dlat=(b.lat-a.lat)*Math.PI/180,dlon=(b.lon-a.lon)*Math.PI/180;const x=Math.sin(dlat/2)**2+Math.cos(la)*Math.cos(lb)*Math.sin(dlon/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+  function start(ristorante){
+    const uscita=window._uscitaCorrente || ristorante?.uscita;
+    if(!ristorante || !Number.isFinite(Number(ristorante.lat)) || !Number.isFinite(Number(ristorante.lon)) || !uscita || !Number.isFinite(Number(uscita.lat)) || !Number.isFinite(Number(uscita.lon))){alert('Percorso demo non disponibile per questa destinazione.');return;}
+    const exit={lat:Number(uscita.lat),lon:Number(uscita.lon)}, dest={lat:Number(ristorante.lat),lon:Number(ristorante.lon)};
+    let pos=null;
+    const open=()=>render(pos);
+    if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{pos={lat:p.coords.latitude,lon:p.coords.longitude};render(pos)},()=>render(null),{enableHighAccuracy:true,timeout:5000,maximumAge:30000});}else render(null);
+    function render(user){
+      document.getElementById('demoGuidataOverlay')?.remove();
+      const o=document.createElement('div');o.id='demoGuidataOverlay';o.innerHTML=`<div class="dg-box"><div class="dg-head"><div><div class="dg-eyebrow">1 KM E SI MANGIA</div><h2>🚛 DEMO GUIDATA</h2></div><button type="button" data-dg-close>×</button></div><p class="dg-note">Questa è una simulazione interna: non apre Google Maps, Waze o Apple Maps.</p><div id="dgMap" class="dg-map"></div><div class="dg-steps"><div>01 <b>${user?'Dalla tua posizione':'Avvicinamento all’uscita'}</b><span>${user?Math.round(dist(user,exit))+' m circa':'Posizione non disponibile: partenza simulata'}</span></div><div>02 <b>🛣️ USCITA ${esc(uscita.nome||'AUTOSTRADALE')}</b><span>Prendi l'uscita e segui la strada locale.</span></div><div>03 <b>🍝 ${esc(ristorante.nome||'RISTORANTE')}</b><span>${Math.round(dist(exit,dest))} m circa dall'uscita.</span></div><div>04 <b>🔄 RIENTRA IN AUTOSTRADA</b><span>Al termine ti guideremo nuovamente verso la stessa uscita.</span></div></div><button type="button" class="dg-return" data-dg-return>SIMULA IL RIENTRO IN AUTOSTRADA</button></div>`;document.body.appendChild(o);o.querySelector('[data-dg-close]').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove()});
+      const mapEl=o.querySelector('#dgMap'); if(window.L){const m=L.map(mapEl,{zoomControl:true}).setView([dest.lat,dest.lon],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(m);const pts=user?[user,exit,dest]:[exit,dest];L.polyline(pts.map(p=>[p.lat,p.lon]),{weight:5}).addTo(m);pts.forEach((p,i)=>L.marker([p.lat,p.lon]).addTo(m).bindPopup(i===0?'PARTENZA':i===pts.length-1?'RISTORANTE':'USCITA').openPopup());m.fitBounds(L.latLngBounds(pts.map(p=>[p.lat,p.lon])),{padding:[30,30]});setTimeout(()=>m.invalidateSize(),150);}
+      o.querySelector('[data-dg-return]').onclick=()=>{o.remove(); if(typeof window.apriRientroAutostrada==='function')window.apriRientroAutostrada(ristorante);};
+    }
+  }
+  document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('[data-demo-ristorante-index]');if(!b)return;e.preventDefault();e.stopPropagation();const i=Number(b.dataset.demoRistoranteIndex),r=window._ristorantiCorrenti?.[i];if(r)start(r);},true);
+  window.avviaDemoGuidata=start;
+  const s=document.createElement('style');s.textContent=`#demoGuidataOverlay{position:fixed;inset:0;z-index:11500;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;padding:14px;font-family:system-ui,sans-serif}.dg-box{width:min(95vw,560px);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:18px;box-shadow:0 15px 50px rgba(0,0,0,.35)}.dg-head{display:flex;justify-content:space-between}.dg-head h2{margin:3px 0}.dg-head button{border:0;border-radius:50%;width:38px;height:38px;font-size:24px}.dg-eyebrow{font-size:12px;font-weight:800;letter-spacing:2px;color:#075c3b}.dg-note{font-size:13px;color:#666}.dg-map{height:260px;border-radius:14px;overflow:hidden;background:#eee}.dg-steps{display:grid;gap:8px;margin-top:12px}.dg-steps>div{background:#f4f7f5;border-radius:12px;padding:10px}.dg-steps b,.dg-steps span{display:block}.dg-steps b{color:#075c3b}.dg-steps span{font-size:13px;color:#666;margin-top:3px}.dg-return{width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:#075c3b;color:#fff;font-weight:800}`;document.head.appendChild(s);
+})();
