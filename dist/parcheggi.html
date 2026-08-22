@@ -30,7 +30,7 @@
 .mp-panel-head{padding:17px 18px;border-bottom:1px solid #e3e9e6;display:flex;justify-content:space-between;gap:12px;align-items:center}
 .mp-panel-head h2{margin:0;color:#075c3b;font-size:24px;text-transform:uppercase}
 .mp-status{font-size:13px;font-weight:700;color:#66736e}
-#mpMap{width:100%;height:520px;min-height:520px;background:#e8ece9;position:relative;z-index:1;overflow:hidden}.mp-map-error{padding:24px;text-align:center;color:#6b756f;font-weight:700}
+#mpMap{height:560px;min-height:560px;background:#e8ece9;position:relative;z-index:1}.parking-pin{width:38px;height:46px;border:3px solid #075c3b;background:#fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.28)}.parking-pin span{transform:rotate(45deg);font-size:20px}.parking-popup{min-width:210px;font-family:'Roboto Condensed',sans-serif;color:#25332d}.parking-popup strong{font-size:16px;color:#075c3b}.parking-popup-nav{display:block;width:100%;margin-top:10px;padding:9px 12px;border:0;border-radius:9px;background:#075c3b;color:#fff;font:800 14px inherit;cursor:pointer}.leaflet-popup-content{margin:12px 14px}
 .mp-list{padding:14px;display:grid;gap:12px;max-height:620px;overflow:auto}
 .mp-card{border:1px solid #dbe4df;border-radius:12px;padding:15px;background:#fff}
 .mp-card h3{margin:0;color:#075c3b;font-size:21px;line-height:1.1}
@@ -58,7 +58,7 @@
 .mp-loading{padding:24px;text-align:center;color:#5b6862}
 .mp-legend{padding:12px 18px;border-top:1px solid #e3e9e6;font-size:12px;color:#637069}
 .mp-leaflet-popup-content{font-family:'Roboto Condensed',sans-serif}
-@media(max-width:850px){.mp-grid{grid-template-columns:1fr}.mp-side{grid-template-columns:1fr 1fr}.mp-list{max-height:none}#mpMap{height:62vh;min-height:440px}}
+@media(max-width:850px){.mp-grid{grid-template-columns:1fr}.mp-side{grid-template-columns:1fr 1fr}.mp-list{max-height:none}#mpMap{height:60vh;min-height:460px}}
 @media(max-width:560px){.mp-page{padding:20px 12px 45px}.mp-hero{padding:25px 18px}.mp-hero p{font-size:17px}.mp-side{grid-template-columns:1fr}.mp-profile-grid{grid-template-columns:1fr}.mp-profile .wide{grid-column:auto}.mp-btn{width:100%}.mp-actions{display:grid}}
 </style>
 </head>
@@ -88,7 +88,7 @@
   <section class="mp-hero">
     <div class="mp-eyebrow">1 KM E SI MANGIA</div>
     <h1>PARCHEGGI.<br>MEZZI PESANTI.</h1>
-    <p>Trova aree di sosta e parcheggi adatti a camion, TIR e altri mezzi pesanti, vicino alla tua posizione e alle uscite autostradali.</p>
+    <p>Trova parcheggi e aree di sosta per camion e mezzi pesanti. Sulla mappa vedrai le uscite autostradali: tocca un’uscita e mostra i parcheggi nelle vicinanze.</p>
     <div class="mp-actions">
       <button class="mp-btn primary" id="mpLocate">📍 USA LA MIA POSIZIONE</button>
       <button class="mp-btn" id="mpNearestExit">🛣️ CERCA VICINO ALL'USCITA</button>
@@ -98,10 +98,10 @@
 
   <section class="mp-grid">
     <div class="mp-panel">
-      <div class="mp-panel-head"><h2>Parcheggi trovati</h2><span class="mp-status" id="mpStatus">In attesa della posizione</span></div>
+      <div class="mp-panel-head"><h2>Parcheggi trovati</h2><span class="mp-status" id="mpStatus">Caricamento mappa e uscite…</span></div>
       <div id="mpMap"></div>
-      <div class="mp-legend">I dati dei parcheggi sono forniti da OpenStreetMap. Le limitazioni dimensionali vengono mostrate solo quando presenti nei dati disponibili.</div>
-      <div id="mpList" class="mp-list"><div class="mp-empty">Premi <strong>USA LA MIA POSIZIONE</strong> per cercare i parcheggi per mezzi pesanti più vicini.</div></div>
+      <div class="mp-legend">🛣️ Le uscite sono quelle del database di Esplora Uscite. 🚛 I parcheggi vengono cercati in OpenStreetMap entro 2,5 km dall’uscita selezionata.</div>
+      <div id="mpList" class="mp-list"><div class="mp-empty">Tocca un’uscita sulla mappa per vedere i parcheggi nelle vicinanze. Il GPS serve solo come scorciatoia per trovare l’uscita più vicina.</div></div>
     </div>
 
     <aside class="mp-side">
@@ -133,26 +133,10 @@
 
 <footer id="footer"><strong>1 KM E SI MANGIA</strong><p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p></footer>
 
-<script src="menu.js?v=20260822"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onerror="window._leafletLoadError=true"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" onerror="window._clusterLoadError=true"></script>
-<script src="navigazione.js?v=20260822"></script>
-<script src="mezzo-pesante.js?v=20260822"></script>
-<script src="parcheggi.js?v=20260822"></script>
-<script>
-(function(){
-  function bootCheck(){
-    var s=document.getElementById('mpStatus');
-    var m=document.getElementById('mpMap');
-    if(window.L){
-      if(s && /In attesa/.test(s.textContent)) s.textContent='Mappa pronta · premi un pulsante per cercare';
-      return;
-    }
-    if(m) m.innerHTML='<div class="mp-map-error">La mappa non è riuscita a caricarsi. Ricarica la pagina e riprova.</div>';
-    if(s) { s.textContent='Mappa non caricata'; s.style.color='#a52b23'; }
-  }
-  window.addEventListener('load', function(){ setTimeout(bootCheck,700); });
-})();
-</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="menu.js"></script>
+<script src="navigazione.js"></script>
+<script src="parcheggi.js?v=20260822-2"></script>
 </body>
 </html>
