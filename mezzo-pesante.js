@@ -4,8 +4,26 @@
   const KEY='1km_mezzo_pesante_v2';
   const defaults={tipo:'Autoarticolato',lunghezza:16.5,larghezza:2.55,altezza:4,peso:40,rimorchio:true};
   const tipi=['Autocarro','Autoarticolato','Autobus','Furgone','Altro'];
-  function load(){try{return Object.assign({},defaults,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){return Object.assign({},defaults);}}
-  function save(v){localStorage.setItem(KEY,JSON.stringify(v));window.dispatchEvent(new CustomEvent('1km-mezzo-updated',{detail:v}));}
+
+  function load(){
+    try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY)||'{}')); }
+    catch(e) { return Object.assign({}, defaults); }
+  }
+
+  function save(v){
+    const profile=Object.assign({},defaults,v||{});
+    if (!(profile.lunghezza>0 && profile.larghezza>0 && profile.altezza>0 && profile.peso>0)) throw new Error('Dati mezzo non validi');
+    localStorage.setItem(KEY,JSON.stringify(profile));
+    localStorage.setItem('1km-esimangia-mezzo',JSON.stringify({
+      lunghezzaM:profile.lunghezza,
+      larghezzaM:profile.larghezza,
+      altezzaM:profile.altezza,
+      pesoKg:profile.peso*1000
+    }));
+    window.dispatchEvent(new CustomEvent('1km-mezzo-updated',{detail:profile}));
+    return profile;
+  }
+
   function numeric(v){const n=Number(v);return Number.isFinite(n)?n:null;}
   function firstNumber(p,keys){for(const k of keys){const n=numeric(p&&p[k]);if(n!==null)return n;}return null;}
   function compat(p){
@@ -22,6 +40,7 @@
     if(!checks.length)return {ok:null,reason:'Limiti dimensionali non pubblicati'};
     return checks.every(Boolean)?{ok:true,reason:'Dimensioni compatibili'}:{ok:false,reason:'Almeno un limite non è compatibile'};
   }
+
   window.getProfiloMezzoPesante=load;
   window.salvaProfiloMezzoPesante=save;
   window.verificaCompatibilitaParcheggio=compat;
