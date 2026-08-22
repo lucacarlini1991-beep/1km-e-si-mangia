@@ -241,17 +241,36 @@
   });
 
   function start(){
-    const ok=initMap();if(!ok)return;
-    loadProfile();
-    $('mpLocate')?.addEventListener('click',locate);
-    $('mpNearestExit')?.addEventListener('click',()=>{
-      if(state.selectedExit) searchParking(state.selectedExit);
-      else { $('mpMap')?.scrollIntoView({behavior:'smooth',block:'center'});status('Scegli un casello sulla mappa per cercare i parcheggi'); }
-    });
-    $('mpRefresh')?.addEventListener('click',()=>state.selectedExit?searchParking(state.selectedExit):loadExits());
-    $('mpSave')?.addEventListener('click',saveProfile);
-    loadExits();
+    try {
+      status('Avvio mappa parcheggi…');
+      const ok=initMap();
+      if(!ok)return;
+      loadProfile();
+
+      const locateBtn=$('mpLocate');
+      const nearestBtn=$('mpNearestExit');
+      const refreshBtn=$('mpRefresh');
+      const saveBtn=$('mpSave');
+
+      locateBtn?.addEventListener('click',locate);
+      nearestBtn?.addEventListener('click',()=>{
+        if(state.selectedExit){
+          searchParking(state.selectedExit);
+        }else{
+          locate();
+        }
+      });
+      refreshBtn?.addEventListener('click',()=>state.selectedExit?searchParking(state.selectedExit):loadExits());
+      saveBtn?.addEventListener('click',saveProfile);
+
+      loadExits();
+      status('Mappa pronta · caricamento uscite…');
+    } catch (error) {
+      console.error('PARCHEGGI BOOT ERROR',error);
+      status('Errore avvio pagina parcheggi · ricarica la pagina',true);
+    }
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  // Il file viene caricato in fondo alla pagina con defer: il DOM è già disponibile.
+  start();
 })();

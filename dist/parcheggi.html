@@ -24,7 +24,7 @@
 .mp-btn{appearance:none;border:1px solid #075c3b;background:#fff;color:#075c3b;padding:13px 18px;border-radius:10px;font:800 16px 'Roboto Condensed',sans-serif;cursor:pointer}
 .mp-btn.primary{background:#f6a916;border-color:#f6a916;color:#143d2c}
 .mp-btn.dark{background:#075c3b;border-color:#075c3b;color:#fff}
-.mp-btn:disabled{opacity:.55;cursor:not-allowed}
+.mp-btn:disabled{opacity:.55;cursor:not-allowed}.mp-btn:not(:disabled):hover{filter:brightness(.97);transform:translateY(-1px)}.mp-btn{transition:transform .12s ease,filter .12s ease}.mp-btn:focus-visible{outline:3px solid rgba(246,169,22,.55);outline-offset:2px}
 .mp-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:20px;align-items:start}
 .mp-panel{background:#fff;border:1px solid #d9e2dd;border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.06)}
 .mp-panel-head{padding:17px 18px;border-bottom:1px solid #e3e9e6;display:flex;justify-content:space-between;gap:12px;align-items:center}
@@ -135,8 +135,18 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="menu.js"></script>
-<script src="navigazione.js"></script>
-<script src="parcheggi.js?v=20260822-2"></script>
+<script src="menu.js" defer></script>
+<script src="navigazione.js" defer></script>
+<script src="gps-camion.js?v=20260822-3" defer></script>
+<script src="parcheggi.js?v=20260822-3" defer></script>
+<script>
+window.addEventListener('error', function(e) {
+  var s=document.getElementById('mpStatus');
+  if(s && /parcheggi|gps-camion|leaflet/i.test(String(e.message||e.filename||''))) {
+    s.textContent='Errore JavaScript: '+(e.message||'modulo non caricato');
+    s.style.color='#a52b23';
+  }
+});
+</script>
 </body>
 </html>
