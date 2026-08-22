@@ -1,436 +1,158 @@
-<style>
-/* === LOGO ORIGINALE 1 KM E SI MANGIA === */
-.logo-link{
-  display:flex !important;
-  align-items:center !important;
-  text-decoration:none !important;
-  line-height:0 !important;
-}
-.site-logo{
-  width:108px !important;
-  height:72px !important;
-  object-fit:contain !important;
-  display:block !important;
-}
-.mobile-menu-logo{
-  display:block !important;
-  width:150px !important;
-  height:auto !important;
-  margin:10px 0 0 !important;
-}
-@media (max-width:750px){
-  .site-logo{
-    width:82px !important;
-    height:58px !important;
-  }
-  .mobile-menu-logo{
-    width:135px !important;
-  }
-}
-</style>
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Parcheggi mezzi pesanti | 1 KM E SI MANGIA</title>
-
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
-  >
-
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
-
-  <link
-    rel="stylesheet"
-    href="styles.css"
-  >
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parcheggi mezzi pesanti | 1 KM E SI MANGIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<style>
+/* =========================================================
+   PARCHEGGI MEZZI PESANTI — pagina dedicata
+   ========================================================= */
+.mp-page{max-width:1180px;margin:0 auto;padding:34px 18px 60px}
+.mp-hero{border:1px solid rgba(255,255,255,.72);background:linear-gradient(135deg,#075c3b,#0b6947);padding:34px 30px;margin-bottom:22px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.mp-eyebrow{color:#f6a916;font-weight:800;letter-spacing:2.5px;font-size:14px;text-transform:uppercase}
+.mp-hero h1{color:#fff;font-size:clamp(42px,6vw,76px);line-height:.92;margin:12px 0 18px;text-transform:uppercase;font-weight:800}
+.mp-hero p{color:#fff;font-size:20px;line-height:1.45;max-width:760px;margin:0}
+.mp-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.mp-btn{appearance:none;border:1px solid #075c3b;background:#fff;color:#075c3b;padding:13px 18px;border-radius:10px;font:800 16px 'Roboto Condensed',sans-serif;cursor:pointer}
+.mp-btn.primary{background:#f6a916;border-color:#f6a916;color:#143d2c}
+.mp-btn.dark{background:#075c3b;border-color:#075c3b;color:#fff}
+.mp-btn:disabled{opacity:.55;cursor:not-allowed}
+.mp-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:20px;align-items:start}
+.mp-panel{background:#fff;border:1px solid #d9e2dd;border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.mp-panel-head{padding:17px 18px;border-bottom:1px solid #e3e9e6;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.mp-panel-head h2{margin:0;color:#075c3b;font-size:24px;text-transform:uppercase}
+.mp-status{font-size:13px;font-weight:700;color:#66736e}
+#mpMap{width:100%;height:520px;min-height:520px;background:#e8ece9;position:relative;z-index:1;overflow:hidden}.mp-map-error{padding:24px;text-align:center;color:#6b756f;font-weight:700}
+.mp-list{padding:14px;display:grid;gap:12px;max-height:620px;overflow:auto}
+.mp-card{border:1px solid #dbe4df;border-radius:12px;padding:15px;background:#fff}
+.mp-card h3{margin:0;color:#075c3b;font-size:21px;line-height:1.1}
+.mp-meta{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0;color:#52615b;font-size:13px}
+.mp-chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;background:#edf4f0;padding:5px 9px;font-weight:700}
+.mp-chip.good{background:#e4f4e9;color:#176534}
+.mp-chip.warn{background:#fff3d9;color:#8a5a00}
+.mp-chip.bad{background:#fde5e5;color:#9a2929}
+.mp-services{font-size:14px;line-height:1.45;color:#45544e;margin:8px 0}
+.mp-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mp-card-actions button{flex:1;min-width:130px}
+.mp-empty{padding:28px 18px;text-align:center;color:#68766f}
+.mp-side{display:grid;gap:20px}
+.mp-profile{padding:18px}
+.mp-profile h2{margin:0 0 5px;color:#075c3b;text-transform:uppercase}
+.mp-profile p{margin:0 0 15px;color:#5a6862;line-height:1.4}
+.mp-profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mp-profile label{font-size:13px;font-weight:800;color:#43514b}
+.mp-profile input,.mp-profile select{box-sizing:border-box;width:100%;margin-top:5px;padding:10px;border:1px solid #cfdad4;border-radius:9px;font:inherit;background:#fff}
+.mp-profile .wide{grid-column:1/-1}
+.mp-save{width:100%;margin-top:13px}
+.mp-saved{font-size:13px;color:#176534;font-weight:700;text-align:center;margin-top:8px;min-height:18px}
+.mp-note{padding:18px;color:#53615b;line-height:1.5;font-size:14px}
+.mp-note strong{color:#075c3b}
+.mp-loading{padding:24px;text-align:center;color:#5b6862}
+.mp-legend{padding:12px 18px;border-top:1px solid #e3e9e6;font-size:12px;color:#637069}
+.mp-leaflet-popup-content{font-family:'Roboto Condensed',sans-serif}
+@media(max-width:850px){.mp-grid{grid-template-columns:1fr}.mp-side{grid-template-columns:1fr 1fr}.mp-list{max-height:none}#mpMap{height:62vh;min-height:440px}}
+@media(max-width:560px){.mp-page{padding:20px 12px 45px}.mp-hero{padding:25px 18px}.mp-hero p{font-size:17px}.mp-side{grid-template-columns:1fr}.mp-profile-grid{grid-template-columns:1fr}.mp-profile .wide{grid-column:auto}.mp-btn{width:100%}.mp-actions{display:grid}}
+</style>
 </head>
-
-
 <body>
-
-
-  <!-- HEADER -->
-
-  <header class="topbar">
+<header class="topbar">
   <a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
-  <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo">
-</a>
-
-    <a
-      href="index.html"
-      class="logo"
-      style="text-decoration:none;color:inherit;"
-    >
-
-      <div class="logo-pin">
-
-        <svg
-          viewBox="0 0 48 55"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-
-          <path
-            d="M24 2
-               C12 2 4 11 4 22
-               C4 37 24 53 24 53
-               C24 53 44 37 44 22
-               C44 11 36 2 24 2Z"
-            fill="white"
-          />
-
-          <circle
-            cx="24"
-            cy="21"
-            r="11"
-            fill="none"
-            stroke="#075c3b"
-            stroke-width="3"
-          />
-
-          <circle
-            cx="24"
-            cy="21"
-            r="5"
-            fill="none"
-            stroke="#075c3b"
-            stroke-width="2"
-          />
-
-        </svg>
-
-      </div>
-
-
-      <div class="logo-text">
-
-        <strong>
-          1 KM
-        </strong>
-
-        <span>
-          E SI MANGIA
-        </span>
-
-      </div>
-
-    </a>
-
-
-    <button
-      class="menu-button"
-      id="menuButton"
-      type="button"
-      aria-label="Apri menu"
-      aria-expanded="false"
-    >
-
-      ☰
-
-    </button>
-
-  </header>
-
-
-
-  <!-- MENU -->
-
-  <nav
-    class="mobile-menu"
-    id="mobileMenu"
-    aria-hidden="true"
-  >
-
-    <div class="mobile-menu-inner">
-
-
-      <button
-        class="menu-close"
-        id="menuClose"
-        type="button"
-        aria-label="Chiudi menu"
-      >
-
-        ×
-
-      </button>
-
-
-      <div class="mobile-menu-title">
-  <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="mobile-menu-logo">
-</div>
-
-
-      <div class="menu-links">
-
-
-        <a
-          href="index.html"
-          class="menu-link"
-        >
-
-          <strong>
-            HOME
-          </strong>
-
-          <span>
-            La nostra idea
-          </span>
-
-        </a>
-
-
-        <a
-          href="uscite.html"
-          class="menu-link"
-        >
-
-          <strong>
-            ESPLORA LE USCITE
-          </strong>
-
-          <span>
-            Trova l'uscita più vicina
-          </span>
-
-        </a>
-
-
-        <a
-          href="parcheggi.html"
-          class="menu-link"
-        >
-
-          <strong>
-            🚛 PARCHEGGI MEZZI PESANTI
-          </strong>
-
-          <span>
-            Trova un parcheggio per il tuo mezzo
-          </span>
-
-        </a>
-
-
-        <a
-          href="come-funziona.html"
-          class="menu-link"
-        >
-
-          <strong>
-            COME FUNZIONA
-          </strong>
-
-          <span>
-            Scopri come utilizzare il servizio
-          </span>
-
-        </a>
-
-
-        <a
-          href="distanze.html"
-          class="menu-link"
-        >
-
-          <strong>
-            LE DISTANZE
-          </strong>
-
-          <span>
-            Quanto ti allontani dall'autostrada
-          </span>
-
-        </a>
-
-
-        <a
-          href="contatti.html"
-          class="menu-link"
-        >
-
-          <strong>
-            CONTATTI
-          </strong>
-
-          <span>
-            Scrivici
-          </span>
-
-        </a>
-
-
-        <a
-          href="fonti-licenze.html"
-          class="menu-link"
-        >
-
-          <strong>
-            FONTI E LICENZE
-          </strong>
-
-          <span>
-            Dati, fonti e informazioni legali
-          </span>
-
-        </a>
-
-
-      </div>
-
+    <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo">
+  </a>
+  <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
+</header>
+<nav class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <div class="mobile-menu-inner">
+    <button class="menu-close" id="menuClose" type="button" aria-label="Chiudi menu">×</button>
+    <div class="mobile-menu-title"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="mobile-menu-logo"></div>
+    <div class="menu-links">
+      <a href="index.html" class="menu-link"><strong>HOME</strong><span>La nostra idea</span></a>
+      <a href="uscite.html" class="menu-link"><strong class="uscite-menu-title"><span class="uscite-logo-mark" aria-hidden="true"></span>ESPLORA LE USCITE</strong><span>Trova l'uscita più vicina</span></a>
+      <a href="parcheggi.html" class="menu-link"><strong>🚛 PARCHEGGI MEZZI PESANTI</strong><span>Trova un parcheggio per il tuo mezzo</span></a>
+      <a href="come-funziona.html" class="menu-link"><strong>COME FUNZIONA</strong><span>Scopri come utilizzare il servizio</span></a>
+      <a href="distanze.html" class="menu-link"><strong>LE DISTANZE</strong><span>Quanto ti allontani dall'autostrada</span></a>
+      <a href="contatti.html" class="menu-link"><strong>CONTATTI</strong><span>Scrivici</span></a>
+    </div>
+  </div>
+</nav>
+
+<main class="mp-page">
+  <section class="mp-hero">
+    <div class="mp-eyebrow">1 KM E SI MANGIA</div>
+    <h1>PARCHEGGI.<br>MEZZI PESANTI.</h1>
+    <p>Trova aree di sosta e parcheggi adatti a camion, TIR e altri mezzi pesanti, vicino alla tua posizione e alle uscite autostradali.</p>
+    <div class="mp-actions">
+      <button class="mp-btn primary" id="mpLocate">📍 USA LA MIA POSIZIONE</button>
+      <button class="mp-btn" id="mpNearestExit">🛣️ CERCA VICINO ALL'USCITA</button>
+      <button class="mp-btn dark" id="mpRefresh">↻ AGGIORNA RISULTATI</button>
+    </div>
+  </section>
+
+  <section class="mp-grid">
+    <div class="mp-panel">
+      <div class="mp-panel-head"><h2>Parcheggi trovati</h2><span class="mp-status" id="mpStatus">In attesa della posizione</span></div>
+      <div id="mpMap"></div>
+      <div class="mp-legend">I dati dei parcheggi sono forniti da OpenStreetMap. Le limitazioni dimensionali vengono mostrate solo quando presenti nei dati disponibili.</div>
+      <div id="mpList" class="mp-list"><div class="mp-empty">Premi <strong>USA LA MIA POSIZIONE</strong> per cercare i parcheggi per mezzi pesanti più vicini.</div></div>
     </div>
 
-  </nav>
-
-
-
-  <!-- CONTENUTO -->
-
-  <main>
-
-    <section class="how-it-works">
-
-      <div class="map-label">
-        1 KM E SI MANGIA
-      </div>
-
-
-      <h1>
-        🚛 PARCHEGGI MEZZI PESANTI
-      </h1>
-
-
-      <p>
-        Trova parcheggi adatti a camion,
-        TIR e altri mezzi pesanti
-        lungo il tuo percorso.
-      </p>
-
-
-      <div class="steps">
-
-
-        <article class="step">
-
-          <div class="step-icon">
-            🅿️
-          </div>
-
-          <h2>
-            TROVA
-          </h2>
-
-          <p>
-            Individua i parcheggi per mezzi
-            pesanti nelle vicinanze delle uscite.
-          </p>
-
-        </article>
-
-
-        <article class="step">
-
-          <div class="step-icon">
-            📍
-          </div>
-
-          <h2>
-            SCEGLI
-          </h2>
-
-          <p>
-            Valuta distanza dall'autostrada
-            e servizi disponibili.
-          </p>
-
-        </article>
-
-
-        <article class="step">
-
-          <div class="step-icon">
-            🧭
-          </div>
-
-          <h2>
-            NAVIGA
-          </h2>
-
-          <p>
-            Quando saremo pronti,
-            potrai avviare direttamente
-            la navigazione verso il parcheggio.
-          </p>
-
-        </article>
-
-
-      </div>
-
-
-      <div class="ad-space">
-
-        <div class="ad-box">
-
-          <span class="ad-label">
-            PUBBLICITÀ
-          </span>
-
-          <span class="ad-placeholder">
-            SPAZIO PUBBLICITARIO
-          </span>
-
+    <aside class="mp-side">
+      <div class="mp-panel mp-profile">
+        <h2>🚛 Il mio mezzo</h2>
+        <p>Inserisci le dimensioni del mezzo: verranno usate per evidenziare i parcheggi compatibili quando i relativi limiti sono disponibili.</p>
+        <div class="mp-profile-grid">
+          <label class="wide">Tipo<select id="mpTipo"><option>Autocarro</option><option selected>Autoarticolato</option><option>Autobus</option><option>Furgone</option><option>Altro</option></select></label>
+          <label>Lunghezza (m)<input id="mpL" type="number" min="0" step="0.01"></label>
+          <label>Larghezza (m)<input id="mpW" type="number" min="0" step="0.01"></label>
+          <label>Altezza (m)<input id="mpH" type="number" min="0" step="0.01"></label>
+          <label>Peso (t)<input id="mpP" type="number" min="0" step="0.1"></label>
+          <label class="wide"><input id="mpR" type="checkbox" style="width:auto;margin-right:6px"> Ho un rimorchio</label>
         </div>
-
+        <button class="mp-btn dark mp-save" id="mpSave">SALVA IL MIO MEZZO</button>
+        <div class="mp-saved" id="mpSaved"></div>
       </div>
 
+      <div class="mp-panel mp-note">
+        <strong>Come leggiamo i risultati</strong><br><br>
+        🟢 <strong>Compatibile</strong> — i limiti pubblicati risultano compatibili con il tuo mezzo.<br><br>
+        🟡 <strong>Da verificare</strong> — il parcheggio è individuato, ma mancano uno o più limiti dimensionali.<br><br>
+        🔴 <strong>Non compatibile</strong> — almeno un limite dichiarato è inferiore alle dimensioni del tuo mezzo.<br><br>
+        <strong>Importante:</strong> un dato non presente in OpenStreetMap non significa che il parcheggio non sia accessibile. In quel caso lo segnaliamo semplicemente come “da verificare”.
+      </div>
+    </aside>
+  </section>
+</main>
 
-    </section>
+<footer id="footer"><strong>1 KM E SI MANGIA</strong><p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p></footer>
 
-  </main>
-
-
-
-  <!-- FOOTER -->
-
-  <footer id="footer">
-
-    <strong>
-      1 KM E SI MANGIA
-    </strong>
-
-    <p>
-      Mangia bene.<br>
-      Perdi poco tempo.<br>
-      Riparti.
-    </p>
-
-  </footer>
-
-
-
-  <script src="menu.js"></script>
-
+<script src="menu.js?v=20260822"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onerror="window._leafletLoadError=true"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" onerror="window._clusterLoadError=true"></script>
+<script src="navigazione.js?v=20260822"></script>
+<script src="mezzo-pesante.js?v=20260822"></script>
+<script src="parcheggi.js?v=20260822"></script>
+<script>
+(function(){
+  function bootCheck(){
+    var s=document.getElementById('mpStatus');
+    var m=document.getElementById('mpMap');
+    if(window.L){
+      if(s && /In attesa/.test(s.textContent)) s.textContent='Mappa pronta · premi un pulsante per cercare';
+      return;
+    }
+    if(m) m.innerHTML='<div class="mp-map-error">La mappa non è riuscita a caricarsi. Ricarica la pagina e riprova.</div>';
+    if(s) { s.textContent='Mappa non caricata'; s.style.color='#a52b23'; }
+  }
+  window.addEventListener('load', function(){ setTimeout(bootCheck,700); });
+})();
+</script>
 </body>
-
 </html>

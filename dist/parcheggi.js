@@ -7,9 +7,9 @@
     'https://overpass.kumi.systems/api/interpreter',
     'https://overpass.private.coffee/api/interpreter'
   ];
-  const SEARCH_RADIUS = 20000;
+  const SEARCH_RADIUS = 15000;
   const EXIT_RADIUS = 12000;
-  const GPS_TIMEOUT = 60000;
+  const GPS_TIMEOUT = 45000;
   const state = { pos: null, exits: [], results: [], map: null, markers: null, searchCenter: null, searchMode: 'near' };
   const $ = id => document.getElementById(id);
   const esc = v => String(v ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
@@ -48,12 +48,10 @@
 
   function queryFor(pos, radius) {
     const lat = pos.lat, lon = pos.lon;
-    return `[out:json][timeout:45];(
-      nwr["amenity"="parking"]["hgv"](around:${radius},${lat},${lon});
-      nwr["amenity"="parking"]["access:hgv"](around:${radius},${lat},${lon});
-      nwr["amenity"="parking"]["goods"](around:${radius},${lat},${lon});
-      nwr["amenity"="parking"]["capacity:hgv"](around:${radius},${lat},${lon});
-      nwr["amenity"="parking"]["motorcar"](around:${radius},${lat},${lon});
+    // Recuperiamo i parcheggi/aree di servizio in zona e poi selezioniamo
+    // quelli realmente interessanti per mezzi pesanti dai tag OSM.
+    return `[out:json][timeout:30];(
+      nwr["amenity"="parking"](around:${radius},${lat},${lon});
       nwr["highway"="services"](around:${radius},${lat},${lon});
     );out center tags;`;
   }
@@ -135,16 +133,17 @@
 
   function truckScore(tags) {
     let score = 0;
-    if (tags.highway === 'services') score += 5;
-    if (tagBool(tags.hgv)) score += 5;
-    if (tagBool(tags['access:hgv'])) score += 4;
-    if (tagBool(tags.goods)) score += 4;
-    if (tags['capacity:hgv']) score += 4;
-    if (tags.capacity_hgv) score += 4;
-    if (tags['hgv:lanes']) score += 2;
+    if (tags.highway === 'services') score += 6;
+    if (tagBool(tags.hgv)) score += 6;
+    if (tagBool(tags['access:hgv'])) score += 5;
+    if (tagBool(tags.goods)) score += 5;
+    if (tags['capacity:hgv']) score += 5;
+    if (tags.capacity_hgv) score += 5;
+    if (tags['hgv:lanes']) score += 3;
     if (tags.motorway) score += 1;
-    if (tags.truck) score += 3;
-    if (tags['parking:lane:hgv']) score += 3;
+    if (tags.truck) score += 4;
+    if (tags['parking:lane:hgv']) score += 4;
+    if (tags['maxheight'] || tags['maxheight:physical']) score += 1;
     if (tags['access:hgv'] === 'no' || tags.hgv === 'no') score -= 20;
     return score;
   }
@@ -153,7 +152,8 @@
     const tags = e.tags || {}, p = coord(e);
     if (!p) return null;
     const score = truckScore(tags);
-    if (score <= 0) return null;
+    // Non scartiamo i parcheggi privi di tag HGV: molti dati OSM non dichiarano esplicitamente hgv.
+    // Li mostriamo come 'da verificare' e li ordiniamo dopo quelli chiaramente HGV.
     const exit = nearestExit(p);
     const lim = limits(tags);
     const compat = window.verificaCompatibilitaParcheggio
@@ -178,7 +178,12 @@
     if (!state.map || !window.L) return;
     state.map.invalidateSize();
     if (state.markers) state.markers.clearLayers();
-    else state.markers = L.layerGroup().addTo(state.map);
+    else {
+      state.markers = (window.L && L.markerClusterGroup)
+        ? L.markerClusterGroup({ showCoverageOnHover:false, spiderfyOnMaxZoom:true, maxClusterRadius:45 })
+        : L.layerGroup();
+      state.map.addLayer(state.markers);
+    }
     const pts = [];
     if (state.searchCenter) {
       const m = L.marker([state.searchCenter.lat, state.searchCenter.lon]);
@@ -187,14 +192,15 @@
       pts.push([state.searchCenter.lat, state.searchCenter.lon]);
     }
     for (const r of state.results) {
-      const color = r.compat && r.compat.ok === true ? '#176534' : r.compat && r.compat.ok === false ? '#9a2929' : '#8a5a00';
+      const color = r.compat && r.compat.ok === true ? '#075c3b' : r.compat && r.compat.ok === false ? '#9a2929' : '#8a5a00';
+      // Stile volutamente simile ai marker ristorante già presenti nel sito.
       const icon = L.divIcon({
-        className: '',
-        html: `<div style="width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)"><div style="transform:rotate(45deg);color:#fff;text-align:center;font-weight:800;font-size:14px;line-height:23px">🚛</div></div>`,
-        iconSize: [34, 34], iconAnchor: [17, 30]
+        className: 'parking-map-icon',
+        html: `<div style="width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid ${color};display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35)">🚛</div>`,
+        iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -17]
       });
       const m = L.marker([r.lat, r.lon], { icon });
-      m.bindPopup(`<b>${esc(r.name)}</b><br>${fmt(r.distance)}${r.exit ? `<br>Uscita ${esc(r.exit.data.nome || '')} · ${fmt(r.exit.distance)}` : ''}`);
+      m.bindPopup(`<div style="min-width:190px;font-family:system-ui,sans-serif"><b>${esc(r.name)}</b><br><span>${fmt(r.distance)}</span>${r.exit ? `<br><span>🛣️ ${fmt(r.exit.distance)} dall'uscita ${esc(r.exit.data.nome || '')}</span>` : ''}<br><button type="button" onclick="window._mpNav && window._mpNav(${JSON.stringify(r.name)},${r.lat},${r.lon})" style="margin-top:8px;width:100%;padding:8px;border:0;border-radius:8px;background:#075c3b;color:#fff;font-weight:800">🧭 NAVIGA</button></div>`);
       state.markers.addLayer(m);
       pts.push([r.lat, r.lon]);
     }
@@ -217,6 +223,11 @@
     const serv = r.services.length ? r.services.join(' · ') : 'Servizi non indicati';
     return `<article class="mp-card"><h3>${esc(r.name)}</h3><div class="mp-meta"><span class="mp-chip">📍 ${fmt(r.distance)}</span>${r.exit ? `<span class="mp-chip">🛣️ ${fmt(r.exit.distance)} dall'uscita ${esc(r.exit.data.nome || '')}</span>` : ''}${chip}</div><div class="mp-services">${esc(serv)}${lim.length ? '<br><strong>Limiti dichiarati:</strong> ' + lim.join(' · ') : '<br><span>Limiti dimensionali non pubblicati.</span>'}</div><div class="mp-card-actions"><button class="mp-btn dark" type="button" data-nav-index="${i}">🧭 NAVIGA</button><button class="mp-btn" type="button" data-map-index="${i}">📍 MAPPA</button></div></article>`;
   }
+
+  window._mpNav = function(name, lat, lon) {
+    if (window.apriNavigazione) window.apriNavigazione({ nome:name, lat:Number(lat), lon:Number(lon) });
+    else window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`, '_blank');
+  };
 
   function renderList() {
     const list = $('mpList');
@@ -268,10 +279,23 @@
   }
 
   function initMap() {
-    if (!window.L || !$('mpMap')) return;
-    state.map = L.map('mpMap', { zoomControl: true }).setView([41.9, 12.5], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(state.map);
-    setTimeout(() => state.map.invalidateSize(), 150);
+    const el = $('mpMap');
+    if (!el) return;
+    if (!window.L) {
+      el.innerHTML = '<div class="mp-map-error">Mappa in caricamento…</div>';
+      setTimeout(() => { if (!window.L) el.innerHTML = '<div class="mp-map-error">La mappa non è riuscita a caricarsi. Ricarica la pagina e riprova.</div>'; }, 2500);
+      return;
+    }
+    try {
+      state.map = L.map(el, { zoomControl: true, tap: true, attributionControl: true }).setView([41.9, 12.5], 6);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(state.map);
+      setTimeout(() => state.map && state.map.invalidateSize(true), 100);
+      setTimeout(() => state.map && state.map.invalidateSize(true), 500);
+      setTimeout(() => state.map && state.map.invalidateSize(true), 1200);
+    } catch (e) {
+      console.error('Mappa parcheggi:', e);
+      el.innerHTML = '<div class="mp-map-error">Errore nell’avvio della mappa. Ricarica la pagina e riprova.</div>';
+    }
   }
 
   function positionError(error) {
@@ -381,7 +405,7 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  async function boot() {
     initMap();
     loadProfile();
     $('mpLocate')?.addEventListener('click', locate);
@@ -389,5 +413,8 @@
     $('mpRefresh')?.addEventListener('click', () => state.pos ? search(state.searchCenter || state.pos, state.searchMode, state.pos) : locate());
     $('mpSave')?.addEventListener('click', saveProfile);
     await loadExits();
-  });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
+  else boot();
 })();
