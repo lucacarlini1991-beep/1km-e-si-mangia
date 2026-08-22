@@ -1,79 +1,96 @@
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "1km-esimangia-mezzo";
+  // Profilo unico e condiviso da parcheggi + navigazione mezzi pesanti.
+  const STORAGE_KEY = "1km_mezzo_pesante_v2";
   const DEFAULTS = {
-    lunghezzaM: 16.50,
-    larghezzaM: 2.55,
-    altezzaM: 2.80,
-    pesoKg: 3500
+    tipo: "Autoarticolato",
+    lunghezza: 16.50,
+    larghezza: 2.55,
+    altezza: 4.00,
+    peso: 40,
+    rimorchio: true
   };
 
   const fields = {
-    lunghezzaM: document.getElementById("lunghezza"),
-    larghezzaM: document.getElementById("larghezza"),
-    altezzaM: document.getElementById("altezza"),
-    pesoKg: document.getElementById("peso")
+    lunghezza: document.getElementById("lunghezza"),
+    larghezza: document.getElementById("larghezza"),
+    altezza: document.getElementById("altezza"),
+    peso: document.getElementById("peso")
   };
-
   const status = document.getElementById("statusMezzo");
 
   function numero(value) {
-    return Number(String(value).replace(",", "."));
+    const n = Number(String(value ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n : null;
   }
 
   function mostraStatus(testo, errore) {
+    if (!status) return;
     status.textContent = testo;
     status.style.display = "block";
     status.style.borderLeftColor = errore ? "#c83b32" : "#f2a51a";
   }
 
   function carica() {
-    let dati = null;
+    let dati = {};
     try {
-      dati = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      dati = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     } catch (_) {}
 
     const profilo = {
-      lunghezzaM: Number.isFinite(numero(dati?.lunghezzaM)) ? numero(dati.lunghezzaM) : DEFAULTS.lunghezzaM,
-      larghezzaM: Number.isFinite(numero(dati?.larghezzaM)) ? numero(dati.larghezzaM) : DEFAULTS.larghezzaM,
-      altezzaM: Number.isFinite(numero(dati?.altezzaM)) ? numero(dati.altezzaM) : DEFAULTS.altezzaM,
-      pesoKg: Number.isFinite(numero(dati?.pesoKg)) ? numero(dati.pesoKg) : DEFAULTS.pesoKg
+      ...DEFAULTS,
+      ...dati
     };
 
-    fields.lunghezzaM.value = profilo.lunghezzaM;
-    fields.larghezzaM.value = profilo.larghezzaM;
-    fields.altezzaM.value = profilo.altezzaM;
-    fields.pesoKg.value = profilo.pesoKg;
+    if (fields.lunghezza) fields.lunghezza.value = profilo.lunghezza;
+    if (fields.larghezza) fields.larghezza.value = profilo.larghezza;
+    if (fields.altezza) fields.altezza.value = profilo.altezza;
+    if (fields.peso) fields.peso.value = profilo.peso;
   }
 
   function salva() {
     const profilo = {
-      lunghezzaM: numero(fields.lunghezzaM.value),
-      larghezzaM: numero(fields.larghezzaM.value),
-      altezzaM: numero(fields.altezzaM.value),
-      pesoKg: numero(fields.pesoKg.value)
+      tipo: DEFAULTS.tipo,
+      lunghezza: numero(fields.lunghezza?.value),
+      larghezza: numero(fields.larghezza?.value),
+      altezza: numero(fields.altezza?.value),
+      peso: numero(fields.peso?.value),
+      rimorchio: true
     };
 
-    if (!Number.isFinite(profilo.lunghezzaM) || profilo.lunghezzaM <= 0 || profilo.lunghezzaM > 30 ||
-        !Number.isFinite(profilo.larghezzaM) || profilo.larghezzaM <= 0 || profilo.larghezzaM > 5 ||
-        !Number.isFinite(profilo.altezzaM) || profilo.altezzaM <= 0 || profilo.altezzaM > 6 ||
-        !Number.isFinite(profilo.pesoKg) || profilo.pesoKg <= 0 || profilo.pesoKg > 100000) {
+    if (
+      !Number.isFinite(profilo.lunghezza) || profilo.lunghezza <= 0 || profilo.lunghezza > 30 ||
+      !Number.isFinite(profilo.larghezza) || profilo.larghezza <= 0 || profilo.larghezza > 5 ||
+      !Number.isFinite(profilo.altezza) || profilo.altezza <= 0 || profilo.altezza > 6 ||
+      !Number.isFinite(profilo.peso) || profilo.peso <= 0 || profilo.peso > 100
+    ) {
       mostraStatus("Controlla i valori inseriti: devono essere numerici e realistici.", true);
       return;
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profilo));
-    mostraStatus("✓ Profilo mezzo salvato su questo dispositivo. Ora il servizio può utilizzare queste dimensioni per i controlli di compatibilità.", false);
+
+    // Manteniamo anche il vecchio formato compatibile con eventuali moduli già pubblicati.
+    localStorage.setItem("1km-esimangia-mezzo", JSON.stringify({
+      lunghezzaM: profilo.lunghezza,
+      larghezzaM: profilo.larghezza,
+      altezzaM: profilo.altezza,
+      pesoKg: profilo.peso * 1000
+    }));
+
+    window.dispatchEvent(new CustomEvent("1km-mezzo-updated", { detail: profilo }));
+    mostraStatus("✓ Il tuo mezzo è stato salvato. Queste dimensioni verranno usate anche per la navigazione mezzi pesanti.", false);
   }
 
   function reset() {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("1km-esimangia-mezzo");
     carica();
     mostraStatus("Dati standard ripristinati.", false);
   }
 
-  document.getElementById("saveMezzo").addEventListener("click", salva);
-  document.getElementById("resetMezzo").addEventListener("click", reset);
+  document.getElementById("saveMezzo")?.addEventListener("click", salva);
+  document.getElementById("resetMezzo")?.addEventListener("click", reset);
   carica();
 })();

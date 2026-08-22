@@ -750,6 +750,20 @@ function creaIconaAppleMaps() {
 }
 
 
+function creaIconaNeutra(emoji) {
+
+  const contenitore = document.createElement("div");
+  contenitore.className = "navigazione-icona-1km";
+
+  const span = document.createElement("span");
+  span.className = "navigazione-icona-neutra-1km";
+  span.textContent = emoji;
+  contenitore.appendChild(span);
+
+  return contenitore;
+}
+
+
 // =====================================================
 // CREA OPZIONE
 // =====================================================
@@ -1139,6 +1153,36 @@ function apriNavigazione(
     )
 
   );
+
+
+  // ---------------------------------------------------
+  // NAVIGAZIONE MEZZO PESANTE
+  // ---------------------------------------------------
+
+  if (window.CamionNavigazione && typeof window.CamionNavigazione.naviga === "function") {
+
+    box.appendChild(
+
+      creaOpzioneNavigazione(
+
+        "🚛 Mezzo pesante",
+
+        "Percorso calcolato con le dimensioni del tuo mezzo",
+
+        creaIconaNeutra("🚛"),
+
+        function() {
+
+          chiudiNavigazione();
+          window.CamionNavigazione.naviga(ristorante);
+
+        }
+
+      )
+
+    );
+
+  }
 
 
   // ---------------------------------------------------
