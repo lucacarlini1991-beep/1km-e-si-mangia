@@ -96,23 +96,47 @@
         }
       ).addTo(state.map);
 
-      // IDENTICO clustering usato da ESPLORA LE USCITE.
-      state.exitCluster = L.markerClusterGroup({
-        showCoverageOnHover: false,
-        spiderfyOnMaxZoom: true,
-        zoomToBoundsOnClick: true,
-        removeOutsideVisibleBounds: true,
-        maxClusterRadius: 55
-      });
+      // Usa il clustering di Esplora Uscite quando disponibile, ma NON
+      // rendiamo la mappa dipendente dal plugin: su alcuni browser/CDN
+      // il plugin può arrivare dopo Leaflet e bloccare tutta l'inizializzazione.
+      if (typeof L.markerClusterGroup === 'function') {
+        state.exitCluster = L.markerClusterGroup({
+          showCoverageOnHover: false,
+          spiderfyOnMaxZoom: true,
+          zoomToBoundsOnClick: true,
+          removeOutsideVisibleBounds: true,
+          maxClusterRadius: 55
+        });
+      } else {
+        state.exitCluster = L.layerGroup();
+      }
       state.map.addLayer(state.exitCluster);
 
       // Layer separato per i parcheggi, come il layer ristoranti.
       state.parkingLayer = L.layerGroup().addTo(state.map);
 
-      setTimeout(() => state.map && state.map.invalidateSize(), 100);
-      setTimeout(() => state.map && state.map.invalidateSize(), 600);
-      setTimeout(() => state.map && state.map.invalidateSize(), 1500);
-      status('Mappa caricata · scegli un’uscita per vedere i parcheggi');
+      const tileLayer = state.map.eachLayer(layer => {
+        if (layer instanceof L.TileLayer) return layer;
+      });
+      // Non dichiarare la mappa pronta prima che le tile siano realmente caricate.
+      let tileReady = false;
+      state.map.eachLayer(layer => {
+        if (layer instanceof L.TileLayer) {
+          layer.once('load', () => {
+            tileReady = true;
+            clearMapMessage();
+            status('Mappa caricata · scegli un’uscita per vedere i parcheggi');
+            state.map.invalidateSize(true);
+          });
+          layer.once('tileerror', () => {
+            if (!tileReady) status('Mappa in caricamento…');
+          });
+        }
+      });
+      setTimeout(() => state.map && state.map.invalidateSize(true), 100);
+      setTimeout(() => state.map && state.map.invalidateSize(true), 600);
+      setTimeout(() => state.map && state.map.invalidateSize(true), 1500);
+      status('Carico la mappa…');
       return true;
     } catch (error) {
       console.error('Mappa parcheggi:', error);
@@ -181,7 +205,16 @@
 
   function parkingQuery(exit) {
     const lat = Number(exit.lat), lon = Number(exit.lon);
-    return `[out:json][timeout:25];(nwr["amenity"="parking"](around:${PARKING_RADIUS},${lat},${lon});nwr["highway"="services"](around:${PARKING_RADIUS},${lat},${lon});nwr["amenity"="rest_area"](around:${PARKING_RADIUS},${lat},${lon}););out center tags;`;
+    // Prima recuperiamo TUTTE le aree di sosta/parcheggio nell'area.
+    // Il filtro camion viene fatto dopo, sui tag disponibili, così un
+    // parcheggio OSM senza hgv=yes non sparisce dalla ricerca.
+    return `[out:json][timeout:35];(
+      nwr["amenity"="parking"](around:${PARKING_RADIUS},${lat},${lon});
+      nwr["amenity"="parking_space"](around:${PARKING_RADIUS},${lat},${lon});
+      nwr["amenity"="rest_area"](around:${PARKING_RADIUS},${lat},${lon});
+      nwr["highway"="services"](around:${PARKING_RADIUS},${lat},${lon});
+      nwr["highway"="rest_area"](around:${PARKING_RADIUS},${lat},${lon});
+    );out center tags;`;
   }
 
   async function overpass(query) {
@@ -352,7 +385,7 @@
       }).sort((a, b) => (b.score - a.score) || (a.distance - b.distance)).slice(0, 80);
       renderParkingOnMap(exit);
       renderList(exit);
-      status(state.parking.length + ' parcheggi · ' + (exit.nome || 'uscita'));
+      status(state.parking.length + ' parcheggi trovati · ' + (exit.nome || 'uscita'));
     } catch (error) {
       console.error('Ricerca parcheggi:', error);
       state.parking = [];
@@ -467,8 +500,14 @@
     $('mpLocate')?.addEventListener('click', locate);
     $('mpNearestExit')?.addEventListener('click', async () => {
       if (state.selectedExit) return searchParking(state.selectedExit);
-      if (state.position) return locate();
-      return locate();
+      // Su desktop/StackBlitz il Chromebook può non avere GPS: non blocchiamo
+      // la funzione. Portiamo l'utente alla mappa e gli chiediamo di scegliere
+      // un casello, che è il vero punto di partenza della ricerca.
+      const mapEl = $('mpMap');
+      if (mapEl) {
+        mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        status('Seleziona un’uscita sulla mappa per cercare i parcheggi vicini');
+      }
     });
     $('mpRefresh')?.addEventListener('click', () => state.selectedExit ? searchParking(state.selectedExit) : loadExits());
     $('mpSave')?.addEventListener('click', saveProfile);
