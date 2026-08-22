@@ -88,7 +88,7 @@
   <section class="mp-hero">
     <div class="mp-eyebrow">1 KM E SI MANGIA</div>
     <h1>PARCHEGGI.<br>MEZZI PESANTI.</h1>
-    <p>Trova aree di sosta e parcheggi adatti a camion, TIR e altri mezzi pesanti, vicino alla tua posizione e alle uscite autostradali.</p>
+    <p>Trova parcheggi e aree di sosta per camion e mezzi pesanti. Sulla mappa vedrai le uscite autostradali: tocca un’uscita e mostra i parcheggi nelle vicinanze.</p>
     <div class="mp-actions">
       <button class="mp-btn primary" id="mpLocate">📍 USA LA MIA POSIZIONE</button>
       <button class="mp-btn" id="mpNearestExit">🛣️ CERCA VICINO ALL'USCITA</button>
@@ -98,10 +98,10 @@
 
   <section class="mp-grid">
     <div class="mp-panel">
-      <div class="mp-panel-head"><h2>Parcheggi trovati</h2><span class="mp-status" id="mpStatus">In attesa della posizione</span></div>
+      <div class="mp-panel-head"><h2>Parcheggi trovati</h2><span class="mp-status" id="mpStatus">Caricamento mappa e uscite…</span></div>
       <div id="mpMap"></div>
-      <div class="mp-legend">I dati dei parcheggi sono forniti da OpenStreetMap. Le limitazioni dimensionali vengono mostrate solo quando presenti nei dati disponibili.</div>
-      <div id="mpList" class="mp-list"><div class="mp-empty">Premi <strong>USA LA MIA POSIZIONE</strong> per cercare i parcheggi per mezzi pesanti più vicini.</div></div>
+      <div class="mp-legend">🛣️ Le uscite sono quelle del database di Esplora Uscite. 🚛 I parcheggi vengono cercati in OpenStreetMap entro 2,5 km dall’uscita selezionata.</div>
+      <div id="mpList" class="mp-list"><div class="mp-empty">Tocca un’uscita sulla mappa per vedere i parcheggi nelle vicinanze. Il GPS serve solo come scorciatoia per trovare l’uscita più vicina.</div></div>
     </div>
 
     <aside class="mp-side">

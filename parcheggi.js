@@ -1,4 +1,6 @@
-/* 1 KM E SI MANGIA — PARCHEGGI MEZZI PESANTI */
+// 1 KM E SI MANGIA — PARCHEGGI MEZZI PESANTI
+// La mappa e la logica delle uscite seguono la stessa struttura funzionante
+// di "Esplora le uscite". Cambiano solo i contenuti mostrati: parcheggi.
 (function () {
   'use strict';
 
@@ -7,456 +9,392 @@
     'https://overpass.kumi.systems/api/interpreter',
     'https://overpass.private.coffee/api/interpreter'
   ];
-  const SEARCH_RADIUS = 12000;
-  const EXIT_RADIUS = 10000;
-  const GPS_TIMEOUT = 45000;
-  const state = { pos: null, exits: [], results: [], map: null, markers: null, searchCenter: null, searchMode: 'near' };
-  const $ = id => document.getElementById(id);
-  const esc = v => String(v ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  const PARKING_RADIUS = 2500;
+  const state = {
+    map: null,
+    exits: [],
+    selectedExit: null,
+    parking: [],
+    parkingLayer: null,
+    exitCluster: null,
+    position: null,
+    loading: false
+  };
 
-  function dist(a, b) {
-    const R = 6371000, rad = Math.PI / 180;
-    const dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
-    const la = a.lat * rad, lb = b.lat * rad;
-    const x = Math.sin(dLat / 2) ** 2 + Math.cos(la) * Math.cos(lb) * Math.sin(dLon / 2) ** 2;
+  const $ = id => document.getElementById(id);
+  const esc = value => String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+
+  function distance(a, b) {
+    const R = 6371000;
+    const rad = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * rad;
+    const dLon = (b.lon - a.lon) * rad;
+    const la1 = a.lat * rad;
+    const la2 = b.lat * rad;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
   }
 
-  function fmt(m) {
+  function formatDistance(m) {
     if (!Number.isFinite(m)) return '—';
     return m < 1000 ? Math.round(m) + ' m' : (m / 1000).toFixed(1).replace('.', ',') + ' km';
   }
 
-  function coord(e) {
-    if (typeof e.lat === 'number' && typeof e.lon === 'number') return { lat: e.lat, lon: e.lon };
-    if (e.center && typeof e.center.lat === 'number' && typeof e.center.lon === 'number') return { lat: e.center.lat, lon: e.center.lon };
-    return null;
-  }
-
-  function setStatus(text, error) {
+  function status(text, error) {
     const el = $('mpStatus');
     if (!el) return;
     el.textContent = text;
     el.style.color = error ? '#a52b23' : '';
   }
 
-  function setButtonBusy(button, busy, busyText, normalText) {
+  function busy(button, yes, busyText, normalText) {
     if (!button) return;
-    button.disabled = busy;
-    button.textContent = busy ? busyText : normalText;
+    button.disabled = yes;
+    button.textContent = yes ? busyText : normalText;
   }
 
-  function queryFor(pos, radius) {
-    const lat = pos.lat, lon = pos.lon;
-    // Recuperiamo i parcheggi/aree di servizio in zona e poi selezioniamo
-    // quelli realmente interessanti per mezzi pesanti dai tag OSM.
-    return `[out:json][timeout:40];(
-      nwr["amenity"="parking"](around:${radius},${lat},${lon});
-      nwr["amenity"="parking_space"](around:${radius},${lat},${lon});
-      nwr["highway"="services"](around:${radius},${lat},${lon});
-      nwr["hgv"](around:${radius},${lat},${lon});
-      nwr["access:hgv"](around:${radius},${lat},${lon});
-      nwr["capacity:hgv"](around:${radius},${lat},${lon});
-    );out center tags;`;
+  function showMapMessage(text, error) {
+    const mapEl = $('mpMap');
+    if (!mapEl) return;
+    const old = mapEl.querySelector('.mp-map-message');
+    if (old) old.remove();
+    const box = document.createElement('div');
+    box.className = 'mp-map-message';
+    box.textContent = text;
+    box.style.cssText = `position:absolute;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box;font:700 17px/1.4 'Roboto Condensed',sans-serif;color:${error ? '#a52b23' : '#52615b'};background:#e8ece9;pointer-events:none`;
+    mapEl.appendChild(box);
   }
 
-  async function overpass(q) {
-    let last = null;
-    for (const url of OVERPASS) {
-      try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 50000);
-        let response = await fetch(url + '?data=' + encodeURIComponent(q), {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: controller.signal
-        });
-        clearTimeout(timer);
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        return await response.json();
-      } catch (e) {
-        last = e;
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 50000);
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'data=' + encodeURIComponent(q),
-            signal: controller.signal
-          });
-          clearTimeout(timer);
-          if (!response.ok) throw new Error('HTTP ' + response.status);
-          return await response.json();
-        } catch (e2) { last = e2; }
-      }
+  function clearMapMessage() {
+    const el = $('mpMap')?.querySelector('.mp-map-message');
+    if (el) el.remove();
+  }
+
+  // IDENTICO approccio di Esplora Uscite: Leaflet + OpenStreetMap gratuito.
+  function initMap() {
+    if (!window.L) {
+      status('Libreria mappa non caricata', true);
+      showMapMessage('La libreria della mappa non è stata caricata.', true);
+      return false;
     }
-    throw last || new Error('Servizio mappe non disponibile');
-  }
-
-  async function loadExits() {
     try {
-      const response = await fetch('uscite.json', { cache: 'no-store' });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const data = await response.json();
-      state.exits = Array.isArray(data)
-        ? data.filter(x => Number.isFinite(Number(x.lat)) && Number.isFinite(Number(x.lon)))
-        : [];
-      return state.exits.length > 0;
-    } catch (e) {
-      console.error('Uscite:', e);
-      state.exits = [];
+      state.map = L.map('mpMap', {
+        center: [42.5, 12.5],
+        zoom: 6,
+        scrollWheelZoom: true
+      });
+      window.appMap = state.map;
+
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(state.map);
+
+      state.exitCluster = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        spiderfyOnMaxZoom: true,
+        zoomToBoundsOnClick: true,
+        removeOutsideVisibleBounds: true,
+        maxClusterRadius: 55
+      });
+      state.map.addLayer(state.exitCluster);
+      state.parkingLayer = L.layerGroup().addTo(state.map);
+
+      setTimeout(() => state.map && state.map.invalidateSize(true), 100);
+      setTimeout(() => state.map && state.map.invalidateSize(true), 700);
+      return true;
+    } catch (error) {
+      console.error('Mappa parcheggi:', error);
+      status('Mappa non disponibile', true);
+      showMapMessage('Errore nell’inizializzazione della mappa.', true);
       return false;
     }
   }
 
-  function nearestExit(p) {
-    let best = null, bestD = Infinity;
-    for (const e of state.exits) {
-      const d = dist(p, { lat: Number(e.lat), lon: Number(e.lon) });
-      if (d < bestD) { bestD = d; best = e; }
+  function exitIcon() {
+    return L.divIcon({
+      className: '',
+      html: '<div class="custom-marker"></div>',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -18]
+    });
+  }
+
+  const parkingIcon = L.divIcon({
+    className: 'parking-map-icon',
+    html: '<div style="width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid #075c3b;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35)">🚛</div>',
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -17]
+  });
+
+  function validExit(exit) {
+    return exit && Number.isFinite(Number(exit.lat)) && Number.isFinite(Number(exit.lon)) && exit.visualizza_mappa !== false;
+  }
+
+  async function loadExits() {
+    try {
+      const response = await fetch('./uscite.json', { cache: 'no-store' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      state.exits = Array.isArray(data) ? data.filter(validExit) : [];
+      if (!state.exits.length) throw new Error('Nessuna uscita nel database');
+      drawExits();
+      status('Mappa pronta · scegli un’uscita per vedere i parcheggi');
+      return true;
+    } catch (error) {
+      console.error('Uscite:', error);
+      status('Impossibile caricare le uscite', true);
+      showMapMessage('Non riesco a caricare il database delle uscite.', true);
+      return false;
     }
-    return best ? { data: best, distance: bestD } : null;
   }
 
-  function tagBool(v) {
-    return ['yes', 'designated', 'permissive', 'true', '1'].includes(String(v || '').toLowerCase());
+  function exitPopup(exit) {
+    return `<div class="exit-popup"><strong>${esc(exit.nome || 'Uscita autostradale')}</strong>${exit.autostrada ? `<small>${esc(exit.autostrada)}${exit.numero_uscita ? ' · Uscita ' + esc(exit.numero_uscita) : ''}</small>` : ''}<small>🛣️ Uscita autostradale</small><button type="button" data-parcheggi-uscita="${esc(exit.id)}" style="margin-top:10px;width:100%;padding:10px;border:0;border-radius:8px;cursor:pointer;background:#075c3b;color:#fff;font-weight:800">🚛 MOSTRA PARCHEGGI</button></div>`;
   }
 
-  function parkingName(tags) {
-    return tags.name || tags.operator || (tags.highway === 'services' ? 'Area di servizio' : 'Parcheggio mezzi pesanti');
+  function drawExits() {
+    if (!state.map || !state.exitCluster) return;
+    state.exitCluster.clearLayers();
+    const icon = exitIcon();
+    state.exits.forEach(exit => {
+      const marker = L.marker([Number(exit.lat), Number(exit.lon)], { icon });
+      marker.bindPopup(exitPopup(exit));
+      marker.on('click', () => {
+        state.map.flyTo([Number(exit.lat), Number(exit.lon)], Math.max(state.map.getZoom(), 13), { duration: 0.6 });
+      });
+      state.exitCluster.addLayer(marker);
+    });
   }
 
-  function services(tags) {
-    const out = [];
-    if (tagBool(tags.toilets)) out.push('WC');
-    if (tagBool(tags.shower)) out.push('Doccia');
-    if (tagBool(tags.lit)) out.push('Illuminato');
-    if (tagBool(tags.surveillance)) out.push('Videosorveglianza');
-    if (tags.fee === 'yes') out.push('A pagamento');
-    if (tags.capacity_hgv || tags['capacity:hgv']) out.push('Posti TIR: ' + (tags.capacity_hgv || tags['capacity:hgv']));
-    return out;
+  function parkingQuery(exit) {
+    const lat = Number(exit.lat), lon = Number(exit.lon);
+    return `[out:json][timeout:35];(nwr["amenity"="parking"](around:${PARKING_RADIUS},${lat},${lon});nwr["amenity"="parking_space"](around:${PARKING_RADIUS},${lat},${lon});nwr["highway"="services"](around:${PARKING_RADIUS},${lat},${lon});nwr["hgv"](around:${PARKING_RADIUS},${lat},${lon});nwr["access:hgv"](around:${PARKING_RADIUS},${lat},${lon});nwr["capacity:hgv"](around:${PARKING_RADIUS},${lat},${lon}););out center tags;`;
+  }
+
+  async function overpass(query) {
+    let lastError = null;
+    for (const url of OVERPASS) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 45000);
+        const response = await fetch(url + '?data=' + encodeURIComponent(query), { headers: { Accept: 'application/json' }, signal: controller.signal });
+        clearTimeout(timer);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return await response.json();
+      } catch (error) {
+        lastError = error;
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 45000);
+          const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(query), signal: controller.signal });
+          clearTimeout(timer);
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          return await response.json();
+        } catch (error2) {
+          lastError = error2;
+        }
+      }
+    }
+    throw lastError || new Error('Servizio parcheggi non disponibile');
+  }
+
+  function point(element) {
+    if (Number.isFinite(Number(element.lat)) && Number.isFinite(Number(element.lon))) return { lat: Number(element.lat), lon: Number(element.lon) };
+    if (element.center && Number.isFinite(Number(element.center.lat)) && Number.isFinite(Number(element.center.lon))) return { lat: Number(element.center.lat), lon: Number(element.center.lon) };
+    return null;
+  }
+
+  function yes(value) { return ['yes', 'true', '1', 'designated', 'permissive'].includes(String(value || '').toLowerCase()); }
+
+  function score(tags) {
+    let s = 0;
+    if (tags.highway === 'services') s += 8;
+    if (yes(tags.hgv)) s += 8;
+    if (yes(tags['access:hgv'])) s += 7;
+    if (tags['capacity:hgv'] || tags.capacity_hgv) s += 6;
+    if (tags.truck) s += 5;
+    if (tags.goods) s += 4;
+    if (tags['parking:lane:hgv']) s += 4;
+    if (tags.hgv === 'no' || tags['access:hgv'] === 'no') s -= 30;
+    if (tags.access === 'private' || tags.access === 'no') s -= 50;
+    return s;
   }
 
   function limits(tags) {
     return {
-      maxheight: tags.maxheight || tags['maxheight:physical'] || null,
-      maxwidth: tags.maxwidth || null,
-      maxlength: tags.maxlength || null,
-      maxweight: tags.maxweight || null
+      height: tags.maxheight || tags['maxheight:physical'] || null,
+      width: tags.maxwidth || null,
+      length: tags.maxlength || null,
+      weight: tags.maxweight || null
     };
   }
 
-  function truckScore(tags) {
-    let score = 0;
-    if (tags.highway === 'services') score += 6;
-    if (tagBool(tags.hgv)) score += 6;
-    if (tagBool(tags['access:hgv'])) score += 5;
-    if (tagBool(tags.goods)) score += 5;
-    if (tags['capacity:hgv']) score += 5;
-    if (tags.capacity_hgv) score += 5;
-    if (tags['hgv:lanes']) score += 3;
-    if (tags.motorway) score += 1;
-    if (tags.truck) score += 4;
-    if (tags['parking:lane:hgv']) score += 4;
-    if (tags['maxheight'] || tags['maxheight:physical']) score += 1;
-    if (tags['access:hgv'] === 'no' || tags.hgv === 'no') score -= 20;
-    return score;
-  }
-
-  function normalize(e, referencePos) {
-    const tags = e.tags || {}, p = coord(e);
-    if (!p) return null;
-    const score = truckScore(tags);
-    // Un parcheggio senza tag HGV non viene scartato: lo mostriamo come
-    // 'da verificare'. In OSM molti parcheggi camion non hanno tutti i tag.
-    if (tags.access === 'no' || tags.access === 'private') return null;
-    const exit = nearestExit(p);
+  function normalize(element, exit) {
+    const tags = element.tags || {};
+    const p = point(element);
+    if (!p || tags.access === 'private' || tags.access === 'no') return null;
+    const d = distance(p, { lat: Number(exit.lat), lon: Number(exit.lon) });
     const lim = limits(tags);
-    const compat = window.verificaCompatibilitaParcheggio
-      ? window.verificaCompatibilitaParcheggio(lim)
-      : null;
+    const compat = typeof window.verificaCompatibilitaParcheggio === 'function' ? window.verificaCompatibilitaParcheggio(lim) : null;
     return {
-      id: e.type + '-' + e.id,
+      id: element.type + '-' + element.id,
       lat: p.lat,
       lon: p.lon,
+      name: tags.name || tags.operator || (tags.highway === 'services' ? 'Area di servizio' : 'Parcheggio mezzi pesanti'),
       tags,
-      name: parkingName(tags),
-      distance: referencePos ? dist(referencePos, p) : Infinity,
-      exit,
+      distance: d,
       limits: lim,
       compat,
-      services: services(tags),
-      truckScore: score
+      score: score(tags)
     };
   }
 
-  function renderMap() {
-    if (!state.map || !window.L) return;
-    state.map.invalidateSize(true);
-    if (!state.markers) {
-      state.markers = window.L.markerClusterGroup
-        ? L.markerClusterGroup({ showCoverageOnHover:false, spiderfyOnMaxZoom:true, maxClusterRadius:40, disableClusteringAtZoom:15 })
-        : L.layerGroup();
-      state.map.addLayer(state.markers);
-    } else {
-      state.markers.clearLayers();
-    }
-
-    const pts = [];
-    if (state.searchCenter) {
-      const isExit = state.searchMode === 'exit';
-      const centerIcon = L.divIcon({
-        className: 'parking-center-icon',
-        html: `<div style="width:38px;height:38px;border-radius:50%;background:#f6a916;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 3px 10px rgba(0,0,0,.35)">${isExit ? '🛣️' : '📍'}</div>`,
-        iconSize:[38,38], iconAnchor:[19,19], popupAnchor:[0,-19]
-      });
-      const cm = L.marker([state.searchCenter.lat,state.searchCenter.lon], {icon:centerIcon});
-      cm.bindPopup(isExit ? '<strong>🛣️ Uscita autostradale</strong><br>Parcheggi cercati in questa zona.' : '<strong>📍 La tua posizione</strong><br>Parcheggi cercati in questa zona.');
-      state.markers.addLayer(cm);
-      pts.push([state.searchCenter.lat,state.searchCenter.lon]);
-    }
-
-    for (const r of state.results) {
-      const color = r.compat?.ok === true ? '#075c3b' : r.compat?.ok === false ? '#9a2929' : '#f0a400';
-      const icon = L.divIcon({
-        className:'parking-map-icon',
-        html:`<div class="parking-pin" style="border-color:${color}"><span>🚛</span></div>`,
-        iconSize:[44,52], iconAnchor:[22,46], popupAnchor:[0,-44]
-      });
-      const m=L.marker([r.lat,r.lon],{icon});
-      const servicesText=r.services.length ? `<br><small>${esc(r.services.join(' · '))}</small>` : '';
-      const compatibility=r.compat?.ok === true ? '🟢 Compatibile' : r.compat?.ok === false ? '🔴 Non compatibile' : '🟡 Da verificare';
-      const exitText=r.exit ? `<br><small>🛣️ ${fmt(r.exit.distance)} dall'uscita ${esc(r.exit.data.nome||'')}</small>` : '';
-      m.bindPopup(`<div class="parking-popup"><strong>${esc(r.name)}</strong><br><span>📍 ${fmt(r.distance)}</span>${exitText}<br><span>${compatibility}</span>${servicesText}<button type="button" class="parking-popup-nav" onclick="window._mpNav && window._mpNav(${JSON.stringify(r.name)},${r.lat},${r.lon})">🧭 NAVIGA</button></div>`);
-      state.markers.addLayer(m);
-      pts.push([r.lat,r.lon]);
-    }
-
-    if (!pts.length) return;
-    if (pts.length === 1) state.map.setView(pts[0], 13);
-    else state.map.fitBounds(pts,{padding:[35,35],maxZoom:15});
-    setTimeout(()=>state.map && state.map.invalidateSize(true),150);
+  function services(tags) {
+    const out = [];
+    if (yes(tags.toilets)) out.push('WC');
+    if (yes(tags.shower)) out.push('Doccia');
+    if (yes(tags.lit)) out.push('Illuminato');
+    if (yes(tags.surveillance)) out.push('Videosorveglianza');
+    if (tags.fee === 'yes') out.push('A pagamento');
+    if (tags['capacity:hgv'] || tags.capacity_hgv) out.push('Posti TIR: ' + (tags['capacity:hgv'] || tags.capacity_hgv));
+    return out;
   }
 
-  function card(r, i) {
-    const c = r.compat;
-    const chip = c && c.ok === true
-      ? '<span class="mp-chip good">🟢 Compatibile</span>'
-      : c && c.ok === false
-        ? '<span class="mp-chip bad">🔴 Non compatibile</span>'
-        : '<span class="mp-chip warn">🟡 Da verificare</span>';
+  function compatibilityText(item) {
+    if (item.compat?.ok === true) return '🟢 Compatibile';
+    if (item.compat?.ok === false) return '🔴 Non compatibile';
+    return '🟡 Da verificare';
+  }
+
+  function popupParking(item) {
     const lim = [];
-    if (r.limits.maxheight) lim.push('H max ' + esc(r.limits.maxheight) + ' m');
-    if (r.limits.maxwidth) lim.push('Larg. max ' + esc(r.limits.maxwidth) + ' m');
-    if (r.limits.maxlength) lim.push('Lung. max ' + esc(r.limits.maxlength) + ' m');
-    if (r.limits.maxweight) lim.push('Peso max ' + esc(r.limits.maxweight));
-    const serv = r.services.length ? r.services.join(' · ') : 'Servizi non indicati';
-    return `<article class="mp-card"><h3>${esc(r.name)}</h3><div class="mp-meta"><span class="mp-chip">📍 ${fmt(r.distance)}</span>${r.exit ? `<span class="mp-chip">🛣️ ${fmt(r.exit.distance)} dall'uscita ${esc(r.exit.data.nome || '')}</span>` : ''}${chip}</div><div class="mp-services">${esc(serv)}${lim.length ? '<br><strong>Limiti dichiarati:</strong> ' + lim.join(' · ') : '<br><span>Limiti dimensionali non pubblicati.</span>'}</div><div class="mp-card-actions"><button class="mp-btn dark" type="button" data-nav-index="${i}">🧭 NAVIGA</button><button class="mp-btn" type="button" data-map-index="${i}">📍 MAPPA</button></div></article>`;
+    if (item.limits.height) lim.push('H max ' + esc(item.limits.height) + ' m');
+    if (item.limits.width) lim.push('Larg. max ' + esc(item.limits.width) + ' m');
+    if (item.limits.length) lim.push('Lung. max ' + esc(item.limits.length) + ' m');
+    if (item.limits.weight) lim.push('Peso max ' + esc(item.limits.weight));
+    const serv = services(item.tags);
+    return `<div class="parking-popup"><strong>${esc(item.name)}</strong><small>📍 ${formatDistance(item.distance)} dall’uscita</small><small>${compatibilityText(item)}</small>${serv.length ? `<small>${esc(serv.join(' · '))}</small>` : ''}${lim.length ? `<small>${lim.join(' · ')}</small>` : ''}<button type="button" class="parking-popup-nav" data-naviga-parcheggio="${esc(item.id)}">🧭 NAVIGA</button></div>`;
   }
 
-  window._mpNav = function(name, lat, lon) {
-    if (window.apriNavigazione) window.apriNavigazione({ nome:name, lat:Number(lat), lon:Number(lon) });
-    else window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`, '_blank');
-  };
+  function renderParkingOnMap(exit) {
+    state.parkingLayer.clearLayers();
+    const bounds = L.latLngBounds([[Number(exit.lat), Number(exit.lon)]]);
+    state.parking.forEach(item => {
+      const marker = L.marker([item.lat, item.lon], { icon: parkingIcon });
+      marker.bindPopup(popupParking(item));
+      marker.on('click', () => state.map.setView([item.lat, item.lon], Math.max(state.map.getZoom(), 15), { animate: true }));
+      marker.addTo(state.parkingLayer);
+      bounds.extend([item.lat, item.lon]);
+    });
+    if (bounds.isValid()) state.map.fitBounds(bounds, { padding: [45, 45], maxZoom: 15 });
+    setTimeout(() => state.map.invalidateSize(true), 150);
+  }
 
-  function renderList() {
+  function renderList(exit) {
     const list = $('mpList');
     if (!list) return;
-    if (!state.results.length) {
-      list.innerHTML = '<div class="mp-empty">Nessun parcheggio adatto a mezzi pesanti trovato nell’area cercata. Prova con un’altra posizione o con l’uscita autostradale più vicina.</div>';
+    if (!state.parking.length) {
+      list.innerHTML = `<div class="mp-empty"><strong>Nessun parcheggio trovato</strong><br>Non risultano parcheggi nei ${PARKING_RADIUS / 1000} km intorno a <strong>${esc(exit.nome || 'questa uscita')}</strong> nei dati OpenStreetMap.</div>`;
       return;
     }
-    list.innerHTML = state.results.map(card).join('');
-    list.querySelectorAll('[data-nav-index]').forEach(b => b.onclick = () => {
-      const r = state.results[Number(b.dataset.navIndex)];
-      if (window.apriNavigazione) window.apriNavigazione({ nome: r.name, lat: r.lat, lon: r.lon });
-      else window.open(`https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lon}&travelmode=driving`, '_blank');
-    });
-    list.querySelectorAll('[data-map-index]').forEach(b => b.onclick = () => {
-      const r = state.results[Number(b.dataset.mapIndex)];
-      if (!state.map) return;
-      state.map.setView([r.lat, r.lon], 16);
-      if (state.markers) state.markers.eachLayer(m => {
-        if (m.getLatLng && Math.abs(m.getLatLng().lat - r.lat) < 1e-7 && Math.abs(m.getLatLng().lng - r.lon) < 1e-7) m.openPopup();
-      });
-    });
+    list.innerHTML = state.parking.map((item, index) => {
+      const serv = services(item.tags);
+      return `<article class="mp-card"><h3>🚛 ${esc(item.name)}</h3><div class="mp-meta"><span class="mp-chip">📍 ${formatDistance(item.distance)} dall’uscita</span><span class="mp-chip ${item.compat?.ok === true ? 'good' : item.compat?.ok === false ? 'bad' : 'warn'}">${compatibilityText(item)}</span></div><div class="mp-services">${serv.length ? esc(serv.join(' · ')) : 'Servizi non indicati'}${item.limits.height || item.limits.width || item.limits.length || item.limits.weight ? '<br>' + [item.limits.height ? 'H ' + esc(item.limits.height) + ' m' : '', item.limits.width ? 'Larg. ' + esc(item.limits.width) + ' m' : '', item.limits.length ? 'Lung. ' + esc(item.limits.length) + ' m' : '', item.limits.weight ? 'Peso ' + esc(item.limits.weight) : ''].filter(Boolean).join(' · ') : ''}</div><div class="mp-card-actions"><button class="mp-btn dark" type="button" data-nav-index="${index}">🧭 NAVIGA</button><button class="mp-btn" type="button" data-map-index="${index}">📍 MAPPA</button></div></article>`;
+    }).join('');
   }
 
-  async function search(center, mode, referencePos) {
-    state.searchCenter = center;
-    state.searchMode = mode;
-    state.pos = referencePos || state.pos || center;
-    setStatus(mode === 'exit' ? 'Cerco parcheggi vicino all’uscita…' : 'Cerco parcheggi…');
-    $('mpList').innerHTML = '<div class="mp-loading">⏳ Ricerca dei parcheggi per mezzi pesanti in corso…</div>';
+  function showParkingPanel(exit) {
+    let panel = document.getElementById('parkingExitPanel');
+    if (panel) panel.remove();
+    panel = document.createElement('div');
+    panel.id = 'parkingExitPanel';
+    panel.style.cssText = 'position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:80vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:18px;font-family:system-ui,sans-serif;';
+    const cards = state.parking.map((item, index) => `<div style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px"><strong>${index + 1}. 🚛 ${esc(item.name)}</strong><button type="button" data-parking-index="${index}" style="min-width:112px;height:40px;border:0;border-radius:10px;background:#075c3b;color:#fff;font-weight:800">NAVIGA</button></div><div style="font-size:12px;color:#555;margin-top:7px">📍 ${formatDistance(item.distance)} dall’uscita · ${compatibilityText(item)}</div></div>`).join('');
+    panel.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px"><div><strong style="font-size:20px">🚛 Parcheggi</strong><div style="font-size:13px;color:#555">${esc(exit.nome || 'Uscita autostradale')} · ${state.parking.length} trovati</div></div><button id="chiudiParkingPanel" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px">×</button></div>${cards || '<p>Nessun parcheggio trovato.</p>'}<button id="chiudiParkingPanelBottom" type="button" style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:800">CHIUDI</button>`;
+    document.body.appendChild(panel);
+    panel.querySelectorAll('#chiudiParkingPanel,#chiudiParkingPanelBottom').forEach(b => b.addEventListener('click', () => panel.remove()));
+    panel.querySelectorAll('[data-parking-index]').forEach(b => b.addEventListener('click', () => {
+      const item = state.parking[Number(b.dataset.parkingIndex)];
+      if (!item) return;
+      panel.remove();
+      navigate(item);
+    }));
+  }
+
+  async function searchParking(exit) {
+    if (!exit || state.loading) return;
+    state.loading = true;
+    state.selectedExit = exit;
+    busy($('mpNearestExit'), true, '🛣️ CERCO PARCHEGGI…', '🛣️ CERCA VICINO ALL’USCITA');
+    status('Cerco parcheggi vicino a ' + (exit.nome || 'questa uscita') + '…');
+    $('mpList').innerHTML = '<div class="mp-loading">⏳ Cerco i parcheggi intorno all’uscita…</div>';
+    state.parkingLayer.clearLayers();
     try {
-      const data = await overpass(queryFor(center, mode === 'exit' ? EXIT_RADIUS : SEARCH_RADIUS));
-      const arr = (data.elements || [])
-        .map(e => normalize(e, mode === 'exit' ? center : state.pos))
-        .filter(Boolean);
+      const data = await overpass(parkingQuery(exit));
       const seen = new Set();
-      state.results = arr
-        .filter(x => { if (seen.has(x.id)) return false; seen.add(x.id); return true; })
-        .sort((a, b) => (b.truckScore - a.truckScore) || (a.distance - b.distance))
-        .slice(0, 60);
-      setStatus(state.results.length + ' parcheggi · mappa aggiornata');
-      renderList();
-      renderMap();
-    } catch (e) {
-      console.error('Parcheggi:', e);
-      setStatus('Errore ricerca', true);
-      $('mpList').innerHTML = '<div class="mp-empty">Non riesco a contattare il servizio dati dei parcheggi in questo momento. Riprova tra poco.</div>';
+      state.parking = (data.elements || []).map(e => normalize(e, exit)).filter(Boolean).filter(item => {
+        if (item.distance > PARKING_RADIUS || seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      }).sort((a, b) => (b.score - a.score) || (a.distance - b.distance)).slice(0, 80);
+      renderParkingOnMap(exit);
+      renderList(exit);
+      status(state.parking.length + ' parcheggi · ' + (exit.nome || 'uscita'));
+      showParkingPanel(exit);
+    } catch (error) {
+      console.error('Ricerca parcheggi:', error);
+      state.parking = [];
+      status('Errore ricerca parcheggi', true);
+      $('mpList').innerHTML = `<div class="mp-empty"><strong>Non riesco a caricare i parcheggi.</strong><br>Il servizio OpenStreetMap non ha risposto. Riprova tra poco.</div>`;
+      showMapMessage('Servizio parcheggi momentaneamente non disponibile. Riprova.', true);
+    } finally {
+      state.loading = false;
+      busy($('mpNearestExit'), false, '', '🛣️ CERCA VICINO ALL’USCITA');
     }
   }
 
-  function showMapMessage(text, error) {
-    const el = $('mpMap');
-    if (!el) return;
-    el.innerHTML = `<div class="mp-map-message" style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box;font:700 16px/1.4 'Roboto Condensed',sans-serif;color:${error ? '#a52b23' : '#52615b'};background:#e8ece9">${esc(text)}</div>`;
-  }
-
-  function addTileLayer(map) {
-    const providers = [
-      {
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        options: { maxZoom: 19, attribution: '© OpenStreetMap contributors' }
-      },
-      {
-        url: 'https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png',
-        options: { maxZoom: 19, attribution: '© OpenStreetMap contributors' }
-      },
-      {
-        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        options: { maxZoom: 20, attribution: '© OpenStreetMap contributors © CARTO' }
-      }
-    ];
-
-    let index = 0;
-    let layer = null;
-    let loaded = false;
-
-    const tryNext = () => {
-      if (index >= providers.length) {
-        setStatus('Mappa non disponibile', true);
-        showMapMessage('Non riesco a caricare la mappa. Controlla la connessione e riprova.', true);
+  function locate() {
+    const button = $('mpLocate');
+    busy(button, true, '📍 CERCO LA POSIZIONE…', '📍 USA LA MIA POSIZIONE');
+    status('Acquisizione posizione GPS…');
+    if (!navigator.geolocation) {
+      status('GPS non supportato dal browser', true);
+      busy(button, false, '', '📍 USA LA MIA POSIZIONE');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(pos => {
+      state.position = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      let best = null, bestDistance = Infinity;
+      state.exits.forEach(exit => {
+        const d = distance(state.position, { lat: Number(exit.lat), lon: Number(exit.lon) });
+        if (d < bestDistance) { bestDistance = d; best = exit; }
+      });
+      if (!best) {
+        status('Non trovo un’uscita vicina', true);
         return;
       }
-      const provider = providers[index++];
-      if (layer) map.removeLayer(layer);
-      layer = L.tileLayer(provider.url, provider.options);
-      let firstError = false;
-      const onLoad = () => {
-        if (loaded) return;
-        loaded = true;
-        setStatus('Mappa caricata · premi un pulsante per cercare');
-        setTimeout(() => map.invalidateSize(), 100);
-        setTimeout(() => map.invalidateSize(), 500);
-      };
-      const onError = () => {
-        if (loaded || firstError) return;
-        firstError = true;
-        setTimeout(tryNext, 200);
-      };
-      layer.once('load', onLoad);
-      layer.on('tileerror', onError);
-      layer.addTo(map);
-      setTimeout(() => {
-        if (!loaded && !firstError) onError();
-      }, 7000);
-    };
-    tryNext();
+      state.map.flyTo([Number(best.lat), Number(best.lon)], 13, { duration: 0.8 });
+      searchParking(best);
+    }, error => {
+      const msg = error.code === 1 ? 'Posizione negata: abilita la localizzazione per questo sito.' : error.code === 3 ? 'Il GPS sta impiegando troppo tempo. Riprova.' : 'Posizione non disponibile.';
+      status(msg, true);
+    }, { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 });
+    setTimeout(() => busy(button, false, '', '📍 USA LA MIA POSIZIONE'), 31000);
   }
 
-  function initMap() {
-    const el = $('mpMap');
-    if (!el) return;
-    if (!window.L) {
-      setStatus('Libreria mappa non caricata', true);
-      showMapMessage('La libreria della mappa non è stata caricata. Ricarica la pagina.', true);
-      return;
-    }
-    try {
-      state.map = L.map(el, { zoomControl: true, tap: true, preferCanvas: true }).setView([41.9, 12.5], 6);
-      addTileLayer(state.map);
-      setTimeout(() => state.map && state.map.invalidateSize(), 150);
-      setTimeout(() => state.map && state.map.invalidateSize(), 1000);
-    } catch (e) {
-      console.error('Inizializzazione mappa:', e);
-      state.map = null;
-      setStatus('Mappa non disponibile', true);
-      showMapMessage('Errore nell’inizializzazione della mappa. Riprova.', true);
-    }
-  }
-
-  function positionError(error) {
-    if (!error) return 'Posizione non disponibile.';
-    if (error.code === 1) return 'Posizione negata. Su iPhone abilita la Localizzazione per questo sito e la Posizione precisa.';
-    if (error.code === 2) return 'Posizione non disponibile. Controlla GPS/Localizzazione e riprova.';
-    if (error.code === 3) return 'Il GPS sta impiegando troppo tempo. Tieni la pagina aperta e riprova.';
-    return 'Impossibile ottenere la posizione.';
-  }
-
-  function getPosition() {
-    return new Promise((resolve, reject) => {
-      if (!window.isSecureContext) return reject(new Error('La geolocalizzazione richiede HTTPS.'));
-      if (!navigator.geolocation) return reject(new Error('Geolocalizzazione non supportata dal browser.'));
-      setStatus('Acquisizione posizione GPS…');
-      navigator.geolocation.getCurrentPosition(
-        p => {
-          const accuracy = Number(p.coords.accuracy);
-          if (!Number.isFinite(accuracy) || accuracy <= 0) return reject(new Error('Posizione GPS non valida.'));
-          resolve({ lat: Number(p.coords.latitude), lon: Number(p.coords.longitude), accuracy });
-        },
-        e => reject(new Error(positionError(e))),
-        { enableHighAccuracy: true, timeout: GPS_TIMEOUT, maximumAge: 0 }
-      );
-    });
-  }
-
-  async function locate() {
-    const button = $('mpLocate');
-    setButtonBusy(button, true, '📍 RICERCA POSIZIONE…', '📍 USA LA MIA POSIZIONE');
-    try {
-      const pos = await getPosition();
-      state.pos = pos;
-      setStatus(`Posizione trovata · precisione circa ${Math.round(pos.accuracy)} m`);
-      await search(pos, 'near', pos);
-    } catch (e) {
-      console.error('GPS parcheggi:', e);
-      setStatus(e.message || 'Posizione non disponibile', true);
-      $('mpList').innerHTML = `<div class="mp-empty">${esc(e.message || 'Non riesco a ottenere la tua posizione.')}<br><br>Controlla la Localizzazione del browser e riprova.</div>`;
-    } finally {
-      setButtonBusy(button, false, '', '📍 USA LA MIA POSIZIONE');
-    }
-  }
-
-  async function nearestExitSearch() {
-    const button = $('mpNearestExit');
-    setButtonBusy(button, true, '🛣️ CERCO L’USCITA…', '🛣️ CERCA VICINO ALL’USCITA');
-    try {
-      if (!state.exits.length) {
-        const ok = await loadExits();
-        if (!ok) throw new Error('Non riesco a caricare l’elenco delle uscite autostradali.');
-      }
-      const pos = state.pos || await getPosition();
-      state.pos = pos;
-      const nearest = nearestExit(pos);
-      if (!nearest) throw new Error('Non trovo un’uscita autostradale vicina.');
-      const e = nearest.data;
-      const exitPos = { lat: Number(e.lat), lon: Number(e.lon) };
-      setStatus(`Uscita più vicina: ${e.nome || 'uscita'} · ${fmt(nearest.distance)}`);
-      await search(exitPos, 'exit', pos);
-    } catch (e) {
-      console.error('Ricerca uscita:', e);
-      setStatus(e.message || 'Impossibile cercare vicino all’uscita', true);
-      $('mpList').innerHTML = `<div class="mp-empty">${esc(e.message || 'Impossibile cercare vicino all’uscita.')}<br><br>Riprova.</div>`;
-    } finally {
-      setButtonBusy(button, false, '', '🛣️ CERCA VICINO ALL’USCITA');
-    }
+  function navigate(item) {
+    const destination = { nome: item.name, lat: item.lat, lon: item.lon };
+    if (typeof window.apriNavigazione === 'function') window.apriNavigazione(destination);
+    else window.open(`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lon}&travelmode=driving`, '_blank');
   }
 
   function loadProfile() {
-    const v = window.getProfiloMezzoPesante ? window.getProfiloMezzoPesante() : { tipo: 'Autoarticolato', lunghezza: 16.5, larghezza: 2.55, altezza: 4, peso: 40, rimorchio: true };
+    const v = typeof window.getProfiloMezzoPesante === 'function' ? window.getProfiloMezzoPesante() : { tipo: 'Autoarticolato', lunghezza: 16.5, larghezza: 2.55, altezza: 4, peso: 40, rimorchio: true };
     if ($('mpTipo')) $('mpTipo').value = v.tipo || 'Autoarticolato';
     if ($('mpL')) $('mpL').value = v.lunghezza ?? 16.5;
     if ($('mpW')) $('mpW').value = v.larghezza ?? 2.55;
@@ -475,32 +413,57 @@
       rimorchio: !!$('mpR')?.checked
     };
     const saved = $('mpSaved');
-    const valid = profile.lunghezza > 0 && profile.lunghezza <= 30 && profile.larghezza > 0 && profile.larghezza <= 5 && profile.altezza > 0 && profile.altezza <= 6 && profile.peso > 0 && profile.peso <= 100;
+    const valid = profile.lunghezza > 0 && profile.larghezza > 0 && profile.altezza > 0 && profile.peso > 0;
     if (!valid) {
-      if (saved) { saved.textContent = '⚠️ Controlla lunghezza, larghezza, altezza e peso.'; saved.style.color = '#a52b23'; saved.style.display = 'block'; }
+      saved.textContent = '⚠️ Inserisci tutte le dimensioni del mezzo.';
+      saved.style.color = '#a52b23';
       return;
     }
     try {
-      if (window.salvaProfiloMezzoPesante) window.salvaProfiloMezzoPesante(profile);
+      if (typeof window.salvaProfiloMezzoPesante === 'function') window.salvaProfiloMezzoPesante(profile);
       else localStorage.setItem('1km_mezzo_pesante_v2', JSON.stringify(profile));
       localStorage.setItem('1km-esimangia-mezzo', JSON.stringify({ lunghezzaM: profile.lunghezza, larghezzaM: profile.larghezza, altezzaM: profile.altezza, pesoKg: profile.peso * 1000 }));
-      if (saved) { saved.textContent = '✓ MEZZO SALVATO — dimensioni memorizzate su questo dispositivo.'; saved.style.color = '#176534'; saved.style.display = 'block'; }
-      if (state.results.length && window.verificaCompatibilitaParcheggio) {
-        state.results = state.results.map(r => Object.assign(r, { compat: window.verificaCompatibilitaParcheggio(r.limits) }));
-        renderList(); renderMap();
-      }
-    } catch (e) {
-      console.error('Salvataggio mezzo:', e);
-      if (saved) { saved.textContent = '❌ Non riesco a salvare i dati su questo dispositivo.'; saved.style.color = '#a52b23'; saved.style.display = 'block'; }
+      saved.textContent = '✓ MEZZO SALVATO — dimensioni memorizzate su questo dispositivo.';
+      saved.style.color = '#176534';
+    } catch (error) {
+      console.error(error);
+      saved.textContent = '❌ Non riesco a salvare i dati su questo dispositivo.';
+      saved.style.color = '#a52b23';
     }
   }
 
+  document.addEventListener('click', event => {
+    const exitButton = event.target.closest && event.target.closest('[data-parcheggi-uscita]');
+    if (exitButton) {
+      event.preventDefault();
+      const id = String(exitButton.getAttribute('data-parcheggi-uscita'));
+      const exit = state.exits.find(e => String(e.id) === id);
+      if (exit) {
+        if (state.map) state.map.flyTo([Number(exit.lat), Number(exit.lon)], 14, { duration: 0.6 });
+        searchParking(exit);
+      }
+      return;
+    }
+
+    const navButton = event.target.closest && event.target.closest('[data-naviga-parcheggio]');
+    if (navButton) {
+      const id = String(navButton.getAttribute('data-naviga-parcheggio'));
+      const item = state.parking.find(p => p.id === id);
+      if (item) navigate(item);
+    }
+  }, true);
+
   document.addEventListener('DOMContentLoaded', async () => {
-    initMap();
+    const ready = initMap();
+    if (!ready) return;
     loadProfile();
     $('mpLocate')?.addEventListener('click', locate);
-    $('mpNearestExit')?.addEventListener('click', nearestExitSearch);
-    $('mpRefresh')?.addEventListener('click', () => state.pos ? search(state.searchCenter || state.pos, state.searchMode, state.pos) : locate());
+    $('mpNearestExit')?.addEventListener('click', async () => {
+      if (state.selectedExit) return searchParking(state.selectedExit);
+      if (state.position) return locate();
+      return locate();
+    });
+    $('mpRefresh')?.addEventListener('click', () => state.selectedExit ? searchParking(state.selectedExit) : loadExits());
     $('mpSave')?.addEventListener('click', saveProfile);
     await loadExits();
   });
