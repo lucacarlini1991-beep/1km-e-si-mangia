@@ -72,13 +72,13 @@
     if (el) el.remove();
   }
 
-  // IDENTICO approccio di Esplora Uscite: Leaflet + OpenStreetMap gratuito.
+  // MAPPA: stessa inizializzazione della pagina ESPLORA LE USCITE.
   function initMap() {
     if (!window.L) {
       status('Libreria mappa non caricata', true);
-      showMapMessage('La libreria della mappa non è stata caricata.', true);
       return false;
     }
+
     try {
       state.map = L.map('mpMap', {
         center: [42.5, 12.5],
@@ -87,11 +87,16 @@
       });
       window.appMap = state.map;
 
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(state.map);
+      // IDENTICO tile layer usato da ESPLORA LE USCITE.
+      L.tileLayer(
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }
+      ).addTo(state.map);
 
+      // IDENTICO clustering usato da ESPLORA LE USCITE.
       state.exitCluster = L.markerClusterGroup({
         showCoverageOnHover: false,
         spiderfyOnMaxZoom: true,
@@ -100,15 +105,18 @@
         maxClusterRadius: 55
       });
       state.map.addLayer(state.exitCluster);
+
+      // Layer separato per i parcheggi, come il layer ristoranti.
       state.parkingLayer = L.layerGroup().addTo(state.map);
 
-      setTimeout(() => state.map && state.map.invalidateSize(true), 100);
-      setTimeout(() => state.map && state.map.invalidateSize(true), 700);
+      setTimeout(() => state.map && state.map.invalidateSize(), 100);
+      setTimeout(() => state.map && state.map.invalidateSize(), 600);
+      setTimeout(() => state.map && state.map.invalidateSize(), 1500);
+      status('Mappa caricata · scegli un’uscita per vedere i parcheggi');
       return true;
     } catch (error) {
       console.error('Mappa parcheggi:', error);
-      status('Mappa non disponibile', true);
-      showMapMessage('Errore nell’inizializzazione della mappa.', true);
+      status('Errore nell’inizializzazione della mappa', true);
       return false;
     }
   }
@@ -143,7 +151,7 @@
       state.exits = Array.isArray(data) ? data.filter(validExit) : [];
       if (!state.exits.length) throw new Error('Nessuna uscita nel database');
       drawExits();
-      status('Mappa pronta · scegli un’uscita per vedere i parcheggi');
+      if (state.map) { /* stato gestito dal caricamento delle tile */ }
       return true;
     } catch (error) {
       console.error('Uscite:', error);
@@ -173,7 +181,7 @@
 
   function parkingQuery(exit) {
     const lat = Number(exit.lat), lon = Number(exit.lon);
-    return `[out:json][timeout:35];(nwr["amenity"="parking"](around:${PARKING_RADIUS},${lat},${lon});nwr["amenity"="parking_space"](around:${PARKING_RADIUS},${lat},${lon});nwr["highway"="services"](around:${PARKING_RADIUS},${lat},${lon});nwr["hgv"](around:${PARKING_RADIUS},${lat},${lon});nwr["access:hgv"](around:${PARKING_RADIUS},${lat},${lon});nwr["capacity:hgv"](around:${PARKING_RADIUS},${lat},${lon}););out center tags;`;
+    return `[out:json][timeout:25];(nwr["amenity"="parking"](around:${PARKING_RADIUS},${lat},${lon});nwr["highway"="services"](around:${PARKING_RADIUS},${lat},${lon});nwr["amenity"="rest_area"](around:${PARKING_RADIUS},${lat},${lon}););out center tags;`;
   }
 
   async function overpass(query) {
@@ -181,7 +189,7 @@
     for (const url of OVERPASS) {
       try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 45000);
+        const timer = setTimeout(() => controller.abort(), 32000);
         const response = await fetch(url + '?data=' + encodeURIComponent(query), { headers: { Accept: 'application/json' }, signal: controller.signal });
         clearTimeout(timer);
         if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -190,7 +198,7 @@
         lastError = error;
         try {
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 45000);
+          const timer = setTimeout(() => controller.abort(), 32000);
           const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(query), signal: controller.signal });
           clearTimeout(timer);
           if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -345,7 +353,6 @@
       renderParkingOnMap(exit);
       renderList(exit);
       status(state.parking.length + ' parcheggi · ' + (exit.nome || 'uscita'));
-      showParkingPanel(exit);
     } catch (error) {
       console.error('Ricerca parcheggi:', error);
       state.parking = [];
