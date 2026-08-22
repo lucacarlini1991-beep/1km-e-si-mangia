@@ -8,7 +8,7 @@
     'https://overpass.private.coffee/api/interpreter'
   ];
   const RADIUS = 2500;
-  const state = { map:null, exits:[], selectedExit:null, parking:[], parkingLayer:null, exitLayer:null, userMarker:null, userPosition:null, fromGps:false, loading:false };
+  const state = { map:null, exits:[], selectedExit:null, parking:[], parkingLayer:null, exitLayer:null, userMarker:null, loading:false };
 
   const $ = id => document.getElementById(id);
   const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
@@ -71,16 +71,14 @@
     }catch(e){console.error(e);status('Impossibile caricare le uscite',true);}
   }
 
-  function query(exit){
+  function query(exit, radius){
     const lat=Number(exit.lat),lon=Number(exit.lon);
-    return `[out:json][timeout:35];(
-      nwr["amenity"="parking"](around:${RADIUS},${lat},${lon});
-      nwr["amenity"="parking_space"](around:${RADIUS},${lat},${lon});
-      nwr["highway"="services"](around:${RADIUS},${lat},${lon});
-      nwr["highway"="rest_area"](around:${RADIUS},${lat},${lon});
-      nwr["parking"="truck"](around:${RADIUS},${lat},${lon});
-      nwr["hgv"="yes"](around:${RADIUS},${lat},${lon});
-      nwr["capacity:hgv"](around:${RADIUS},${lat},${lon});
+    const r=Number(radius||2500);
+    return `[out:json][timeout:20];(
+      nwr["amenity"="parking"](around:${r},${lat},${lon});
+      nwr["amenity"="rest_area"](around:${r},${lat},${lon});
+      nwr["highway"="services"](around:${r},${lat},${lon});
+      nwr["highway"="rest_area"](around:${r},${lat},${lon});
     );out center tags;`;
   }
 
@@ -148,10 +146,8 @@
   function renderParking(exit){
     state.parkingLayer.clearLayers();
     const bounds=L.latLngBounds([[Number(exit.lat),Number(exit.lon)]]);
-    if(state.userPosition) bounds.extend([state.userPosition.lat,state.userPosition.lon]);
     const icon=parkingIcon();
     state.parking.forEach(x=>{const m=L.marker([x.lat,x.lon],{icon});m.bindPopup(`<div class="parking-popup"><strong>${esc(x.name)}</strong><small>📍 ${fmt(x.distance)} dall’uscita</small><small>${compatText(x)}</small>${services(x.tags).length?`<small>${esc(services(x.tags).join(' · '))}</small>`:''}<button type="button" class="parking-popup-nav" data-naviga-parcheggio="${esc(x.id)}">🧭 NAVIGA</button></div>`);state.parkingLayer.addLayer(m);bounds.extend([x.lat,x.lon]);});
-    if(!state.fromGps && bounds.isValid())state.map.fitBounds(bounds,{padding:[40,40],maxZoom:15});
     setTimeout(()=>state.map.invalidateSize(true),100);
   }
   function renderList(exit){
@@ -160,23 +156,51 @@
     el.innerHTML=state.parking.map((x,i)=>`<article class="mp-card"><h3>🚛 ${esc(x.name)}</h3><div class="mp-meta"><span class="mp-chip">📍 ${fmt(x.distance)} dall’uscita</span><span class="mp-chip ${x.compat===true?'good':x.compat===false?'bad':'warn'}">${compatText(x)}</span></div><div class="mp-services">${services(x.tags).length?esc(services(x.tags).join(' · ')):'Servizi non indicati'}${Object.values(x.limits).some(Boolean)?'<br>'+Object.entries({'H':x.limits.height,'Larg.':x.limits.width,'Lung.':x.limits.length,'Peso':x.limits.weight}).filter(([,v])=>v).map(([k,v])=>k+' '+esc(v)).join(' · '):''}</div><div class="mp-card-actions"><button class="mp-btn dark" type="button" data-nav-index="${i}">🧭 NAVIGA</button><button class="mp-btn" type="button" data-map-index="${i}">📍 MAPPA</button></div></article>`).join('');
   }
 
-  async function searchParking(exit, options){
+  async function searchParking(exit){
     if(!exit||state.loading)return;
-    options=options||{};
-    state.fromGps=options.fromGps===true;
-    state.loading=true;state.selectedExit=exit;
+    state.loading=true;
+    state.selectedExit=exit;
+
     busy($('mpNearestExit'),true,'🛣️ CERCO PARCHEGGI…','🛣️ CERCA VICINO ALL\'USCITA');
     status('Cerco parcheggi vicino a '+(exit.nome||'questa uscita')+'…');
     $('mpList').innerHTML='<div class="mp-loading">⏳ Cerco i parcheggi intorno all’uscita…</div>';
+
     try{
-      const data=await overpass(query(exit));
+      let data=await overpass(query(exit,2500));
+      let elements=Array.isArray(data.elements)?data.elements:[];
+
+      // Secondo tentativo, più ampio ma sempre semplice, solo se il primo è vuoto.
+      if(!elements.length){
+        status('Nessun parcheggio entro 2,5 km · cerco entro 5 km…');
+        data=await overpass(query(exit,5000));
+        elements=Array.isArray(data.elements)?data.elements:[];
+      }
+
       const seen=new Set();
-      state.parking=(data.elements||[]).map(e=>normalize(e,exit)).filter(Boolean).filter(x=>x.distance<=RADIUS&&!seen.has(x.id)&&seen.add(x.id)).sort((a,b)=>(a.distance-b.distance)).slice(0,100);
-      renderParking(exit);renderList(exit);
-      status(state.parking.length+' parcheggi trovati · '+(exit.nome||'uscita'));
+      state.parking=elements
+        .map(e=>normalize(e,exit))
+        .filter(Boolean)
+        .filter(x=>!seen.has(x.id)&&seen.add(x.id))
+        .sort((a,b)=>(a.distance-b.distance))
+        .slice(0,100);
+
+      renderParking(exit);
+      renderList(exit);
+      status(
+        state.parking.length
+          ? state.parking.length+' parcheggi trovati · '+(exit.nome||'uscita')
+          : 'Nessun parcheggio trovato · '+(exit.nome||'uscita')
+      );
     }catch(e){
-      console.error(e);state.parking=[];renderParking(exit);renderList(exit);status('Servizio parcheggi non disponibile · riprova',true);
-    }finally{state.loading=false;busy($('mpNearestExit'),false,'','🛣️ CERCA VICINO ALL\'USCITA');}
+      console.error(e);
+      state.parking=[];
+      renderParking(exit);
+      renderList(exit);
+      status('Servizio parcheggi non disponibile · riprova',true);
+    }finally{
+      state.loading=false;
+      busy($('mpNearestExit'),false,'','🛣️ CERCA VICINO ALL\'USCITA');
+    }
   }
 
   function navigate(x){
@@ -192,11 +216,10 @@
     if(!(p.lunghezza>0&&p.larghezza>0&&p.altezza>0&&p.peso>0)){msg.textContent='⚠️ Inserisci tutte le dimensioni del mezzo.';msg.style.color='#a52b23';return;}
     localStorage.setItem('1km-esimangia-mezzo',JSON.stringify({lunghezzaM:p.lunghezza,larghezzaM:p.larghezza,altezzaM:p.altezza,pesoKg:p.peso*1000}));
     msg.textContent='✓ MEZZO SALVATO — dimensioni memorizzate su questo dispositivo.';msg.style.color='#176534';
-    if(state.selectedExit) searchParking(state.selectedExit,{fromGps:false});
+    if(state.selectedExit) searchParking(state.selectedExit);
   }
   async function handleNearestFromPosition(pos){
     const here={lat:Number(pos.lat),lon:Number(pos.lon)};
-    state.userPosition=here;
 
     let best=null,bestD=Infinity;
     state.exits.forEach(e=>{
@@ -205,23 +228,15 @@
     });
 
     if(!best){
-      status('Posizione GPS trovata · nessuna uscita vicina disponibile',true);
-      if(state.map) state.map.setView([here.lat,here.lon],15,{animate:true});
+      status('Posizione GPS trovata · nessuna uscita disponibile',true);
       return;
     }
 
     status('Posizione GPS trovata · uscita più vicina: '+(best.nome||'uscita autostradale'));
 
-    // L'uscita serve SOLO per cercare i parcheggi.
-    // La mappa resta sulla posizione reale del mezzo.
-    await searchParking(best,{fromGps:true});
-
-    // Una sola centratura finale sulla posizione GPS reale.
-    // Nessun fitBounds tra mezzo e casello: evita il rimbalzo.
-    if(state.map){
-      state.map.setView([here.lat,here.lon],15,{animate:true});
-      setTimeout(()=>state.map.invalidateSize(true),100);
-    }
+    // L'uscita viene usata esclusivamente per la ricerca parcheggi.
+    // Nessun setView / flyTo / fitBounds qui.
+    await searchParking(best);
   }
 
   function locate(){
@@ -248,7 +263,7 @@
 
   document.addEventListener('click',e=>{
     const exitBtn=e.target.closest?.('[data-parcheggi-uscita]');
-    if(exitBtn){const exit=state.exits.find(x=>String(x.id)===String(exitBtn.dataset.parcheggiUscita));if(exit)searchParking(exit,{fromGps:false});return;}
+    if(exitBtn){const exit=state.exits.find(x=>String(x.id)===String(exitBtn.dataset.parcheggiUscita));if(exit)searchParking(exit);return;}
     const nav=e.target.closest?.('[data-naviga-parcheggio]');if(nav){const x=state.parking.find(p=>p.id===nav.dataset.navigaParcheggio);if(x)navigate(x);return;}
     const ni=e.target.closest?.('[data-nav-index]');if(ni){const x=state.parking[Number(ni.dataset.navIndex)];if(x)navigate(x);return;}
     const mi=e.target.closest?.('[data-map-index]');if(mi){const x=state.parking[Number(mi.dataset.mapIndex)];if(x)state.map.flyTo([x.lat,x.lon],16,{duration:.5});return;}
@@ -263,7 +278,7 @@
       if(state.selectedExit) searchParking(state.selectedExit);
       else locate();
     });
-    $('mpRefresh')?.addEventListener('click',()=>state.selectedExit?searchParking(state.selectedExit,{fromGps:false}):loadExits());
+    $('mpRefresh')?.addEventListener('click',()=>state.selectedExit?searchParking(state.selectedExit):loadExits());
     $('mpSave')?.addEventListener('click',saveProfile);
     loadExits();
   }

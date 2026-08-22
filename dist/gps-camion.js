@@ -102,7 +102,7 @@
       return false;
     }
     save(normalized);
-    draw(normalized, center);
+    draw(normalized, false);
     callbacks?.onSuccess?.(normalized);
     return true;
   }
@@ -137,7 +137,7 @@
 
     navigator.geolocation.getCurrentPosition(
       function (position) {
-        if (!handle(position, callbacks, true)) {
+        if (!handle(position, callbacks, false)) {
           running = false;
           return;
         }
