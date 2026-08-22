@@ -4,11 +4,10 @@
 
   const OVERPASS = [
     'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.private.coffee/api/interpreter'
+    'https://overpass.kumi.systems/api/interpreter'
   ];
-  const RADIUS = 2500;
-  const state = { map:null, exits:[], selectedExit:null, parking:[], parkingLayer:null, exitLayer:null, userMarker:null, loading:false };
+  const RADIUS = 5000;
+  const state = { map:null, exits:[], selectedExit:null, parking:[], parkingLayer:null, exitLayer:null, userMarker:null, userPosition:null, fromGps:false, loading:false };
 
   const $ = id => document.getElementById(id);
   const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
@@ -71,32 +70,31 @@
     }catch(e){console.error(e);status('Impossibile caricare le uscite',true);}
   }
 
-  function query(exit, radius){
+  function query(exit){
     const lat=Number(exit.lat),lon=Number(exit.lon);
-    const r=Number(radius||2500);
-    return `[out:json][timeout:20];(
-      nwr["amenity"="parking"](around:${r},${lat},${lon});
-      nwr["amenity"="rest_area"](around:${r},${lat},${lon});
-      nwr["highway"="services"](around:${r},${lat},${lon});
-      nwr["highway"="rest_area"](around:${r},${lat},${lon});
+    return `[out:json][timeout:15];(
+      nwr["amenity"="parking"](around:${RADIUS},${lat},${lon});
+      nwr["amenity"="rest_area"](around:${RADIUS},${lat},${lon});
+      nwr["highway"="services"](around:${RADIUS},${lat},${lon});
+      nwr["highway"="rest_area"](around:${RADIUS},${lat},${lon});
     );out center tags;`;
   }
 
   async function overpass(q){
     let last=null;
     for(const url of OVERPASS){
-      for(const method of ['GET','POST']){
-        try{
-          const controller=new AbortController();
-          const timer=setTimeout(()=>controller.abort(),35000);
-          const options={signal:controller.signal,headers:{Accept:'application/json'}};
-          let target=url;
-          if(method==='GET') target += '?data='+encodeURIComponent(q);
-          else {options.method='POST';options.headers['Content-Type']='application/x-www-form-urlencoded';options.body='data='+encodeURIComponent(q);}
-          const r=await fetch(target,options);clearTimeout(timer);
-          if(!r.ok)throw new Error('HTTP '+r.status);
-          return await r.json();
-        }catch(e){last=e;console.warn('Overpass',method,url,e.message);}
+      try{
+        const controller=new AbortController();
+        const timer=setTimeout(()=>controller.abort(),18000);
+        const target=url+'?data='+encodeURIComponent(q);
+        const r=await fetch(target,{signal:controller.signal,headers:{Accept:'application/json'}});
+        clearTimeout(timer);
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        const data=await r.json();
+        return data;
+      }catch(e){
+        last=e;
+        console.warn('Overpass',url,e.message);
       }
     }
     throw last||new Error('Overpass non disponibile');
@@ -145,9 +143,8 @@
 
   function renderParking(exit){
     state.parkingLayer.clearLayers();
-    const bounds=L.latLngBounds([[Number(exit.lat),Number(exit.lon)]]);
     const icon=parkingIcon();
-    state.parking.forEach(x=>{const m=L.marker([x.lat,x.lon],{icon});m.bindPopup(`<div class="parking-popup"><strong>${esc(x.name)}</strong><small>📍 ${fmt(x.distance)} dall’uscita</small><small>${compatText(x)}</small>${services(x.tags).length?`<small>${esc(services(x.tags).join(' · '))}</small>`:''}<button type="button" class="parking-popup-nav" data-naviga-parcheggio="${esc(x.id)}">🧭 NAVIGA</button></div>`);state.parkingLayer.addLayer(m);bounds.extend([x.lat,x.lon]);});
+    state.parking.forEach(x=>{const m=L.marker([x.lat,x.lon],{icon});m.bindPopup(`<div class="parking-popup"><strong>${esc(x.name)}</strong><small>📍 ${fmt(x.distance)} dall’uscita</small><small>${compatText(x)}</small>${services(x.tags).length?`<small>${esc(services(x.tags).join(' · '))}</small>`:''}<button type="button" class="parking-popup-nav" data-naviga-parcheggio="${esc(x.id)}">🧭 NAVIGA</button></div>`);state.parkingLayer.addLayer(m);});
     setTimeout(()=>state.map.invalidateSize(true),100);
   }
   function renderList(exit){
@@ -156,47 +153,40 @@
     el.innerHTML=state.parking.map((x,i)=>`<article class="mp-card"><h3>🚛 ${esc(x.name)}</h3><div class="mp-meta"><span class="mp-chip">📍 ${fmt(x.distance)} dall’uscita</span><span class="mp-chip ${x.compat===true?'good':x.compat===false?'bad':'warn'}">${compatText(x)}</span></div><div class="mp-services">${services(x.tags).length?esc(services(x.tags).join(' · ')):'Servizi non indicati'}${Object.values(x.limits).some(Boolean)?'<br>'+Object.entries({'H':x.limits.height,'Larg.':x.limits.width,'Lung.':x.limits.length,'Peso':x.limits.weight}).filter(([,v])=>v).map(([k,v])=>k+' '+esc(v)).join(' · '):''}</div><div class="mp-card-actions"><button class="mp-btn dark" type="button" data-nav-index="${i}">🧭 NAVIGA</button><button class="mp-btn" type="button" data-map-index="${i}">📍 MAPPA</button></div></article>`).join('');
   }
 
-  async function searchParking(exit){
+  async function searchParking(exit, options){
     if(!exit||state.loading)return;
     state.loading=true;
     state.selectedExit=exit;
 
     busy($('mpNearestExit'),true,'🛣️ CERCO PARCHEGGI…','🛣️ CERCA VICINO ALL\'USCITA');
-    status('Cerco parcheggi vicino a '+(exit.nome||'questa uscita')+'…');
+    status('Cerco parcheggi entro 5 km da '+(exit.nome||'questa uscita')+'…');
     $('mpList').innerHTML='<div class="mp-loading">⏳ Cerco i parcheggi intorno all’uscita…</div>';
 
     try{
-      let data=await overpass(query(exit,2500));
-      let elements=Array.isArray(data.elements)?data.elements:[];
-
-      // Secondo tentativo, più ampio ma sempre semplice, solo se il primo è vuoto.
-      if(!elements.length){
-        status('Nessun parcheggio entro 2,5 km · cerco entro 5 km…');
-        data=await overpass(query(exit,5000));
-        elements=Array.isArray(data.elements)?data.elements:[];
-      }
-
+      const data=await overpass(query(exit));
       const seen=new Set();
-      state.parking=elements
+
+      state.parking=(data.elements||[])
         .map(e=>normalize(e,exit))
         .filter(Boolean)
-        .filter(x=>!seen.has(x.id)&&seen.add(x.id))
-        .sort((a,b)=>(a.distance-b.distance))
+        .filter(x=>x.distance<=RADIUS&&!seen.has(x.id)&&seen.add(x.id))
+        .sort((a,b)=>a.distance-b.distance)
         .slice(0,100);
 
       renderParking(exit);
       renderList(exit);
-      status(
-        state.parking.length
-          ? state.parking.length+' parcheggi trovati · '+(exit.nome||'uscita')
-          : 'Nessun parcheggio trovato · '+(exit.nome||'uscita')
-      );
+
+      if(state.parking.length){
+        status(state.parking.length+' parcheggi trovati · '+(exit.nome||'uscita'));
+      }else{
+        status('Nessun parcheggio OSM trovato entro 5 km · '+(exit.nome||'uscita'));
+      }
     }catch(e){
       console.error(e);
       state.parking=[];
       renderParking(exit);
       renderList(exit);
-      status('Servizio parcheggi non disponibile · riprova',true);
+      status('Ricerca parcheggi non disponibile · riprova tra poco',true);
     }finally{
       state.loading=false;
       busy($('mpNearestExit'),false,'','🛣️ CERCA VICINO ALL\'USCITA');
@@ -234,8 +224,8 @@
 
     status('Posizione GPS trovata · uscita più vicina: '+(best.nome||'uscita autostradale'));
 
-    // L'uscita viene usata esclusivamente per la ricerca parcheggi.
-    // Nessun setView / flyTo / fitBounds qui.
+    // Il GPS serve solo a scegliere l'uscita.
+    // La ricerca parcheggi non cambia la posizione/zoom della mappa.
     await searchParking(best);
   }
 
