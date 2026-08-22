@@ -6,7 +6,7 @@
   "use strict";
 
   const PROFILE_KEY = "1km_mezzo_pesante_v2";
-  const POSITION_KEY = "1km-posizione";
+  const TEST_POSITION_KEY = "1km-camion-posizione-test";
   const ROUTING_URL = "https://valhalla1.openstreetmap.de/route";
 
   const DEFAULTS = {
@@ -52,9 +52,9 @@
     };
   }
 
-  function getSavedPosition() {
+  function getTestPosition() {
     try {
-      const p = JSON.parse(sessionStorage.getItem(POSITION_KEY) || "null");
+      const p = JSON.parse(localStorage.getItem(TEST_POSITION_KEY) || "null");
       if (!p) return null;
       const lat = number(p.lat), lon = number(p.lng ?? p.lon);
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
@@ -64,21 +64,39 @@
     }
   }
 
-  function getCurrentPosition() {
-    const saved = getSavedPosition();
-    if (saved) return Promise.resolve(saved);
+  // GPS CAMION SEPARATO: non legge né modifica il modulo GPS esistente.
+  // Se viene passata una posizione esplicita, quella ha la precedenza.
+  function getTruckPosition(explicitOrigin) {
+    if (explicitOrigin) {
+      const lat = number(explicitOrigin.lat), lon = number(explicitOrigin.lng ?? explicitOrigin.lon);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) return Promise.resolve({ lat, lon });
+    }
+
+    const test = getTestPosition();
+    if (test) return Promise.resolve(test);
 
     if (!navigator.geolocation) {
-      return Promise.reject(new Error("La geolocalizzazione non è disponibile su questo dispositivo."));
+      return Promise.reject(new Error("Il GPS del modulo camion non è disponibile su questo dispositivo."));
     }
 
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
         pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-        () => reject(new Error("Non riesco a ottenere la tua posizione. Attiva la posizione e riprova.")),
-        { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+        () => reject(new Error("Il GPS camion non riesce a ottenere la posizione. Su Chromebook puoi impostare una posizione di test.")),
+        { enableHighAccuracy: true, timeout: 30000, maximumAge: 5000 }
       );
     });
+  }
+
+  function setTestPosition(position) {
+    const lat = number(position?.lat), lon = number(position?.lng ?? position?.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error("Posizione di test non valida.");
+    localStorage.setItem(TEST_POSITION_KEY, JSON.stringify({ lat, lon }));
+    return { lat, lon };
+  }
+
+  function clearTestPosition() {
+    localStorage.removeItem(TEST_POSITION_KEY);
   }
 
   // Polyline6 di Valhalla: lat/lon con precisione 1e-6.
@@ -260,7 +278,7 @@
     }
   }
 
-  async function navigate(destination) {
+  async function navigate(destination, explicitOrigin) {
     const coordinate = typeof window.coordinateNavigazione === "function"
       ? window.coordinateNavigazione(destination)
       : { lat: number(destination?.lat), lon: number(destination?.lon) };
@@ -273,7 +291,7 @@
     const overlay = createOverlay(destination);
 
     try {
-      const origin = await getCurrentPosition();
+      const origin = await getTruckPosition(explicitOrigin);
       const result = await calculateRoute(origin, coordinate);
       render(overlay, result);
     } catch (error) {
@@ -291,6 +309,8 @@
     disponibile: function () { return true; },
     getProfilo: getProfile,
     naviga: navigate,
+    impostaPosizioneTest: setTestPosition,
+    rimuoviPosizioneTest: clearTestPosition,
     chiudi: close
   };
 
