@@ -7,8 +7,8 @@
     'https://overpass.kumi.systems/api/interpreter',
     'https://overpass.private.coffee/api/interpreter'
   ];
-  const SEARCH_RADIUS = 15000;
-  const EXIT_RADIUS = 12000;
+  const SEARCH_RADIUS = 12000;
+  const EXIT_RADIUS = 10000;
   const GPS_TIMEOUT = 45000;
   const state = { pos: null, exits: [], results: [], map: null, markers: null, searchCenter: null, searchMode: 'near' };
   const $ = id => document.getElementById(id);
@@ -50,9 +50,13 @@
     const lat = pos.lat, lon = pos.lon;
     // Recuperiamo i parcheggi/aree di servizio in zona e poi selezioniamo
     // quelli realmente interessanti per mezzi pesanti dai tag OSM.
-    return `[out:json][timeout:30];(
+    return `[out:json][timeout:40];(
       nwr["amenity"="parking"](around:${radius},${lat},${lon});
+      nwr["amenity"="parking_space"](around:${radius},${lat},${lon});
       nwr["highway"="services"](around:${radius},${lat},${lon});
+      nwr["hgv"](around:${radius},${lat},${lon});
+      nwr["access:hgv"](around:${radius},${lat},${lon});
+      nwr["capacity:hgv"](around:${radius},${lat},${lon});
     );out center tags;`;
   }
 
@@ -62,10 +66,9 @@
       try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 50000);
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'data=' + encodeURIComponent(q),
+        let response = await fetch(url + '?data=' + encodeURIComponent(q), {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
           signal: controller.signal
         });
         clearTimeout(timer);
@@ -73,6 +76,19 @@
         return await response.json();
       } catch (e) {
         last = e;
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 50000);
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'data=' + encodeURIComponent(q),
+            signal: controller.signal
+          });
+          clearTimeout(timer);
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          return await response.json();
+        } catch (e2) { last = e2; }
       }
     }
     throw last || new Error('Servizio mappe non disponibile');
@@ -152,8 +168,9 @@
     const tags = e.tags || {}, p = coord(e);
     if (!p) return null;
     const score = truckScore(tags);
-    // Non scartiamo i parcheggi privi di tag HGV: molti dati OSM non dichiarano esplicitamente hgv.
-    // Li mostriamo come 'da verificare' e li ordiniamo dopo quelli chiaramente HGV.
+    // Un parcheggio senza tag HGV non viene scartato: lo mostriamo come
+    // 'da verificare'. In OSM molti parcheggi camion non hanno tutti i tag.
+    if (tags.access === 'no' || tags.access === 'private') return null;
     const exit = nearestExit(p);
     const lim = limits(tags);
     const compat = window.verificaCompatibilitaParcheggio
@@ -176,36 +193,50 @@
 
   function renderMap() {
     if (!state.map || !window.L) return;
-    state.map.invalidateSize();
-    if (state.markers) state.markers.clearLayers();
-    else {
-      state.markers = (window.L && L.markerClusterGroup)
-        ? L.markerClusterGroup({ showCoverageOnHover:false, spiderfyOnMaxZoom:true, maxClusterRadius:45 })
+    state.map.invalidateSize(true);
+    if (!state.markers) {
+      state.markers = window.L.markerClusterGroup
+        ? L.markerClusterGroup({ showCoverageOnHover:false, spiderfyOnMaxZoom:true, maxClusterRadius:40, disableClusteringAtZoom:15 })
         : L.layerGroup();
       state.map.addLayer(state.markers);
+    } else {
+      state.markers.clearLayers();
     }
+
     const pts = [];
     if (state.searchCenter) {
-      const m = L.marker([state.searchCenter.lat, state.searchCenter.lon]);
-      m.bindPopup(state.searchMode === 'exit' ? '<b>Uscita autostradale</b>' : '<b>La tua posizione</b>');
-      state.markers.addLayer(m);
-      pts.push([state.searchCenter.lat, state.searchCenter.lon]);
-    }
-    for (const r of state.results) {
-      const color = r.compat && r.compat.ok === true ? '#075c3b' : r.compat && r.compat.ok === false ? '#9a2929' : '#8a5a00';
-      // Stile volutamente simile ai marker ristorante già presenti nel sito.
-      const icon = L.divIcon({
-        className: 'parking-map-icon',
-        html: `<div style="width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid ${color};display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35)">🚛</div>`,
-        iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -17]
+      const isExit = state.searchMode === 'exit';
+      const centerIcon = L.divIcon({
+        className: 'parking-center-icon',
+        html: `<div style="width:38px;height:38px;border-radius:50%;background:#f6a916;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 3px 10px rgba(0,0,0,.35)">${isExit ? '🛣️' : '📍'}</div>`,
+        iconSize:[38,38], iconAnchor:[19,19], popupAnchor:[0,-19]
       });
-      const m = L.marker([r.lat, r.lon], { icon });
-      m.bindPopup(`<div style="min-width:190px;font-family:system-ui,sans-serif"><b>${esc(r.name)}</b><br><span>${fmt(r.distance)}</span>${r.exit ? `<br><span>🛣️ ${fmt(r.exit.distance)} dall'uscita ${esc(r.exit.data.nome || '')}</span>` : ''}<br><button type="button" onclick="window._mpNav && window._mpNav(${JSON.stringify(r.name)},${r.lat},${r.lon})" style="margin-top:8px;width:100%;padding:8px;border:0;border-radius:8px;background:#075c3b;color:#fff;font-weight:800">🧭 NAVIGA</button></div>`);
-      state.markers.addLayer(m);
-      pts.push([r.lat, r.lon]);
+      const cm = L.marker([state.searchCenter.lat,state.searchCenter.lon], {icon:centerIcon});
+      cm.bindPopup(isExit ? '<strong>🛣️ Uscita autostradale</strong><br>Parcheggi cercati in questa zona.' : '<strong>📍 La tua posizione</strong><br>Parcheggi cercati in questa zona.');
+      state.markers.addLayer(cm);
+      pts.push([state.searchCenter.lat,state.searchCenter.lon]);
     }
-    if (pts.length === 1) state.map.setView(pts[0], 12);
-    else if (pts.length > 1) state.map.fitBounds(pts, { padding: [30, 30] });
+
+    for (const r of state.results) {
+      const color = r.compat?.ok === true ? '#075c3b' : r.compat?.ok === false ? '#9a2929' : '#f0a400';
+      const icon = L.divIcon({
+        className:'parking-map-icon',
+        html:`<div class="parking-pin" style="border-color:${color}"><span>🚛</span></div>`,
+        iconSize:[44,52], iconAnchor:[22,46], popupAnchor:[0,-44]
+      });
+      const m=L.marker([r.lat,r.lon],{icon});
+      const servicesText=r.services.length ? `<br><small>${esc(r.services.join(' · '))}</small>` : '';
+      const compatibility=r.compat?.ok === true ? '🟢 Compatibile' : r.compat?.ok === false ? '🔴 Non compatibile' : '🟡 Da verificare';
+      const exitText=r.exit ? `<br><small>🛣️ ${fmt(r.exit.distance)} dall'uscita ${esc(r.exit.data.nome||'')}</small>` : '';
+      m.bindPopup(`<div class="parking-popup"><strong>${esc(r.name)}</strong><br><span>📍 ${fmt(r.distance)}</span>${exitText}<br><span>${compatibility}</span>${servicesText}<button type="button" class="parking-popup-nav" onclick="window._mpNav && window._mpNav(${JSON.stringify(r.name)},${r.lat},${r.lon})">🧭 NAVIGA</button></div>`);
+      state.markers.addLayer(m);
+      pts.push([r.lat,r.lon]);
+    }
+
+    if (!pts.length) return;
+    if (pts.length === 1) state.map.setView(pts[0], 13);
+    else state.map.fitBounds(pts,{padding:[35,35],maxZoom:15});
+    setTimeout(()=>state.map && state.map.invalidateSize(true),150);
   }
 
   function card(r, i) {
@@ -268,7 +299,7 @@
         .filter(x => { if (seen.has(x.id)) return false; seen.add(x.id); return true; })
         .sort((a, b) => (b.truckScore - a.truckScore) || (a.distance - b.distance))
         .slice(0, 60);
-      setStatus(state.results.length + ' risultati');
+      setStatus(state.results.length + ' parcheggi · mappa aggiornata');
       renderList();
       renderMap();
     } catch (e) {
@@ -278,23 +309,82 @@
     }
   }
 
+  function showMapMessage(text, error) {
+    const el = $('mpMap');
+    if (!el) return;
+    el.innerHTML = `<div class="mp-map-message" style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box;font:700 16px/1.4 'Roboto Condensed',sans-serif;color:${error ? '#a52b23' : '#52615b'};background:#e8ece9">${esc(text)}</div>`;
+  }
+
+  function addTileLayer(map) {
+    const providers = [
+      {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        options: { maxZoom: 19, attribution: '© OpenStreetMap contributors' }
+      },
+      {
+        url: 'https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png',
+        options: { maxZoom: 19, attribution: '© OpenStreetMap contributors' }
+      },
+      {
+        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        options: { maxZoom: 20, attribution: '© OpenStreetMap contributors © CARTO' }
+      }
+    ];
+
+    let index = 0;
+    let layer = null;
+    let loaded = false;
+
+    const tryNext = () => {
+      if (index >= providers.length) {
+        setStatus('Mappa non disponibile', true);
+        showMapMessage('Non riesco a caricare la mappa. Controlla la connessione e riprova.', true);
+        return;
+      }
+      const provider = providers[index++];
+      if (layer) map.removeLayer(layer);
+      layer = L.tileLayer(provider.url, provider.options);
+      let firstError = false;
+      const onLoad = () => {
+        if (loaded) return;
+        loaded = true;
+        setStatus('Mappa caricata · premi un pulsante per cercare');
+        setTimeout(() => map.invalidateSize(), 100);
+        setTimeout(() => map.invalidateSize(), 500);
+      };
+      const onError = () => {
+        if (loaded || firstError) return;
+        firstError = true;
+        setTimeout(tryNext, 200);
+      };
+      layer.once('load', onLoad);
+      layer.on('tileerror', onError);
+      layer.addTo(map);
+      setTimeout(() => {
+        if (!loaded && !firstError) onError();
+      }, 7000);
+    };
+    tryNext();
+  }
+
   function initMap() {
     const el = $('mpMap');
     if (!el) return;
     if (!window.L) {
-      el.innerHTML = '<div class="mp-map-error">Mappa in caricamento…</div>';
-      setTimeout(() => { if (!window.L) el.innerHTML = '<div class="mp-map-error">La mappa non è riuscita a caricarsi. Ricarica la pagina e riprova.</div>'; }, 2500);
+      setStatus('Libreria mappa non caricata', true);
+      showMapMessage('La libreria della mappa non è stata caricata. Ricarica la pagina.', true);
       return;
     }
     try {
-      state.map = L.map(el, { zoomControl: true, tap: true, attributionControl: true }).setView([41.9, 12.5], 6);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(state.map);
-      setTimeout(() => state.map && state.map.invalidateSize(true), 100);
-      setTimeout(() => state.map && state.map.invalidateSize(true), 500);
-      setTimeout(() => state.map && state.map.invalidateSize(true), 1200);
+      state.map = L.map(el, { zoomControl: true, tap: true, preferCanvas: true }).setView([41.9, 12.5], 6);
+      addTileLayer(state.map);
+      setTimeout(() => state.map && state.map.invalidateSize(), 150);
+      setTimeout(() => state.map && state.map.invalidateSize(), 1000);
     } catch (e) {
-      console.error('Mappa parcheggi:', e);
-      el.innerHTML = '<div class="mp-map-error">Errore nell’avvio della mappa. Ricarica la pagina e riprova.</div>';
+      console.error('Inizializzazione mappa:', e);
+      state.map = null;
+      setStatus('Mappa non disponibile', true);
+      showMapMessage('Errore nell’inizializzazione della mappa. Riprova.', true);
     }
   }
 
@@ -405,7 +495,7 @@
     }
   }
 
-  async function boot() {
+  document.addEventListener('DOMContentLoaded', async () => {
     initMap();
     loadProfile();
     $('mpLocate')?.addEventListener('click', locate);
@@ -413,8 +503,5 @@
     $('mpRefresh')?.addEventListener('click', () => state.pos ? search(state.searchCenter || state.pos, state.searchMode, state.pos) : locate());
     $('mpSave')?.addEventListener('click', saveProfile);
     await loadExits();
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
-  else boot();
+  });
 })();
