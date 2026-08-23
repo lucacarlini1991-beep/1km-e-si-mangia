@@ -219,7 +219,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0020",
@@ -241,7 +241,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0091",
@@ -335,7 +335,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0359",
@@ -357,7 +357,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0945",
@@ -2587,7 +2587,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0648",
@@ -2609,7 +2609,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0338",
@@ -2637,7 +2637,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0431",
@@ -5341,7 +5341,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1853",
@@ -5871,7 +5871,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0532",
@@ -5893,7 +5893,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0807",
@@ -6109,7 +6109,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1144",
@@ -8649,7 +8649,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0085",
@@ -13195,7 +13195,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0243",
@@ -13217,7 +13217,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0244",
@@ -13245,7 +13245,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1239",
@@ -13395,7 +13395,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1568",
@@ -15969,7 +15969,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0311",
@@ -17175,7 +17175,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0267",
@@ -17241,7 +17241,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0838",
@@ -17263,7 +17263,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0305",
@@ -17579,7 +17579,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0003",
@@ -17879,7 +17879,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1471",
@@ -17929,7 +17929,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1143",
@@ -17951,7 +17951,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1421",
@@ -18007,7 +18007,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1407",
@@ -20027,7 +20027,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0389",
@@ -23295,7 +23295,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0148",
@@ -23317,7 +23317,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1088",
@@ -23505,7 +23505,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1026",
@@ -23715,7 +23715,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0345",
@@ -23737,7 +23737,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0346",
@@ -23759,7 +23759,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1297",
@@ -26069,7 +26069,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0833",
@@ -27141,7 +27141,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1089",
@@ -27219,7 +27219,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1645",
@@ -27713,7 +27713,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0047",
@@ -29755,7 +29755,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0886",
@@ -32275,7 +32275,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0242",
@@ -32297,7 +32297,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0168",
@@ -32581,7 +32581,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0274",
@@ -32913,7 +32913,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0173",
@@ -32935,7 +32935,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0114",
@@ -39843,7 +39843,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0151",
@@ -39865,7 +39865,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-0149",
@@ -39887,7 +39887,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1932",
@@ -40009,7 +40009,7 @@
     "fonte": "OpenStreetMap",
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
-    "visualizza_mappa": true
+    "visualizza_mappa": false
   },
   {
     "id": "uscita-1080",
