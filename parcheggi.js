@@ -69,9 +69,13 @@
 
   function loadParkingDb(){
     if(parkingDbPromise)return parkingDbPromise;
-    parkingDbPromise=fetch('./parcheggi-database.json?v=1',{cache:'force-cache'})
+    parkingDbPromise=fetch('./parcheggi-database.json?v=3',{cache:'no-store'})
       .then(r=>{if(!r.ok)throw new Error('parcheggi-database.json HTTP '+r.status);return r.json();})
-      .then(data=>{state.parkingDb=data.exits||{};return data;});
+      .then(data=>{
+        if(!data || typeof data!=='object') throw new Error('Database parcheggi non valido');
+        state.parkingDb=data;
+        return data;
+      });
     return parkingDbPromise;
   }
 
@@ -85,25 +89,59 @@
     $('mpList').innerHTML='<div class="mp-loading">⏳ Carico i parcheggi…</div>';
 
     try{
-      await loadParkingDb();
-      state.parking=Array.isArray(state.parkingDb[String(exit.id)])
-        ? state.parkingDb[String(exit.id)].slice(0,100)
-        : [];
+      const db=await loadParkingDb();
+      // Priorità: entro 2 km. Se sono meno di 2, allarghiamo
+      // automaticamente a 5 km e poi a 10 km. Ultima risorsa:
+      // i 2 parcheggi più vicini, mostrando sempre la distanza reale.
+      const ix=db.index?.[String(exit.id)];
+      let candidates=[];
+      let usedRadius=2;
+
+      if(ix){
+        if(Array.isArray(ix.within2km)) candidates=ix.within2km.slice();
+        if(candidates.length<2 && Array.isArray(ix.within5km)){
+          candidates=ix.within5km.slice();
+          usedRadius=5;
+        }
+        if(candidates.length<2 && Array.isArray(ix.within10km)){
+          candidates=ix.within10km.slice();
+          usedRadius=10;
+        }
+        if(candidates.length<2 && Array.isArray(ix.nearest)){
+          candidates=ix.nearest.slice();
+          usedRadius=Number((Number(candidates[candidates.length-1]?.distance||0)/1000).toFixed(1));
+        }
+      }
+
+      // Compatibilità con il vecchio formato del database.
+      if(!candidates.length && Array.isArray(db.exits?.[String(exit.id)])){
+        candidates=db.exits[String(exit.id)].slice();
+      }
+
+      if(!candidates.length && Array.isArray(db.allParking)){
+        candidates=db.allParking.map(x=>{
+          const d=distance({lat:Number(exit.lat),lon:Number(exit.lon)},{lat:Number(x.lat),lon:Number(x.lon)});
+          return {...x,distance:Math.round(d)};
+        }).sort((a,b)=>a.distance-b.distance).slice(0,2);
+        usedRadius=Number((Number(candidates[candidates.length-1]?.distance||0)/1000).toFixed(1));
+      }
+
+      state.parking=candidates.slice(0,100);
 
       renderParking(exit);
       renderList(exit);
 
       if(state.parking.length){
-        status(state.parking.length+' parcheggi trovati · '+(exit.nome||'uscita'));
+        status(state.parking.length+' parcheggi trovati · raggio '+usedRadius+' km · '+(exit.nome||'uscita'));
       }else{
-        status('Nessun parcheggio camion entro 2 km · '+(exit.nome||'uscita'));
+        status('Nessun parcheggio disponibile nel database · '+(exit.nome||'uscita'));
       }
     }catch(e){
       console.error(e);
       state.parking=[];
       renderParking(exit);
       renderList(exit);
-      status('Database parcheggi non disponibile · verifica il deploy',true);
+      status('Errore nel caricamento del database parcheggi · riprova',true);
     }finally{
       state.loading=false;
       busy($('mpNearestExit'),false,'','🛣️ CERCA VICINO ALL\'USCITA');
