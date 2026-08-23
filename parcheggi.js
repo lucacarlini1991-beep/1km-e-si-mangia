@@ -21,7 +21,7 @@
   function busy(el,on,onText,offText){ if(!el)return;el.disabled=on;el.textContent=on?onText:offText; }
 
   function initMap(){
-    if(!window.L){ status('Leaflet non è stato caricato',true); return false; }
+    if(!window.L){ status('La mappa non è stata caricata',true); return false; }
     const el=$('mpMap');
     if(!el){ status('Contenitore mappa non trovato',true); return false; }
     try{
@@ -141,7 +141,7 @@
       state.parking=[];
       renderParking(exit);
       renderList(exit);
-      status('Errore nel caricamento del database parcheggi · riprova',true);
+      status('Errore nella lettura del database parcheggi · riprova',true);
     }finally{
       state.loading=false;
       busy($('mpNearestExit'),false,'','🛣️ CERCA VICINO ALL\'USCITA');
@@ -181,6 +181,17 @@
     if(yes(tags.hgv)||yes(tags['access:hgv'])||tags.highway==='services')return true;
     return null;
   }
+  function nomeParcheggio(x){
+    const n=String(x?.name||'Parcheggio');
+    const map={
+      'Fueling / Truck Stop':'Area di rifornimento / Sosta camion',
+      'Truck Stop / Rest Area':'Area di sosta camion',
+      'Rest Area':'Area di sosta',
+      'Parking':'Parcheggio',
+      'Truck Stop':'Sosta camion'
+    };
+    return map[n]||n;
+  }
   function services(t){const a=[];if(yes(t.toilets))a.push('WC');if(yes(t.shower))a.push('Doccia');if(yes(t.lit))a.push('Illuminato');if(yes(t.surveillance))a.push('Videosorveglianza');if(t.fee==='yes')a.push('A pagamento');if(t['capacity:hgv']||t.capacity_hgv)a.push('Posti TIR '+(t['capacity:hgv']||t.capacity_hgv));return a;}
   function compatText(x){return x.compat===true?'🟢 Compatibile':x.compat===false?'🔴 Non compatibile':'🟡 Da verificare';}
 
@@ -192,8 +203,8 @@
   }
   function renderList(exit){
     const el=$('mpList');if(!el)return;
-    if(!state.parking.length){el.innerHTML=`<div class="mp-empty"><strong>Nessun parcheggio trovato</strong><br>Il database locale non contiene parcheggi camion entro 2 km da <strong>${esc(exit.nome||'questa uscita')}</strong>.</div>`;return;}
-    el.innerHTML=state.parking.map((x,i)=>`<article class="mp-card"><h3>🚛 ${esc(x.name)}</h3><div class="mp-meta"><span class="mp-chip">📍 ${fmt(x.distance)} dall’uscita</span><span class="mp-chip ${x.compat===true?'good':x.compat===false?'bad':'warn'}">${compatText(x)}</span></div><div class="mp-services">${services(x.tags).length?esc(services(x.tags).join(' · ')):'Servizi non indicati'}${Object.values(x.limits).some(Boolean)?'<br>'+Object.entries({'H':x.limits.height,'Larg.':x.limits.width,'Lung.':x.limits.length,'Peso':x.limits.weight}).filter(([,v])=>v).map(([k,v])=>k+' '+esc(v)).join(' · '):''}</div><div class="mp-card-actions"><button class="mp-btn dark" type="button" data-nav-index="${i}">🧭 NAVIGA</button><button class="mp-btn" type="button" data-map-index="${i}">📍 MAPPA</button></div></article>`).join('');
+    if(!state.parking.length){el.innerHTML=`<div class="mp-empty"><strong>Nessun parcheggio trovato</strong><br>Il database locale non contiene parcheggi camion nei dintorni di <strong>${esc(exit.nome||'questa uscita')}</strong>.</div>`;return;}
+    el.innerHTML=state.parking.map((x,i)=>`<article class="mp-card"><h3>🚛 ${esc(nomeParcheggio(x))}</h3><div class="mp-meta"><span class="mp-chip">📍 ${fmt(x.distance)} dall’uscita</span><span class="mp-chip ${x.compat===true?'good':x.compat===false?'bad':'warn'}">${compatText(x)}</span></div><div class="mp-services">${services(x.tags).length?esc(services(x.tags).join(' · ')):'Servizi non indicati'}${Object.values(x.limits).some(Boolean)?'<br>'+Object.entries({'H':x.limits.height,'Larg.':x.limits.width,'Lung.':x.limits.length,'Peso':x.limits.weight}).filter(([,v])=>v).map(([k,v])=>k+' '+esc(v)).join(' · '):''}</div><div class="mp-card-actions"><button class="mp-btn dark" type="button" data-nav-index="${i}">🧭 NAVIGA</button><button class="mp-btn" type="button" data-map-index="${i}">📍 MAPPA</button></div></article>`).join('');
   }
 
 
