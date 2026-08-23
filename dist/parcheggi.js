@@ -209,9 +209,68 @@
 
 
 
+  function navProfileSummary(){
+    const p=profile();
+    const vals=[];
+    if(p.lunghezza>0) vals.push('L '+p.lunghezza.toFixed(2).replace(/\.00$/,'')+' m');
+    if(p.larghezza>0) vals.push('Larg. '+p.larghezza.toFixed(2).replace(/\.00$/,'')+' m');
+    if(p.altezza>0) vals.push('H '+p.altezza.toFixed(2).replace(/\.00$/,'')+' m');
+    if(p.peso>0) vals.push('Peso '+p.peso.toFixed(2).replace(/\.00$/,'')+' t');
+    return vals.join(' · ')||'Profilo mezzo non compilato';
+  }
+  function copyTruckProfile(){
+    const p=profile();
+    const text=[
+      'Profilo camion — 1 KM E SI MANGIA',
+      p.lunghezza>0?'Lunghezza: '+p.lunghezza+' m':'',
+      p.larghezza>0?'Larghezza: '+p.larghezza+' m':'',
+      p.altezza>0?'Altezza: '+p.altezza+' m':'',
+      p.peso>0?'Peso: '+p.peso+' t':''
+    ].filter(Boolean).join('\n');
+    if(navigator.clipboard?.writeText){
+      navigator.clipboard.writeText(text).then(()=>status('Dati del mezzo copiati negli appunti.')).catch(()=>{});
+    }else{
+      const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();
+      status('Dati del mezzo copiati negli appunti.');
+    }
+  }
+  function closeNavChooser(){document.getElementById('truckNavChooser')?.remove();}
   function navigate(x){
-    const url='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(x.lat+','+x.lon)+'&travelmode=driving';
-    window.open(url,'_blank','noopener');
+    const lat=Number(x.lat), lon=Number(x.lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+    closeNavChooser();
+    const existing=document.getElementById('truckNavChooser');
+    if(existing)existing.remove();
+    const wrap=document.createElement('div');
+    wrap.id='truckNavChooser';
+    wrap.innerHTML=`<div class="tnc-backdrop"></div><div class="tnc-box" role="dialog" aria-modal="true">
+      <button class="tnc-close" type="button" aria-label="Chiudi">×</button>
+      <div class="tnc-kicker">🚛 NAVIGAZIONE CAMION</div>
+      <h2>Come vuoi navigare?</h2>
+      <div class="tnc-destination">📍 ${esc(nomeParcheggio(x))}</div>
+      <div class="tnc-profile"><strong>Profilo mezzo:</strong><br>${esc(navProfileSummary())}</div>
+      <button class="tnc-option primary" type="button" data-nav-osmand="1"><span>🟢</span><div><strong>OsmAnd</strong><small>Open source · profilo Camion</small></div></button>
+      <button class="tnc-option" type="button" data-nav-tomtom="1"><span>🔵</span><div><strong>TomTom GO Expert</strong><small>Navigazione professionale per camion</small></div></button>
+      <button class="tnc-copy" type="button" data-copy-truck="1">📋 Copia dati del mezzo</button>
+      <p class="tnc-note">OsmAnd supporta il profilo Camion e i parametri di altezza, larghezza, lunghezza e peso. Il sito può passare destinazione e profilo <strong>Camion</strong>; i valori dimensionali salvati qui non possono invece essere inseriti automaticamente tramite il link web documentato da OsmAnd.</p>
+    </div>`;
+    document.body.appendChild(wrap);
+    const style=document.createElement('style');
+    style.id='truckNavChooserStyle';
+    style.textContent=`#truckNavChooser{position:fixed;inset:0;z-index:99999;font-family:inherit}.tnc-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.52)}.tnc-box{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 28px));background:#fff;border-radius:18px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);color:#171717}.tnc-close{position:absolute;right:12px;top:10px;border:0;background:transparent;font-size:30px;line-height:1;cursor:pointer;color:#555}.tnc-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;color:#176534}.tnc-box h2{margin:5px 0 14px;font-size:23px}.tnc-destination{font-weight:700;margin-bottom:10px}.tnc-profile{font-size:13px;background:#f4f6f8;border-radius:10px;padding:10px;margin-bottom:14px}.tnc-option{width:100%;display:flex;align-items:center;gap:13px;text-align:left;border:1px solid #d8dde3;background:#fff;border-radius:12px;padding:13px 14px;margin:8px 0;cursor:pointer}.tnc-option.primary{border:2px solid #198754;background:#f2fbf5}.tnc-option span{font-size:23px}.tnc-option strong{display:block;font-size:16px}.tnc-option small{display:block;color:#666;margin-top:2px}.tnc-copy{width:100%;border:0;background:#eee;border-radius:10px;padding:11px;cursor:pointer;margin-top:5px;font-weight:700}.tnc-note{font-size:11px;line-height:1.45;color:#666;margin:12px 2px 0}`;
+    document.head.appendChild(style);
+    wrap.querySelector('.tnc-close').onclick=closeNavChooser;
+    wrap.querySelector('.tnc-backdrop').onclick=closeNavChooser;
+    wrap.querySelector('[data-copy-truck]').onclick=copyTruckProfile;
+    wrap.querySelector('[data-nav-osmand]').onclick=()=>{
+      const url='https://osmand.net/map/navigate/?finish='+encodeURIComponent(lat+','+lon)+'&type=osmand&profile=truck&pin='+encodeURIComponent(lat+','+lon);
+      window.location.href=url;
+    };
+    wrap.querySelector('[data-nav-tomtom]').onclick=()=>{
+      const url='tomtomgo://x-callback-url/navigate?destination='+encodeURIComponent(lat+','+lon);
+      window.location.href=url;
+      setTimeout(()=>{window.open('https://www.tomtom.com/it_it/navigation/mobile-apps/go-expert-app/','_blank','noopener');},900);
+    };
   }
   function loadProfile(){
     try{const raw=localStorage.getItem('1km-esimangia-mezzo');if(raw){const x=JSON.parse(raw);if(x.lunghezzaM)$('mpL').value=x.lunghezzaM;if(x.larghezzaM)$('mpW').value=x.larghezzaM;if(x.altezzaM)$('mpH').value=x.altezzaM;if(x.pesoKg)$('mpP').value=x.pesoKg/1000;}}
