@@ -25,7 +25,18 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     fs.copyFileSync(path.join(root, entry.name), path.join(out, entry.name));
   }
 }
+// Copia i file necessari per Google AdSense e Google
+for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
+  const source = path.join(root, file);
+  const destination = path.join(out, file);
 
+  if (fs.existsSync(source)) {
+    fs.copyFileSync(source, destination);
+    console.log(`Copiato in dist/: ${file}`);
+  } else {
+    console.warn(`ATTENZIONE: ${file} non trovato`);
+  }
+}
 console.log('Sito sincronizzato in dist/.');
 console.log('Pagine:', fs.readdirSync(out).filter(x => x.endsWith('.html')).join(', '));
 console.log('gps.js e gps-camion.js:', fs.existsSync(path.join(out,'gps.js')), fs.existsSync(path.join(out,'gps-camion.js')));
