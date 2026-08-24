@@ -47,7 +47,15 @@
   }
 
   function exitIcon(){ return L.divIcon({className:'',html:'<div class="custom-marker"></div>',iconSize:[36,36],iconAnchor:[18,18],popupAnchor:[0,-18]}); }
-  function parkingIcon(){ return L.divIcon({className:'',html:'<div style="width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid #075c3b;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 3px 10px rgba(0,0,0,.3)">🚛</div>',iconSize:[38,38],iconAnchor:[19,19],popupAnchor:[0,-19]}); }
+  function parkingIcon(){
+    return L.icon({
+      iconUrl:'assets/pin-camion.png',
+      iconRetinaUrl:'assets/pin-camion.png',
+      iconSize:[48,60],
+      iconAnchor:[24,60],
+      popupAnchor:[0,-54]
+    });
+  }
 
   async function loadExits(){
     try{

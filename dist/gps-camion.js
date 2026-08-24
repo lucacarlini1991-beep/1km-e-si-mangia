@@ -51,12 +51,12 @@
 
   function icon() {
     if (!window.L) return null;
-    return L.divIcon({
-      className: 'gps-camion-location-icon',
-      html: '<div style="width:42px;height:42px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#f6a916;border:4px solid #fff;box-shadow:0 3px 12px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:21px">🚛</span></div>',
-      iconSize: [42, 42],
-      iconAnchor: [21, 42],
-      popupAnchor: [0, -38]
+    return L.icon({
+      iconUrl: 'assets/pin-posizione.png',
+      iconRetinaUrl: 'assets/pin-posizione.png',
+      iconSize: [46, 58],
+      iconAnchor: [23, 58],
+      popupAnchor: [0, -52]
     });
   }
 

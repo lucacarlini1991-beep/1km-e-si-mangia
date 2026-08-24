@@ -15,12 +15,12 @@
   function getMap(){if(map)return map;if(window.appMap&&typeof window.appMap.setView==="function"){map=window.appMap;return map;}return null;}
   function icon(){
     if(!window.L)return null;
-    return L.divIcon({
-      className:"gps-user-location-icon",
-      html:'<div style="width:22px;height:22px;border-radius:50%;background:#075c3b;border:4px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);box-sizing:border-box;"></div>',
-      iconSize:[22,22],
-      iconAnchor:[11,11],
-      popupAnchor:[0,-14]
+    return L.icon({
+      iconUrl:"assets/pin-posizione.png",
+      iconRetinaUrl:"assets/pin-posizione.png",
+      iconSize:[46,58],
+      iconAnchor:[23,58],
+      popupAnchor:[0,-52]
     });
   }
   function updateMap(p,center){
