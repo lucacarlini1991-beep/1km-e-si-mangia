@@ -92,20 +92,20 @@ map.addLayer(clusterUscite);
 // ICONA USCITA
 // =====================================================
 
-const exitIcon = L.icon({
+const exitIcon = L.divIcon({
 
-  iconUrl: "assets/pin-posizione.png",
+  className: "",
 
-  iconRetinaUrl: "assets/pin-posizione.png",
+  html:
+    '<div class="custom-marker"></div>',
 
-  iconSize: [48, 60],
+  iconSize: [36, 36],
 
-  iconAnchor: [24, 60],
+  iconAnchor: [18, 18],
 
-  popupAnchor: [0, -54]
+  popupAnchor: [0, -18]
 
 });
-
 
 // =====================================================
 // DATABASE

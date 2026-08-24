@@ -10,17 +10,23 @@
     if(!Number.isFinite(lat)||!Number.isFinite(lng)||!Number.isFinite(accuracy)||lat<-90||lat>90||lng<-180||lng>180||accuracy<=0||accuracy>opt.maxAccuracy)return null;
     return {lat,lng,accuracy,timestamp:Date.now()};
   }
-  function save(p){try{sessionStorage.setItem(KEY,JSON.stringify(p));}catch(e){}}
+  function save(p){try{sessionStorage.setItem(KEY,JSON.stringify(p));}catch(e){} }
+  function setLocationButton(text,disabled){
+    const b=document.getElementById("locationButton");
+    if(!b)return;
+    b.disabled=!!disabled;
+    b.innerHTML='<img src="assets/pin-posizione.png" alt="" aria-hidden="true" style="width:28px;height:34px;object-fit:contain;display:inline-block;vertical-align:middle;margin-right:8px;">'+text;
+  }
   function attachMap(m){map=m||null;return api;}
   function getMap(){if(map)return map;if(window.appMap&&typeof window.appMap.setView==="function"){map=window.appMap;return map;}return null;}
   function icon(){
     if(!window.L)return null;
-    return L.icon({
-      iconUrl:"assets/pin-posizione.png",
-      iconRetinaUrl:"assets/pin-posizione.png",
-      iconSize:[46,58],
-      iconAnchor:[23,58],
-      popupAnchor:[0,-52]
+    return L.divIcon({
+      className:"gps-user-location-icon",
+      html:'<div style="width:22px;height:22px;border-radius:50%;background:#075c3b;border:4px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);box-sizing:border-box;"></div>',
+      iconSize:[22,22],
+      iconAnchor:[11,11],
+      popupAnchor:[0,-14]
     });
   }
   function updateMap(p,center){
@@ -34,7 +40,7 @@
   }
   function error(e){
     console.error("GPS ERRORE:",e&&e.code,e&&e.message);
-    const b=document.getElementById("locationButton"); if(b){b.disabled=false;b.textContent="📍 USA LA MIA POSIZIONE";}
+    setLocationButton("USA LA MIA POSIZIONE",false);
     let msg="Non siamo riusciti a ottenere la tua posizione.";
     if(e&&e.code===1)msg="Permesso di posizione negato.\n\nSu iPhone vai in:\nImpostazioni → Privacy e sicurezza → Localizzazione → Safari\n\ne attiva la Posizione precisa.";
     else if(e&&e.code===2)msg="La posizione non è disponibile.\n\nControlla la Localizzazione dell'iPhone e riprova.";
@@ -46,7 +52,7 @@
     if(!window.isSecureContext){const e=new Error("La geolocalizzazione richiede HTTPS.");e.code="INSECURE_CONTEXT";error(e);return false;}
     if(!navigator.geolocation){const e=new Error("Geolocalizzazione non disponibile.");e.code="NOT_SUPPORTED";error(e);return false;}
     getMap(); stop();
-    const b=document.getElementById("locationButton"); if(b){b.disabled=true;b.textContent="📍 RICERCA POSIZIONE...";}
+    setLocationButton("RICERCA POSIZIONE...",true);
     navigator.geolocation.getCurrentPosition(function(p){const d=normalize(p);if(!d){error({code:2});return;}last=d;save(d);if(updateMap(d,true))startWatch();else error({code:2});},error,{enableHighAccuracy:true,timeout:60000,maximumAge:0});
     return true;
   }
