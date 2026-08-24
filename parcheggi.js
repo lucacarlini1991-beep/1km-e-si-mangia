@@ -46,7 +46,15 @@
     }catch(e){ console.error(e);status('Errore nell’inizializzazione della mappa',true);return false; }
   }
 
-  function exitIcon(){ return L.divIcon({className:'',html:'<div class="custom-marker"></div>',iconSize:[36,36],iconAnchor:[18,18],popupAnchor:[0,-18]}); }
+  function exitIcon(){
+    return L.icon({
+      iconUrl:'assets/pin-posizione.png',
+      iconRetinaUrl:'assets/pin-posizione.png',
+      iconSize:[48,60],
+      iconAnchor:[24,60],
+      popupAnchor:[0,-54]
+    });
+  }
   function parkingIcon(){
     return L.icon({
       iconUrl:'assets/pin-camion.png',
