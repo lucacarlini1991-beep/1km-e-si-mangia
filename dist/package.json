@@ -1,0 +1,19 @@
+{
+  "name": "1km-e-si-mangia",
+  "version": "1.0.0",
+  "description": "1 KM E SI MANGIA",
+  "main": "build-database.js",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "start": "vite --host 0.0.0.0",
+    "build": "vite build && node build-site.mjs",
+    "test": "node --check gps-camion.js && node --check parcheggi.js && node --check gps.js && node --check script.js",
+    "google:sync": "node google-places-sync.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^8.2.1"
+  }
+}
