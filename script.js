@@ -123,6 +123,115 @@ let ristorantiDatabase = [];
 const ristorantiLayer = L.layerGroup().addTo(map);
 const ristorantiPerUscitaMap = new Map();
 
+const googlePlacesLayer = L.layerGroup().addTo(map);
+let googlePlacesLoadedForPosition = "";
+let googlePlacesDatabase = [];
+let googlePlacesPosition = null;
+
+const googlePlaceIcon = L.divIcon({
+  className: "google-place-map-icon",
+  html:
+    '<div style="width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #4285f4;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.35);">🍽️</div>',
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+  popupAnchor: [0, -18]
+});
+
+function distanzaGooglePlaces(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad;
+  const dLng = (lng2 - lng1) * rad;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * rad) *
+      Math.cos(lat2 * rad) *
+      Math.sin(dLng / 2) ** 2;
+
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function caricaGooglePlacesDaGPS(posizione) {
+  if (!posizione) return;
+
+  const lat = Number(posizione.lat);
+  const lng = Number(posizione.lng);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+  const chiave = lat.toFixed(5) + "," + lng.toFixed(5);
+
+  if (googlePlacesLoadedForPosition === chiave) return;
+  googlePlacesLoadedForPosition = chiave;
+
+  console.log("📍 GOOGLE PLACES: ricerca ristoranti vicino alla posizione GPS...");
+
+  try {
+    const response = await fetch(
+      "/api/places?lat=" +
+      encodeURIComponent(lat) +
+      "&lng=" +
+      encodeURIComponent(lng) +
+      "&radius=2100",
+      {
+        method: "GET",
+        headers: { "Accept": "application/json" }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data?.error || "Google Places non disponibile.");
+    }
+
+    googlePlacesDatabase = Array.isArray(data.places) ? data.places : [];
+    googlePlacesPosition = { lat: lat, lng: lng };
+
+    googlePlacesLayer.clearLayers();
+
+    data.places.forEach(function(place) {
+      const distanza = Math.round(
+        distanzaGooglePlaces(lat, lng, place.lat, place.lng)
+      );
+
+      const link = place.googleMapsUri
+        ? '<a href="' + escapeHtml(place.googleMapsUri) +
+          '" target="_blank" rel="noopener noreferrer" ' +
+          'style="display:inline-block;margin-top:8px;color:#075c3b;font-weight:800;">APRΙ IN GOOGLE MAPS</a>'
+        : "";
+
+      const popup =
+        '<div style="min-width:220px;line-height:1.45">' +
+        '<strong>🍽️ ' + escapeHtml(place.nome) + '</strong>' +
+        '<small>📍 ' + distanza + ' m da te</small>' +
+        (place.indirizzo
+          ? '<small>🏠 ' + escapeHtml(place.indirizzo) + '</small>'
+          : "") +
+        link +
+        '</div>';
+
+      L.marker([place.lat, place.lng], {
+        icon: googlePlaceIcon,
+        zIndexOffset: 5000
+      })
+      .bindPopup(popup)
+      .addTo(googlePlacesLayer);
+    });
+
+    console.log(
+      "✅ GOOGLE PLACES: " + data.places.length +
+      " ristoranti trovati entro " + data.radius + " m."
+    );
+  } catch (error) {
+    googlePlacesLoadedForPosition = "";
+    console.error("❌ GOOGLE PLACES:", error);
+  }
+}
+
+window.caricaGooglePlacesDaGPS = caricaGooglePlacesDaGPS;
+
+
 const restaurantIcon = L.divIcon({
   className: "restaurant-map-icon",
   html:
@@ -411,6 +520,113 @@ function chiudiPannelloRistoranti() {
   if (panel) panel.remove();
 }
 
+function distanzaGoogleDaUscita(uscita, place) {
+  if (!uscita || !place) return Infinity;
+
+  const lat = Number(uscita.lat);
+  const lon = Number(uscita.lon);
+  const plat = Number(place.lat);
+  const plon = Number(place.lng);
+
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon) ||
+    !Number.isFinite(plat) ||
+    !Number.isFinite(plon)
+  ) {
+    return Infinity;
+  }
+
+  return distanzaGooglePlaces(lat, lon, plat, plon);
+}
+
+function creaCardGooglePlace(place, index, uscita) {
+  const distanza = Math.round(distanzaGoogleDaUscita(uscita, place));
+  const nome = escapeHtml(place.nome || "Ristorante");
+
+  const rating = Number(place.rating);
+  const recensioni = Number(place.userRatingCount);
+  const ratingHtml = Number.isFinite(rating)
+    ? `<div style="font-size:13px;color:#555;margin-top:3px">⭐ ${rating.toFixed(1)}${Number.isFinite(recensioni) ? ` · ${recensioni} recensioni` : ""}</div>`
+    : "";
+
+  const apertura = place.openNow === true
+    ? `<span style="color:#087443;font-weight:700">🟢 Aperto</span>`
+    : place.openNow === false
+      ? `<span style="color:#b33;font-weight:700">🔴 Chiuso</span>`
+      : "";
+
+  const mapsLink = place.googleMapsUri
+    ? `<a href="${escapeHtml(place.googleMapsUri)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;min-width:132px;height:42px;border-radius:10px;background:#fff;border:1px solid #075c3b;color:#075c3b;text-decoration:none;font-weight:800;box-sizing:border-box">GOOGLE MAPS</a>`
+    : "";
+
+  return `
+    <div style="border:2px solid #4285f4;border-radius:14px;padding:12px;margin-top:10px;background:#fbfdff">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div>
+          <strong style="font-size:16px">${index + 1}. ${nome}</strong>
+          ${ratingHtml}
+          ${apertura ? `<div style="font-size:12px;margin-top:4px">${apertura}</div>` : ""}
+        </div>
+        ${mapsLink}
+      </div>
+      <div style="font-size:12px;color:#555;margin-top:8px;display:grid;gap:3px">
+        <span>📏 ${Number.isFinite(distanza) ? distanza + " m dall'uscita" : ""}</span>
+        ${place.indirizzo ? `<span>🏠 ${escapeHtml(place.indirizzo)}</span>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function mostraGooglePlacesNelPannello(panel, uscita) {
+  if (!panel || !Array.isArray(googlePlacesDatabase) || !googlePlacesDatabase.length) {
+    return;
+  }
+
+  const vicini = googlePlacesDatabase
+    .map(function(place) {
+      return {
+        place: place,
+        distanza: distanzaGoogleDaUscita(uscita, place)
+      };
+    })
+    .filter(function(item) {
+      return Number.isFinite(item.distanza) && item.distanza <= 2100;
+    })
+    .sort(function(a, b) {
+      return a.distanza - b.distanza;
+    })
+    .slice(0, 10);
+
+  if (!vicini.length) return;
+
+  const section = document.createElement("div");
+  section.style.cssText =
+    "margin-top:18px;padding-top:14px;border-top:2px solid #4285f4;";
+
+  section.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div>
+        <strong style="font-size:18px">🍽️ Google Places</strong>
+        <div style="font-size:12px;color:#555;margin-top:2px">
+          ${vicini.length} ristoranti Google entro 2,1 km
+        </div>
+      </div>
+      <span style="font-size:11px;color:#4285f4;font-weight:800">GOOGLE</span>
+    </div>
+    ${vicini.map(function(item, index) {
+      return creaCardGooglePlace(item.place, index, uscita);
+    }).join("")}
+  `;
+
+  const bottom = panel.querySelector("#chiudiRistorantiMapBottom");
+  if (bottom) {
+    panel.insertBefore(section, bottom);
+  } else {
+    panel.appendChild(section);
+  }
+}
+
 function mostraTuttiRistoranti(uscita) {
   if (!uscita) return;
   window._ultimaUscitaRistoranti = uscita;
@@ -499,6 +715,11 @@ function mostraTuttiRistoranti(uscita) {
   }
 
   document.body.appendChild(panel);
+
+  /* Google Places è una fonte separata dal database OSM.
+     Se il GPS ha già caricato i risultati, li mostriamo nello
+     stesso pannello dell'uscita, senza sostituire il database locale. */
+  mostraGooglePlacesNelPannello(panel, uscita);
 
   const closeTop = panel.querySelector("#chiudiRistorantiMap");
   if (closeTop) closeTop.addEventListener("click", chiudiPannelloRistoranti);
