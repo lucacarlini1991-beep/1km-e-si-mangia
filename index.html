@@ -678,60 +678,33 @@
 
   </script>
 
+
+  <script src="gps.js?v=20260825-gps"></script>
   <script>
     (function () {
       const button = document.getElementById("homeLocationButton");
-      if (!button) return;
+      if (!button || !window.GPSManager) return;
 
-      button.addEventListener("click", function () {
-        if (!navigator.geolocation) {
-          alert("La geolocalizzazione non è disponibile su questo dispositivo.");
-          return;
-        }
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
 
-        if (!window.isSecureContext) {
-          alert("La posizione richiede una connessione HTTPS.");
-          return;
-        }
+        if (button.disabled) return;
 
-        const original = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '<span class="btn-icon">📍</span> RICERCA POSIZIONE...';
-
-        navigator.geolocation.getCurrentPosition(
-          function (position) {
-            const coords = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-              accuracy: position.coords.accuracy,
-              timestamp: Date.now()
-            };
-
-            sessionStorage.setItem("1km-posizione", JSON.stringify(coords));
-            window.location.href = "uscite.html?posizione=1";
-          },
-          function (error) {
-            console.error("Errore geolocalizzazione Home:", error);
-            button.disabled = false;
-            button.innerHTML = original;
-
-            let messaggio = "Non siamo riusciti a ottenere la tua posizione.";
-            if (error.code === 1) {
-              messaggio = "La posizione è stata negata. Su iPhone controlla Impostazioni → Privacy e sicurezza → Localizzazione e autorizza il browser per questo sito.";
-            } else if (error.code === 2) {
-              messaggio = "La posizione non è disponibile in questo momento. Riprova tra qualche secondo.";
-            } else if (error.code === 3) {
-              messaggio = "La ricerca della posizione ha impiegato troppo tempo. Riprova.";
-            }
-            alert(messaggio);
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 20000,
-            maximumAge: 0
+        window.GPSManager.start({
+          enableHighAccuracy: true,
+          timeout: 60000,
+          maximumAge: 0,
+          onSuccess: function () {
+            /*
+             * Prima mostriamo POSIZIONE TROVATA.
+             * Poi passiamo alla mappa con la posizione già salvata.
+             */
+            setTimeout(function () {
+              window.location.href = "uscite.html?gps=1";
+            }, 450);
           }
-        );
-      });
+        });
+      }, false);
     })();
   </script>
 
