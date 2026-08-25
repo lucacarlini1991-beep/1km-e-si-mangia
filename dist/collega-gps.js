@@ -44,6 +44,18 @@
           window.GPSManager.startWatch();
         }
 
+        /* La posizione era già stata trovata dalla Home.
+           Ora avviamo esplicitamente Google Places anche nel flusso
+           Home -> uscite.html. */
+        if(typeof window.caricaGooglePlacesDaGPS==="function"){
+          window.caricaGooglePlacesDaGPS({
+            lat: lat,
+            lng: lng,
+            accuracy: accuracy,
+            timestamp: Number(p.timestamp) || Date.now()
+          });
+        }
+
         return true;
       }catch(e){
         console.warn("GPS: posizione salvata non leggibile.",e);
@@ -73,8 +85,11 @@
         enableHighAccuracy:true,
         timeout:60000,
         maximumAge:0,
-        onSuccess:function(){
+        onSuccess:function(posizione){
           working=false;
+          if(typeof window.caricaGooglePlacesDaGPS==="function"){
+            window.caricaGooglePlacesDaGPS(posizione);
+          }
         }
       });
 
