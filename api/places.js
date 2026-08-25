@@ -1,16 +1,100 @@
-// 1 KM E SI MANGIA - Google Places proxy
-// La chiave Google resta esclusivamente in Vercel:
-// GOOGLE_PLACES_API_KEY
+// 1 KM E SI MANGIA - Google Places proxy + cache Place ID
+// Google key: GOOGLE_PLACES_API_KEY (Vercel)
+// Supabase service key: SUPABASE_SERVICE_ROLE_KEY (Vercel)
 
-const ENDPOINT = "https://places.googleapis.com/v1/places:searchNearby";
+const ENDPOINT_NEARBY = "https://places.googleapis.com/v1/places:searchNearby";
+const ENDPOINT_DETAILS = "https://places.googleapis.com/v1/places/";
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://pyiheodneyvtcotuonpt.supabase.co";
 const DEFAULT_RADIUS = 2000;
 const MAX_RADIUS = 2000;
 const DEFAULT_MAX_RESULTS = 15;
-const MAX_RESULTS = 20;
+const MAX_RESULTS = 15;
+const CACHE_DETAILS_LIMIT = 5;
 
 function numero(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function cacheKey(lat, lon, radius) {
+  return `restaurant:${Number(lat).toFixed(5)}:${Number(lon).toFixed(5)}:${Math.round(radius)}`;
+}
+
+function supabaseHeaders() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) return null;
+  return {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json"
+  };
+}
+
+async function leggiCache(key) {
+  const headers = supabaseHeaders();
+  if (!headers) return null;
+
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/google_places_cache?select=place_ids,updated_at&cache_key=eq.${encodeURIComponent(key)}&limit=1`;
+    const response = await fetch(url, { headers });
+    if (!response.ok) return null;
+    const rows = await response.json();
+    if (!Array.isArray(rows) || !rows[0]) return null;
+    const ids = Array.isArray(rows[0].place_ids) ? rows[0].place_ids.map(String).filter(Boolean) : [];
+    return ids.length ? { ids, updatedAt: rows[0].updated_at || null } : null;
+  } catch (error) {
+    console.warn("Google Places cache read error:", error);
+    return null;
+  }
+}
+
+async function salvaCache(key, lat, lon, radius, placeIds) {
+  const headers = supabaseHeaders();
+  if (!headers || !Array.isArray(placeIds) || !placeIds.length) return;
+
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/google_places_cache?on_conflict=cache_key`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { ...headers, Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({
+        cache_key: key,
+        exit_lat: lat,
+        exit_lon: lon,
+        radius_m: Math.round(radius),
+        place_ids: placeIds,
+        updated_at: new Date().toISOString()
+      })
+    });
+    if (!response.ok) {
+      console.warn("Google Places cache write error:", response.status, await response.text().catch(() => ""));
+    }
+  } catch (error) {
+    console.warn("Google Places cache write error:", error);
+  }
+}
+
+async function dettagliPlace(apiKey, placeId) {
+  const response = await fetch(`${ENDPOINT_DETAILS}${encodeURIComponent(placeId)}`, {
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      // Solo dati necessari alla scheda. displayName è Pro; location/address/types sono Essentials.
+      "X-Goog-FieldMask": "id,displayName,formattedAddress,location,types"
+    }
+  });
+
+  if (!response.ok) return null;
+  const data = await response.json().catch(() => null);
+  return data && data.id ? data : null;
+}
+
+async function recuperaDaCache(apiKey, cache) {
+  // Non salviamo nomi/indirizzi Google: conserviamo solo i Place ID.
+  // Recuperiamo pochi dettagli alla volta, su richiesta, usando gli ID salvati.
+  const ids = cache.ids.slice(0, CACHE_DETAILS_LIMIT);
+  const risultati = await Promise.all(ids.map((id) => dettagliPlace(apiKey, id)));
+  return risultati.filter(Boolean);
 }
 
 module.exports = async function handler(req, res) {
@@ -35,14 +119,23 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "Coordinate del casello non valide." });
   }
 
+  const key = cacheKey(lat, lon, radius);
+
   try {
-    const response = await fetch(ENDPOINT, {
+    const cached = await leggiCache(key);
+    if (cached) {
+      const places = await recuperaDaCache(apiKey, cached);
+      if (places.length) {
+        console.log("Google Places CACHE HIT", { cacheKey: key, placeIds: cached.ids.length, dettagli: places.length });
+        return res.status(200).json({ places, cache: "place_id" });
+      }
+    }
+
+    const response = await fetch(ENDPOINT_NEARBY, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        // Solo i campi necessari per mostrare i locali.
-        // Niente foto, recensioni, telefono, orari o altri dati costosi.
         "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types"
       },
       body: JSON.stringify({
@@ -53,10 +146,7 @@ module.exports = async function handler(req, res) {
         regionCode: "IT",
         locationRestriction: {
           circle: {
-            center: {
-              latitude: lat,
-              longitude: lon
-            },
+            center: { latitude: lat, longitude: lon },
             radius
           }
         }
@@ -65,22 +155,18 @@ module.exports = async function handler(req, res) {
 
     const text = await response.text();
     let data = {};
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch (_) {
-      data = {};
-    }
+    try { data = text ? JSON.parse(text) : {}; } catch (_) { data = {}; }
 
     if (!response.ok) {
       console.error("Google Places error:", response.status, data?.error || text);
-      return res.status(response.status).json({
-        error: data?.error?.message || `Google Places HTTP ${response.status}`
-      });
+      return res.status(response.status).json({ error: data?.error?.message || `Google Places HTTP ${response.status}` });
     }
 
-    return res.status(200).json({
-      places: Array.isArray(data.places) ? data.places : []
-    });
+    const places = Array.isArray(data.places) ? data.places : [];
+    const placeIds = places.map((place) => place?.id).filter(Boolean).map(String);
+    await salvaCache(key, lat, lon, radius, placeIds);
+
+    return res.status(200).json({ places, cache: "miss" });
   } catch (error) {
     console.error("Google Places proxy error:", error);
     return res.status(502).json({ error: "Impossibile contattare Google Places." });
