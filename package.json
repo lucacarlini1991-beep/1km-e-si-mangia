@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "start": "vite --host 0.0.0.0",
-    "build": "vite build && node build-site.mjs",
+    "build": "node -e \"const {spawnSync}=require('child_process'); if(process.env.GOOGLE_PLACES_API_KEY){ const r=spawnSync('node',['google-places-sync.js'],{stdio:'inherit'}); if(r.status!==0) process.exit(r.status||1); } else { console.log('Google Places: chiave non presente, sincronizzazione saltata.'); }\" && vite build && node build-site.mjs",
     "test": "node --check gps-camion.js && node --check parcheggi.js && node --check gps.js && node --check script.js && node --check google-places-sync.js",
     "google:sync": "node google-places-sync.js"
   },
