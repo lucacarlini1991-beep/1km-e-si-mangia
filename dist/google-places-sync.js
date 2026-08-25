@@ -4,19 +4,18 @@
 // =====================================================
 //
 // SCOPO:
-//   Usa Google Places (Nearby Search New) per trovare i
-//   ristoranti intorno alle nostre uscite e collega il
-//   relativo Google Place ID ai record gia presenti nel
-//   nostro database.
+//   Verifica periodicamente i ristoranti gia presenti nel
+//   database usando Google Places (New) e collega il relativo
+//   Google Place ID.
 //
-// IMPORTANTE:
-//   La API key NON deve mai essere scritta qui.
+// SICUREZZA:
+//   La chiave NON va mai scritta nel codice o nel JSON.
 //   Variabile richiesta: GOOGLE_PLACES_API_KEY
 //
-//   Salviamo nel database solo il Place ID Google e la
-//   data del nostro controllo. I dati Google ricevuti per
-//   il matching restano temporanei e non vengono copiati
-//   nel JSON del sito.
+// COSTI:
+//   Questa versione richiede solo ID, nome e coordinate.
+//   Non richiede rating, recensioni, foto o altri campi
+//   Enterprise. In questo modo il primo test resta leggero.
 //
 // TEST:
 //   GOOGLE_PLACES_MAX_EXITS=25 node google-places-sync.js
@@ -33,7 +32,7 @@ const CONFIG = {
   ristoranti: "./ristoranti.json",
   radius: 2100,
   maxResultCount: 20,
-  maxExits: Number(process.env.GOOGLE_PLACES_MAX_EXITS || 25),
+  maxExits: Number(process.env.GOOGLE_PLACES_MAX_EXITS || 1651),
   pausaMs: 120,
   minMatchDistance: 180,
   strongMatchDistance: 45,
@@ -86,8 +85,8 @@ function distanceMeters(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * rad) *
-    Math.cos(lat2 * rad) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(lat2 * rad) *
+      Math.sin(dLon / 2) ** 2;
 
   return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
@@ -126,6 +125,7 @@ async function cercaGoogle(apiKey, lat, lon) {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": apiKey,
+      // SOLO campi essenziali per questa fase: niente rating/foto/recensioni.
       "X-Goog-FieldMask": "places.id,places.displayName,places.location"
     },
     body: JSON.stringify({
@@ -215,7 +215,7 @@ async function main() {
 
   if (!apiKey) {
     throw new Error(
-      "Manca GOOGLE_PLACES_API_KEY. Inseriscila come variabile d'ambiente / GitHub Secret."
+      "Manca GOOGLE_PLACES_API_KEY. Impostala come Secret/variabile d'ambiente."
     );
   }
 
@@ -235,7 +235,11 @@ async function main() {
   }
 
   const usciteValide = uscite
-    .map((uscita, index) => ({ uscita, index, coordinate: coordinateUscita(uscita) }))
+    .map((uscita, index) => ({
+      uscita,
+      index,
+      coordinate: coordinateUscita(uscita)
+    }))
     .filter(item => item.coordinate)
     .slice(0, CONFIG.maxExits);
 
@@ -269,8 +273,8 @@ async function main() {
         const record = match.ristorante;
         const id = record.id || record.osm_id || record.nome;
 
-        // Un singolo ristorante puo comparire vicino a piu uscite.
-        // Lo associamo comunque una sola volta per questa esecuzione.
+        // Un ristorante puo comparire vicino a piu uscite.
+        // In questa esecuzione lo associamo una sola volta.
         if (giaAssociati.has(id)) continue;
         giaAssociati.add(id);
 
@@ -283,9 +287,7 @@ async function main() {
         }
       }
 
-      console.log(
-        `✓ ${nomeUscita}: ${places.length} risultati Google`
-      );
+      console.log(`✓ ${nomeUscita}: ${places.length} risultati Google`);
     } catch (error) {
       errori++;
       console.error(`✗ ${nomeUscita}: ${error.message}`);
@@ -294,7 +296,6 @@ async function main() {
     await sleep(CONFIG.pausaMs);
   }
 
-  // Ordine stabile: non riscriviamo inutilmente la struttura del file.
   fs.writeFileSync(
     CONFIG.ristoranti,
     JSON.stringify(ristoranti, null, 2) + "\n",
@@ -306,13 +307,19 @@ async function main() {
   console.log("GOOGLE PLACES - SINCRONIZZAZIONE COMPLETATA");
   console.log("==========================================");
   console.log(`Uscite controllate: ${usciteValide.length}`);
-  console.log(`Chiamate Google: ${chiamate}`);
+  console.log(`Chiamate Google riuscite: ${chiamate}`);
   console.log(`Luoghi Google ricevuti: ${luoghiGoogle}`);
   console.log(`Ristoranti associati: ${associati}`);
   console.log(`Risultati non associati: ${nonAssociati}`);
   console.log(`Errori: ${errori}`);
   console.log(`Database aggiornato: ${CONFIG.ristoranti}`);
   console.log("==========================================");
+
+  // Se Google non ha risposto a nessuna uscita, non consideriamo
+  // l'esecuzione valida: evita di pubblicare un aggiornamento sospetto.
+  if (chiamate === 0) {
+    throw new Error("Nessuna chiamata Google completata con successo.");
+  }
 }
 
 main().catch(error => {

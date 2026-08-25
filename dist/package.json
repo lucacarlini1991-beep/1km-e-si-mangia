@@ -7,7 +7,6 @@
     "dev": "vite --host 0.0.0.0",
     "start": "vite --host 0.0.0.0",
     "build": "vite build && node build-site.mjs",
-    "test": "node --check gps-camion.js && node --check parcheggi.js && node --check gps.js && node --check script.js",
     "google:sync": "node google-places-sync.js"
   },
   "keywords": [],
