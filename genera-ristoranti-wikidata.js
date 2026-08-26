@@ -7,9 +7,6 @@
 // OpenStreetMap. I record trovati entro 2,1 km da un'uscita
 // vengono salvati in ristoranti-wikidata.json e poi aggiunti
 // a ristoranti.json se non risultano già presenti in OSM.
-//
-// Wikidata è un database aperto/CC0 e dispone di coordinate
-// geografiche interrogabili tramite il servizio SPARQL.
 // =====================================================
 
 const fs = require("fs");
@@ -21,13 +18,7 @@ const OUTPUT_MERGED = "./ristoranti.json";
 const MAX_DISTANCE_METERS = 2100;
 const DEDUPE_DISTANCE_METERS = 120;
 const ENDPOINT = "https://query.wikidata.org/sparql";
-
-const USER_AGENT =
-  "1KM-E-SI-MANGIA/1.0 (https://1km-e-si-mangia.it; database enrichment)";
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const USER_AGENT = "1KM-E-SI-MANGIA/1.0 (https://1km-e-si-mangia.it; database enrichment)";
 
 function numero(value) {
   const n = Number(value);
@@ -49,8 +40,7 @@ function distanzaMetri(lat1, lon1, lat2, lon2) {
   const rad = Math.PI / 180;
   const dLat = (lat2 - lat1) * rad;
   const dLon = (lon2 - lon1) * rad;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
+  const a = Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
@@ -86,8 +76,6 @@ function costruisciQuery(uscite) {
   const minLon = Math.min(...validi.map(u => Number(u.lon))) - 0.08;
   const maxLon = Math.max(...validi.map(u => Number(u.lon))) + 0.08;
 
-  // wikibase:box restringe prima la ricerca geografica; il filtro
-  // preciso a 2,1 km viene poi eseguito localmente in JavaScript.
   return `
 SELECT ?item ?itemLabel ?coord ?website ?phone WHERE {
   SERVICE wikibase:box {
@@ -95,12 +83,9 @@ SELECT ?item ?itemLabel ?coord ?website ?phone WHERE {
     bd:serviceParam wikibase:cornerWest "Point(${minLon} ${minLat})"^^geo:wktLiteral .
     bd:serviceParam wikibase:cornerEast "Point(${maxLon} ${maxLat})"^^geo:wktLiteral .
   }
-
   ?item wdt:P31/wdt:P279* wd:Q11707 .
-
   OPTIONAL { ?item wdt:P856 ?website . }
   OPTIONAL { ?item wdt:P1329 ?phone . }
-
   SERVICE wikibase:label {
     bd:serviceParam wikibase:language "it,en" .
   }
@@ -124,9 +109,7 @@ async function scaricaWikidata(query) {
     });
 
     const text = await response.text();
-    if (!response.ok) {
-      throw new Error(`Wikidata HTTP ${response.status}: ${text.slice(0, 300)}`);
-    }
+    if (!response.ok) throw new Error(`Wikidata HTTP ${response.status}: ${text.slice(0, 300)}`);
 
     const json = JSON.parse(text);
     return Array.isArray(json?.results?.bindings) ? json.results.bindings : [];
@@ -136,7 +119,7 @@ async function scaricaWikidata(query) {
 }
 
 function estraiCoordinata(wkt) {
-  const match = String(wkt || "").match(/Point\\(([-0-9.]+)\\s+([-0-9.]+)\\)/i);
+  const match = String(wkt || "").match(/Point\(([-0-9.]+)\s+([-0-9.]+)\)/i);
   if (!match) return null;
   const lon = numero(match[1]);
   const lat = numero(match[2]);
@@ -171,27 +154,9 @@ function creaRecord(binding, uscita, distanza) {
       autostrada: uscita.autostrada || "",
       distanza_m: Math.round(distanza)
     },
-    parcheggio: {
-      presente: false,
-      tipo: null,
-      distanza_m: null,
-      osm_id: null,
-      lat: null,
-      lon: null,
-      accesso: null,
-      capacity: null
-    },
-    mezzi_voluminosi: {
-      stato: "non_verificato",
-      hgv: null,
-      maxheight: null,
-      maxweight: null,
-      maxlength: null
-    },
-    area_manovra: {
-      stato: "non_verificato",
-      fonte: null
-    },
+    parcheggio: { presente: false, tipo: null, distanza_m: null, osm_id: null, lat: null, lon: null, accesso: null, capacity: null },
+    mezzi_voluminosi: { stato: "non_verificato", hgv: null, maxheight: null, maxweight: null, maxlength: null },
+    area_manovra: { stato: "non_verificato", fonte: null },
     fonti: ["Wikidata"],
     ultima_verifica: new Date().toISOString()
   };
@@ -201,22 +166,17 @@ function eDuplicato(record, esistenti) {
   const nome = normalizza(record.nome);
 
   return esistenti.some(existing => {
-    const sameId = record.wikidata_id && existing.wikidata_id === record.wikidata_id;
-    if (sameId) return true;
+    if (record.wikidata_id && existing.wikidata_id === record.wikidata_id) return true;
 
-    const d = distanzaMetri(
-      record.lat,
-      record.lon,
-      Number(existing.lat),
-      Number(existing.lon)
-    );
+    const lat = numero(existing.lat);
+    const lon = numero(existing.lon);
+    if (lat === null || lon === null) return false;
 
+    const d = distanzaMetri(record.lat, record.lon, lat, lon);
     if (d > DEDUPE_DISTANCE_METERS) return false;
 
     const nomeEsistente = normalizza(existing.nome);
-    if (nome && nomeEsistente && (nome === nomeEsistente || nome.includes(nomeEsistente) || nomeEsistente.includes(nome))) {
-      return true;
-    }
+    if (nome && nomeEsistente && (nome === nomeEsistente || nome.includes(nomeEsistente) || nomeEsistente.includes(nome))) return true;
 
     const sitoA = normalizza(record.sito);
     const sitoB = normalizza(existing.sito);
@@ -233,15 +193,12 @@ async function main() {
   console.log(`🚗 Uscite disponibili: ${uscite.length}`);
   console.log("🌐 Interrogo Wikidata come seconda fonte aperta...");
 
-  const query = costruisciQuery(uscite);
   let bindings;
-
   try {
-    bindings = await scaricaWikidata(query);
+    bindings = await scaricaWikidata(costruisciQuery(uscite));
   } catch (error) {
-    console.warn("⚠️ Wikidata non disponibile: mantengo il database OSM senza modifiche.");
+    console.warn("⚠️ Wikidata non disponibile: mantengo invariati i database esistenti.");
     console.warn(error.message);
-    fs.writeFileSync(OUTPUT_WIKIDATA, "[]\n", "utf8");
     return;
   }
 
@@ -260,20 +217,14 @@ async function main() {
     if (!record || !record.nome.trim()) continue;
 
     const key = record.wikidata_id;
-    if (!candidati.has(key) || record.uscita.distanza_m < candidati.get(key).uscita.distanza_m) {
-      candidati.set(key, record);
-    }
+    if (!candidati.has(key) || record.uscita.distanza_m < candidati.get(key).uscita.distanza_m) candidati.set(key, record);
   }
 
   const secondDatabase = Array.from(candidati.values()).sort(
     (a, b) => a.uscita.distanza_m - b.uscita.distanza_m || a.nome.localeCompare(b.nome, "it")
   );
 
-  fs.writeFileSync(
-    OUTPUT_WIKIDATA,
-    JSON.stringify(secondDatabase, null, 2) + "\n",
-    "utf8"
-  );
+  fs.writeFileSync(OUTPUT_WIKIDATA, JSON.stringify(secondDatabase, null, 2) + "\n", "utf8");
 
   const merged = [...osm];
   let aggiunti = 0;
@@ -290,17 +241,11 @@ async function main() {
     Number(a.uscita?.distanza_m || 0) - Number(b.uscita?.distanza_m || 0)
   );
 
-  fs.writeFileSync(
-    OUTPUT_MERGED,
-    JSON.stringify(merged, null, 2) + "\n",
-    "utf8"
-  );
+  fs.writeFileSync(OUTPUT_MERGED, JSON.stringify(merged, null, 2) + "\n", "utf8");
 
   console.log(`✅ Secondo database: ${secondDatabase.length} ristoranti Wikidata entro 2,1 km.`);
   console.log(`➕ Nuovi ristoranti aggiunti al database principale: ${aggiunti}`);
   console.log(`📦 Database finale: ${merged.length} ristoranti.`);
-
-  await sleep(100);
 }
 
 main().catch(error => {
