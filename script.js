@@ -806,7 +806,7 @@ async function mostraTuttiRistoranti(uscita) {
   if (!Number.isFinite(distanzaGps) || distanzaGps > limiteGps) {
     mostraAvvisoGoogle(
       "Uscita troppo lontana",
-      `Sei a circa ${Math.round(distanzaGps / 1000)} km da questa uscita. Google Places viene interrogato solo quando il GPS conferma che sei vicino al casello selezionato (massimo ${CONFIG.googlePlacesMaxGpsDistanceKm} km).`
+      "Avvicinati a questa uscita per scoprire altri locali. Grazie al servizio Google Places potremo aiutarti a trovarne altri. Per ora ti mostriamo quelli presenti sul nostro sito."
     );
     console.log("Google Places BLOCCATO: uscita lontana dal GPS", {
       uscita: uscita.nome,
