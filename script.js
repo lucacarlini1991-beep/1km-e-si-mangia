@@ -10,6 +10,7 @@
 
 const CONFIG = {
 
+  // Limite RISTORANTI: 2 km DI STRADA (non linea d'aria).
   distanzaMassimaRistoranteKm: 2,
 
   tolleranzaDistanzaMetri: 100,
@@ -697,6 +698,139 @@ function normalizzaNomeGoogle(value) {
     .trim();
 }
 
+// =====================================================
+// DISTANZA REALE SU STRADA
+// =====================================================
+// Il limite ristoranti non viene piu' deciso in linea d'aria.
+// Usiamo OSRM per calcolare la distanza stradale dall'uscita.
+// Se il routing non riesce, il ristorante NON viene mostrato:
+// meglio nessun risultato che mostrare un locale oltre 2 km reali.
+
+const distanzaStradaleCache = new Map();
+
+async function distanzaStradaleRistoranti(uscita, ristoranti) {
+  if (!uscita || !Array.isArray(ristoranti) || !ristoranti.length) return [];
+
+  const origineLat = Number(uscita.lat);
+  const origineLon = Number(uscita.lon);
+
+  if (!Number.isFinite(origineLat) || !Number.isFinite(origineLon)) {
+    throw new Error("Coordinate uscita non valide");
+  }
+
+  const validi = ristoranti.filter(function(r) {
+    return Number.isFinite(Number(r?.lat)) && Number.isFinite(Number(r?.lon));
+  });
+
+  if (!validi.length) return [];
+
+  const risultati = new Map();
+  const daCalcolare = [];
+
+  validi.forEach(function(r) {
+    const chiave = [
+      String(uscita.id || ""),
+      Number(r.lat).toFixed(6),
+      Number(r.lon).toFixed(6)
+    ].join(":");
+
+    if (distanzaStradaleCache.has(chiave)) {
+      risultati.set(r, distanzaStradaleCache.get(chiave));
+    } else {
+      daCalcolare.push({ ristorante: r, chiave });
+    }
+  });
+
+  if (daCalcolare.length) {
+    const coordinate = [
+      `${origineLon},${origineLat}`,
+      ...daCalcolare.map(function(item) {
+        return `${Number(item.ristorante.lon)},${Number(item.ristorante.lat)}`;
+      })
+    ].join(";");
+
+    const destinazioni = daCalcolare.map(function(_, index) {
+      return index + 1;
+    }).join(";");
+
+    const endpoints = [
+      `https://router.project-osrm.org/table/v1/driving/${coordinate}?sources=0&destinations=${destinazioni}&annotations=distance`,
+      `https://routing.openstreetmap.de/routed-car/table/v1/driving/${coordinate}?sources=0&destinations=${destinazioni}&annotations=distance`
+    ];
+
+    let distances = null;
+
+    for (const url of endpoints) {
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          cache: "no-store"
+        });
+
+        if (!response.ok) continue;
+
+        const data = await response.json();
+        const row = Array.isArray(data?.distances) && Array.isArray(data.distances[0])
+          ? data.distances[0]
+          : null;
+
+        if (row && row.length === daCalcolare.length) {
+          distances = row;
+          break;
+        }
+      } catch (error) {
+        console.warn("Routing stradale non disponibile:", error);
+      }
+    }
+
+    if (!distances) {
+      throw new Error("Impossibile calcolare le distanze stradali");
+    }
+
+    daCalcolare.forEach(function(item, index) {
+      const distanza = Number(distances[index]);
+
+      if (Number.isFinite(distanza)) {
+        distanzaStradaleCache.set(item.chiave, distanza);
+        risultati.set(item.ristorante, distanza);
+      }
+    });
+  }
+
+  return validi.map(function(r) {
+    return {
+      ristorante: r,
+      distanza_m: risultati.get(r)
+    };
+  });
+}
+
+async function filtraRistorantiPerStrada(uscita, ristoranti) {
+  const misure = await distanzaStradaleRistoranti(uscita, ristoranti);
+  const limite = CONFIG.distanzaMassimaRistoranteKm * 1000;
+
+  return misure
+    .filter(function(item) {
+      return Number.isFinite(Number(item.distanza_m)) &&
+        Number(item.distanza_m) <= limite;
+    })
+    .map(function(item) {
+      const ristorante = item.ristorante;
+
+      if (!ristorante.uscita) {
+        ristorante.uscita = {
+          id: uscita.id,
+          nome: uscita.nome
+        };
+      }
+
+      // Questa e' la distanza usata dalla UI: DISTANZA STRADALE.
+      ristorante.uscita.distanza_m = Math.round(Number(item.distanza_m));
+
+      return ristorante;
+    });
+}
+
 function unisciRistorantiGoogle(ristorantiLocali, placesGoogle, uscita) {
   const risultato = Array.isArray(ristorantiLocali) ? ristorantiLocali.slice() : [];
   const usati = new Set();
@@ -782,24 +916,15 @@ function mostraAvvisoGoogle(titolo, testo) {
 async function mostraTuttiRistoranti(uscita) {
   if (!uscita) return;
 
-  // I ristoranti presenti nel database locale devono essere SEMPRE mostrati.
-  // Il GPS serve solo come condizione per eventuale arricchimento con Google Places.
-  const locali = ristorantiPerUscita(uscita);
-  window._ristorantiVisualizzati = locali;
-  mostraRistorantiDatabase(uscita, locali);
-
   const gps = window.GPSManager && typeof window.GPSManager.getLastPosition === "function"
     ? window.GPSManager.getLastPosition()
     : null;
 
-  const gpsValido = gps &&
-    Number.isFinite(Number(gps.lat)) &&
-    Number.isFinite(Number(gps.lng));
-
-  // Se il GPS non è disponibile, non blocchiamo mai la visualizzazione locale
-  // e non mostriamo messaggi tecnici all'utente.
-  if (!gpsValido) {
-    console.log("Google Places saltato: posizione GPS non disponibile.");
+  if (!gps || !Number.isFinite(Number(gps.lat)) || !Number.isFinite(Number(gps.lng))) {
+    mostraAvvisoGoogle(
+      "Posizione necessaria",
+      "Per mostrare i ristoranti devi prima attivare la tua posizione GPS. Senza una posizione valida non facciamo nessuna chiamata a Google Places."
+    );
     return;
   }
 
@@ -812,19 +937,44 @@ async function mostraTuttiRistoranti(uscita) {
   const tolleranzaGps = Math.max(0, Number(gps.accuracy) || 0);
   const limiteGps = CONFIG.googlePlacesMaxGpsDistanceKm * 1000 + tolleranzaGps;
 
-  // Se l'utente non è vicino al casello, manteniamo semplicemente il database
-  // locale. Nessun popup "Uscita troppo lontana" e nessuna chiamata Google.
   if (!Number.isFinite(distanzaGps) || distanzaGps > limiteGps) {
-    console.log("Google Places saltato: uscita lontana dal GPS", {
+    mostraAvvisoGoogle(
+      "Uscita troppo lontana",
+      `Sei a circa ${Math.round(distanzaGps / 1000)} km da questa uscita. Google Places viene interrogato solo quando il GPS conferma che sei vicino al casello selezionato (massimo ${CONFIG.googlePlacesMaxGpsDistanceKm} km).`
+    );
+    console.log("Google Places BLOCCATO: uscita lontana dal GPS", {
       uscita: uscita.nome,
-      distanzaGpsMetri: Number.isFinite(distanzaGps) ? Math.round(distanzaGps) : null,
+      distanzaGpsMetri: Math.round(distanzaGps),
       limiteGpsMetri: Math.round(limiteGps)
     });
     return;
   }
 
-  // L'utente è vicino all'uscita: arricchiamo silenziosamente i risultati locali
-  // con Google Places. La chiave Google resta sempre sul server Vercel.
+  // PRIMA verifichiamo la distanza REALE SU STRADA.
+  // Non mostriamo piu' subito i risultati in linea d'aria.
+  const localiGrezzi = ristorantiPerUscita(uscita);
+
+  let locali = [];
+  try {
+    locali = await filtraRistorantiPerStrada(uscita, localiGrezzi);
+  } catch (error) {
+    console.error("Routing stradale non disponibile:", error);
+    mostraAvvisoGoogle(
+      "Distanza stradale non disponibile",
+      "Non riesco a verificare la distanza reale su strada da questa uscita. Per evitare di mostrare ristoranti oltre i 2 km, non mostro risultati finche' la distanza stradale non e' verificabile."
+    );
+    return;
+  }
+
+  window._ristorantiVisualizzati = locali;
+  mostraRistorantiDatabase(uscita, locali);
+
+  const panel = document.getElementById("ristorantiMapPanel");
+  if (panel) {
+    const titolo = panel.querySelector("strong");
+    if (titolo) titolo.textContent = "🍴 Ristoranti · ricerca Google...";
+  }
+
   try {
     const response = await fetch("/api/places", {
       method: "POST",
@@ -842,20 +992,36 @@ async function mostraTuttiRistoranti(uscita) {
     }
 
     const placesGoogle = Array.isArray(data.places) ? data.places : [];
-    const combinati = unisciRistorantiGoogle(locali, placesGoogle, uscita);
+    const combinatiGrezzi = unisciRistorantiGoogle(locali, placesGoogle, uscita);
+
+    // Anche i risultati Google devono rispettare i 2 km STRADALI.
+    const combinati = await filtraRistorantiPerStrada(uscita, combinatiGrezzi);
+
     window._ristorantiVisualizzati = combinati;
     mostraRistorantiDatabase(uscita, combinati);
 
-    console.log("Google Places OK", {
+    console.log("Google Places OK + filtro stradale", {
       uscita: uscita.nome,
       gpsDistanzaMetri: Math.round(distanzaGps),
       risultatiGoogle: placesGoogle.length,
-      risultatiTotali: combinati.length
+      risultatiTotali: combinati.length,
+      limiteStradaleMetri: CONFIG.distanzaMassimaRistoranteKm * 1000
     });
   } catch (error) {
-    // Google è solo un arricchimento: se non risponde, lasciamo intatti i dati locali.
     console.error("Google Places non disponibile:", error);
+
+    // Google puo' fallire: manteniamo SOLO i locali gia'
+    // verificati con distanza stradale.
     window._ristorantiVisualizzati = locali;
+    mostraRistorantiDatabase(uscita, locali);
+
+    const current = document.getElementById("ristorantiMapPanel");
+    if (current) {
+      const info = document.createElement("div");
+      info.style.cssText = "margin:10px 0;padding:10px;border-radius:10px;background:#fff4d6;color:#6b5317;font-size:12px;";
+      info.textContent = "Google Places non ha risposto. Mostro i ristoranti gia verificati entro 2 km su strada.";
+      current.insertBefore(info, current.children[1] || null);
+    }
   }
 }
 
