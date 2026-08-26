@@ -18,7 +18,7 @@ const CONFIG = {
   // dimostra che si trova abbastanza vicino al casello selezionato.
   // Questo impedisce, ad esempio, di selezionare Reggio Calabria
   // mentre ci si trova in Valle d'Aosta e generare una chiamata Google.
-  googlePlacesMaxGpsDistanceKm: 20,
+  googlePlacesMaxGpsDistanceKm: 2,
   googlePlacesRadiusMeters: 2000,
   googlePlacesMaxResults: 15,
 
@@ -130,7 +130,6 @@ let ristorantiDatabase = [];
 
 const ristorantiLayer = L.layerGroup().addTo(map);
 const ristorantiPerUscitaMap = new Map();
-let ristorantiDatabaseReady = Promise.resolve();
 
 const restaurantIcon = L.divIcon({
   className: "restaurant-map-icon",
@@ -397,6 +396,7 @@ function creaPopupRistorante(ristorante) {
       ${parcheggio}
       ${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}
       ${ristorante.google_address ? `<small>📍 ${escapeHtml(ristorante.google_address)}</small>` : ""}
+      ${ristorante.fonte === "Google Places" ? `<small style="color:#075c3b;font-weight:700">Google Places</small>` : ""}
       ${bloccoRistoranteExtra(ristorante)}
       <button type="button" data-naviga-ristorante="${ristoranteId}" style="display:block;width:100%;margin-top:10px;padding:10px 12px;border:0;border-radius:9px;background:#075c3b;color:#fff;font-size:14px;font-weight:800;cursor:pointer">🧭 NAVIGA</button>
     </div>
@@ -497,6 +497,7 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
             <span>${parcheggio}</span>
             ${ristorante.telefono ? `<span>📞 ${escapeHtml(ristorante.telefono)}</span>` : ""}
             ${ristorante.google_address ? `<span>📍 ${escapeHtml(ristorante.google_address)}</span>` : ""}
+            ${ristorante.fonte === "Google Places" ? `<span style="color:#075c3b;font-weight:700">Google Places</span>` : ""}
             ${bloccoRistoranteExtra(ristorante)}
           </div>
         </div>
@@ -753,7 +754,7 @@ function unisciRistorantiGoogle(ristorantiLocali, placesGoogle, uscita) {
       nome,
       lat,
       lon,
-      cucina: "",
+      cucina: "Google Places",
       fonte: "Google Places",
       uscita: {
         id: uscita.id,
@@ -778,23 +779,35 @@ function mostraAvvisoGoogle(titolo, testo) {
   panel.querySelector("#chiudiRistorantiMap")?.addEventListener("click", chiudiPannelloRistoranti);
 }
 
+function mostraSuggerimentoGooglePlaces() {
+  const panel = document.getElementById("ristorantiMapPanel");
+  if (!panel) return;
+
+  const box = document.createElement("div");
+  box.id = "googlePlacesHint";
+  box.style.cssText = "margin:10px 0;padding:12px 14px;border-radius:12px;background:#f4f7f5;color:#46544f;font-size:13px;line-height:1.45;";
+  box.innerHTML = "<strong style=\"display:block;color:#075c3b;margin-bottom:4px\">📍 Scopri altri locali</strong>Attiva la tua posizione per trovare <strong>anche altri locali vicino a questa uscita</strong>.<br>Qui trovi già quelli <strong>presenti sul nostro sito</strong>.";
+
+  const vecchio = panel.querySelector("#googlePlacesHint");
+  if (vecchio) vecchio.replaceWith(box);
+  else panel.insertBefore(box, panel.children[1] || null);
+}
+
 async function mostraTuttiRistoranti(uscita) {
   if (!uscita) return;
 
-  // Il nostro database viene mostrato SEMPRE.
-  // GPS e Google Places sono solo un arricchimento aggiuntivo.
-  await ristorantiDatabaseReady;
-
+  // Il nostro database viene SEMPRE mostrato per primo.
+  // Google Places è solo un'integrazione aggiuntiva quando l'utente
+  // si trova realmente vicino all'uscita selezionata.
   const locali = ristorantiPerUscita(uscita);
   window._ristorantiVisualizzati = locali;
   mostraRistorantiDatabase(uscita, locali);
+  mostraSuggerimentoGooglePlaces();
 
   const gps = window.GPSManager && typeof window.GPSManager.getLastPosition === "function"
     ? window.GPSManager.getLastPosition()
     : null;
 
-  // Senza una posizione valida non possiamo cercare altri locali,
-  // ma i locali del nostro sito restano comunque disponibili.
   if (!gps || !Number.isFinite(Number(gps.lat)) || !Number.isFinite(Number(gps.lng))) {
     return;
   }
@@ -805,11 +818,14 @@ async function mostraTuttiRistoranti(uscita) {
     Number(uscita.lat),
     Number(uscita.lon)
   );
-  const tolleranzaGps = Math.max(0, Number(gps.accuracy) || 0);
+
+  // L'accuratezza GPS viene considerata, ma non può allargare il limite oltre 300 m.
+  const accuratezzaGps = Number(gps.accuracy);
+  const tolleranzaGps = Number.isFinite(accuratezzaGps)
+    ? Math.min(Math.max(accuratezzaGps, 0), 300)
+    : 0;
   const limiteGps = CONFIG.googlePlacesMaxGpsDistanceKm * 1000 + tolleranzaGps;
 
-  // Se l'utente è lontano dall'uscita, non interroghiamo Google.
-  // Il database del sito è già stato mostrato e rimane il contenuto principale.
   if (!Number.isFinite(distanzaGps) || distanzaGps > limiteGps) {
     return;
   }
@@ -830,18 +846,43 @@ async function mostraTuttiRistoranti(uscita) {
       throw new Error(data?.error || `HTTP ${response.status}`);
     }
 
-    const placesGoogle = Array.isArray(data.places) ? data.places : [];
+    // Sicurezza aggiuntiva: anche se il servizio restituisse un risultato
+    // fuori raggio, sul sito non lo mostriamo mai oltre i 2 km dall'uscita.
+    const placesGoogle = (Array.isArray(data.places) ? data.places : []).filter(function(place) {
+      const lat = Number(place?.location?.latitude);
+      const lon = Number(place?.location?.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+
+      const distanza = distanzaGpsMetri(
+        Number(uscita.lat),
+        Number(uscita.lon),
+        lat,
+        lon
+      );
+
+      return distanza <= CONFIG.googlePlacesRadiusMeters;
+    });
+
     const combinati = unisciRistorantiGoogle(locali, placesGoogle, uscita);
     window._ristorantiVisualizzati = combinati;
     mostraRistorantiDatabase(uscita, combinati);
+    mostraSuggerimentoGooglePlaces();
+
+    console.log("Google Places OK", {
+      uscita: uscita.nome,
+      gpsDistanzaMetri: Math.round(distanzaGps),
+      risultatiGoogle: placesGoogle.length,
+      risultatiTotali: combinati.length
+    });
   } catch (error) {
-    // Google è solo un servizio aggiuntivo: in caso di problema
-    // lasciamo invariati i locali già presenti sul nostro sito.
-    console.warn("Ricerca aggiuntiva non disponibile:", error);
+    // In caso di problema manteniamo semplicemente il nostro elenco.
+    // L'utente non deve vedere dettagli tecnici del servizio.
+    console.error("Google Places non disponibile:", error);
     window._ristorantiVisualizzati = locali;
+    mostraRistorantiDatabase(uscita, locali);
+    mostraSuggerimentoGooglePlaces();
   }
 }
-
 window.mostraTuttiRistoranti = mostraTuttiRistoranti;
 
 // =====================================================
@@ -888,7 +929,7 @@ document.addEventListener("click", function(event) {
 }, true);
 
 // Carica e indicizza il database ristoranti per ID uscita.
-ristorantiDatabaseReady = fetch("./ristoranti.json")
+fetch("./ristoranti.json")
   .then(function(response) {
     if (!response.ok) throw new Error("Impossibile caricare ristoranti.json");
     return response.json();
