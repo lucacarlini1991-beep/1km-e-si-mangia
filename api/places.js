@@ -10,10 +10,22 @@ const MAX_RADIUS = 2000;
 const DEFAULT_MAX_RESULTS = 15;
 const MAX_RESULTS = 15;
 const CACHE_DETAILS_LIMIT = 5;
+const ONSITE_MAX_DISTANCE_METERS = 5000;
+const MIN_SECOND_CENTER_DISTANCE_METERS = 250;
 
 function numero(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function distanzaMetri(aLat, aLon, bLat, bLon) {
+  const R = 6371000;
+  const p1 = Number(aLat) * Math.PI / 180;
+  const p2 = Number(bLat) * Math.PI / 180;
+  const dp = (Number(bLat) - Number(aLat)) * Math.PI / 180;
+  const dl = (Number(bLon) - Number(aLon)) * Math.PI / 180;
+  const x = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
 function cacheKey(lat, lon, radius) {
@@ -79,7 +91,6 @@ async function dettagliPlace(apiKey, placeId) {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": apiKey,
-      // Solo dati necessari alla scheda. displayName è Pro; location/address/types sono Essentials.
       "X-Goog-FieldMask": "id,displayName,formattedAddress,location,types"
     }
   });
@@ -90,11 +101,63 @@ async function dettagliPlace(apiKey, placeId) {
 }
 
 async function recuperaDaCache(apiKey, cache) {
-  // Non salviamo nomi/indirizzi Google: conserviamo solo i Place ID.
-  // Recuperiamo pochi dettagli alla volta, su richiesta, usando gli ID salvati.
   const ids = cache.ids.slice(0, CACHE_DETAILS_LIMIT);
   const risultati = await Promise.all(ids.map((id) => dettagliPlace(apiKey, id)));
   return risultati.filter(Boolean);
+}
+
+async function cercaCentro(apiKey, center, radius, maxResultCount) {
+  const key = cacheKey(center.lat, center.lon, radius);
+
+  const cached = await leggiCache(key);
+  if (cached) {
+    const places = await recuperaDaCache(apiKey, cached);
+    if (places.length) {
+      console.log("Google Places CACHE HIT", {
+        cacheKey: key,
+        placeIds: cached.ids.length,
+        dettagli: places.length
+      });
+      return { places, cache: "hit" };
+    }
+  }
+
+  const response = await fetch(ENDPOINT_NEARBY, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types"
+    },
+    body: JSON.stringify({
+      includedTypes: ["restaurant"],
+      maxResultCount,
+      rankPreference: "DISTANCE",
+      languageCode: "it",
+      regionCode: "IT",
+      locationRestriction: {
+        circle: {
+          center: { latitude: center.lat, longitude: center.lon },
+          radius
+        }
+      }
+    })
+  });
+
+  const text = await response.text();
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; } catch (_) { data = {}; }
+
+  if (!response.ok) {
+    console.error("Google Places error:", response.status, data?.error || text);
+    throw new Error(data?.error?.message || `Google Places HTTP ${response.status}`);
+  }
+
+  const places = Array.isArray(data.places) ? data.places : [];
+  const placeIds = places.map((place) => place?.id).filter(Boolean).map(String);
+  await salvaCache(key, center.lat, center.lon, radius, placeIds);
+
+  return { places, cache: "miss" };
 }
 
 module.exports = async function handler(req, res) {
@@ -119,54 +182,46 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "Coordinate del casello non valide." });
   }
 
-  const key = cacheKey(lat, lon, radius);
+  const originLat = numero(body?.searchOrigin?.lat);
+  const originLon = numero(body?.searchOrigin?.lon);
+  const originValido = originLat !== null && originLon !== null &&
+    originLat >= -90 && originLat <= 90 && originLon >= -180 && originLon <= 180;
+
+  const centri = [{ lat, lon, tipo: "uscita" }];
+
+  // Se il dispositivo ha una posizione reale e si trova entro 5 km
+  // dall'uscita, eseguiamo una seconda Nearby Search centrata su di lui.
+  // In questo modo Google può restituire locali che non emergono nella
+  // ricerca centrata esattamente sul casello. Il filtro stradale finale
+  // del sito continua comunque a decidere quali risultati sono validi.
+  if (originValido) {
+    const distanza = distanzaMetri(lat, lon, originLat, originLon);
+    if (distanza <= ONSITE_MAX_DISTANCE_METERS && distanza >= MIN_SECOND_CENTER_DISTANCE_METERS) {
+      centri.push({ lat: originLat, lon: originLon, tipo: "posizione" });
+    }
+  }
 
   try {
-    const cached = await leggiCache(key);
-    if (cached) {
-      const places = await recuperaDaCache(apiKey, cached);
-      if (places.length) {
-        console.log("Google Places CACHE HIT", { cacheKey: key, placeIds: cached.ids.length, dettagli: places.length });
-        return res.status(200).json({ places, cache: "place_id" });
+    const risposte = await Promise.all(
+      centri.map((centro) => cercaCentro(apiKey, centro, radius, maxResultCount))
+    );
+
+    const unici = new Map();
+    for (const risposta of risposte) {
+      for (const place of risposta.places || []) {
+        if (place?.id && !unici.has(String(place.id))) {
+          unici.set(String(place.id), place);
+        }
       }
     }
 
-    const response = await fetch(ENDPOINT_NEARBY, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types"
-      },
-      body: JSON.stringify({
-        includedTypes: ["restaurant"],
-        maxResultCount,
-        rankPreference: "DISTANCE",
-        languageCode: "it",
-        regionCode: "IT",
-        locationRestriction: {
-          circle: {
-            center: { latitude: lat, longitude: lon },
-            radius
-          }
-        }
-      })
+    const places = Array.from(unici.values());
+
+    return res.status(200).json({
+      places,
+      cache: risposte.every((r) => r.cache === "hit") ? "hit" : "mixed",
+      ricercaInZona: centri.length > 1
     });
-
-    const text = await response.text();
-    let data = {};
-    try { data = text ? JSON.parse(text) : {}; } catch (_) { data = {}; }
-
-    if (!response.ok) {
-      console.error("Google Places error:", response.status, data?.error || text);
-      return res.status(response.status).json({ error: data?.error?.message || `Google Places HTTP ${response.status}` });
-    }
-
-    const places = Array.isArray(data.places) ? data.places : [];
-    const placeIds = places.map((place) => place?.id).filter(Boolean).map(String);
-    await salvaCache(key, lat, lon, radius, placeIds);
-
-    return res.status(200).json({ places, cache: "miss" });
   } catch (error) {
     console.error("Google Places proxy error:", error);
     return res.status(502).json({ error: "Impossibile contattare Google Places." });
