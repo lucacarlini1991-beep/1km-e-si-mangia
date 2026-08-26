@@ -130,6 +130,7 @@ let ristorantiDatabase = [];
 
 const ristorantiLayer = L.layerGroup().addTo(map);
 const ristorantiPerUscitaMap = new Map();
+let ristorantiDatabaseReady = Promise.resolve();
 
 const restaurantIcon = L.divIcon({
   className: "restaurant-map-icon",
@@ -396,7 +397,6 @@ function creaPopupRistorante(ristorante) {
       ${parcheggio}
       ${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}
       ${ristorante.google_address ? `<small>📍 ${escapeHtml(ristorante.google_address)}</small>` : ""}
-      ${ristorante.fonte === "Google Places" ? `<small style="color:#075c3b;font-weight:700">Google Places</small>` : ""}
       ${bloccoRistoranteExtra(ristorante)}
       <button type="button" data-naviga-ristorante="${ristoranteId}" style="display:block;width:100%;margin-top:10px;padding:10px 12px;border:0;border-radius:9px;background:#075c3b;color:#fff;font-size:14px;font-weight:800;cursor:pointer">🧭 NAVIGA</button>
     </div>
@@ -497,7 +497,6 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
             <span>${parcheggio}</span>
             ${ristorante.telefono ? `<span>📞 ${escapeHtml(ristorante.telefono)}</span>` : ""}
             ${ristorante.google_address ? `<span>📍 ${escapeHtml(ristorante.google_address)}</span>` : ""}
-            ${ristorante.fonte === "Google Places" ? `<span style="color:#075c3b;font-weight:700">Google Places</span>` : ""}
             ${bloccoRistoranteExtra(ristorante)}
           </div>
         </div>
@@ -754,7 +753,7 @@ function unisciRistorantiGoogle(ristorantiLocali, placesGoogle, uscita) {
       nome,
       lat,
       lon,
-      cucina: "Google Places",
+      cucina: "",
       fonte: "Google Places",
       uscita: {
         id: uscita.id,
@@ -782,15 +781,21 @@ function mostraAvvisoGoogle(titolo, testo) {
 async function mostraTuttiRistoranti(uscita) {
   if (!uscita) return;
 
+  // Il nostro database viene mostrato SEMPRE.
+  // GPS e Google Places sono solo un arricchimento aggiuntivo.
+  await ristorantiDatabaseReady;
+
+  const locali = ristorantiPerUscita(uscita);
+  window._ristorantiVisualizzati = locali;
+  mostraRistorantiDatabase(uscita, locali);
+
   const gps = window.GPSManager && typeof window.GPSManager.getLastPosition === "function"
     ? window.GPSManager.getLastPosition()
     : null;
 
+  // Senza una posizione valida non possiamo cercare altri locali,
+  // ma i locali del nostro sito restano comunque disponibili.
   if (!gps || !Number.isFinite(Number(gps.lat)) || !Number.isFinite(Number(gps.lng))) {
-    mostraAvvisoGoogle(
-      "Posizione necessaria",
-      "Per mostrare i ristoranti devi prima attivare la tua posizione GPS. Senza una posizione valida non facciamo nessuna chiamata a Google Places."
-    );
     return;
   }
 
@@ -803,29 +808,10 @@ async function mostraTuttiRistoranti(uscita) {
   const tolleranzaGps = Math.max(0, Number(gps.accuracy) || 0);
   const limiteGps = CONFIG.googlePlacesMaxGpsDistanceKm * 1000 + tolleranzaGps;
 
+  // Se l'utente è lontano dall'uscita, non interroghiamo Google.
+  // Il database del sito è già stato mostrato e rimane il contenuto principale.
   if (!Number.isFinite(distanzaGps) || distanzaGps > limiteGps) {
-    mostraAvvisoGoogle(
-      "Uscita troppo lontana",
-      "Avvicinati a questa uscita per scoprire altri locali. Grazie al servizio Google Places potremo aiutarti a trovarne altri. Per ora ti mostriamo quelli presenti sul nostro sito."
-    );
-    console.log("Google Places BLOCCATO: uscita lontana dal GPS", {
-      uscita: uscita.nome,
-      distanzaGpsMetri: Math.round(distanzaGps),
-      limiteGpsMetri: Math.round(limiteGps)
-    });
     return;
-  }
-
-  // Mostriamo subito i dati gia presenti nel nostro database, poi li arricchiamo
-  // con Google. La chiave Google resta sempre sul server Vercel.
-  const locali = ristorantiPerUscita(uscita);
-  window._ristorantiVisualizzati = locali;
-  mostraRistorantiDatabase(uscita, locali);
-
-  const panel = document.getElementById("ristorantiMapPanel");
-  if (panel) {
-    const titolo = panel.querySelector("strong");
-    if (titolo) titolo.textContent = "🍴 Ristoranti · ricerca Google...";
   }
 
   try {
@@ -848,24 +834,11 @@ async function mostraTuttiRistoranti(uscita) {
     const combinati = unisciRistorantiGoogle(locali, placesGoogle, uscita);
     window._ristorantiVisualizzati = combinati;
     mostraRistorantiDatabase(uscita, combinati);
-
-    console.log("Google Places OK", {
-      uscita: uscita.nome,
-      gpsDistanzaMetri: Math.round(distanzaGps),
-      risultatiGoogle: placesGoogle.length,
-      risultatiTotali: combinati.length
-    });
   } catch (error) {
-    console.error("Google Places non disponibile:", error);
+    // Google è solo un servizio aggiuntivo: in caso di problema
+    // lasciamo invariati i locali già presenti sul nostro sito.
+    console.warn("Ricerca aggiuntiva non disponibile:", error);
     window._ristorantiVisualizzati = locali;
-    // Non perdiamo i risultati OSM gia disponibili se Google ha un problema.
-    const current = document.getElementById("ristorantiMapPanel");
-    if (current) {
-      const info = document.createElement("div");
-      info.style.cssText = "margin:10px 0;padding:10px;border-radius:10px;background:#fff4d6;color:#6b5317;font-size:12px;";
-      info.textContent = "Google Places non ha risposto. Mostro i ristoranti gia presenti nel database.";
-      current.insertBefore(info, current.children[1] || null);
-    }
   }
 }
 
@@ -915,7 +888,7 @@ document.addEventListener("click", function(event) {
 }, true);
 
 // Carica e indicizza il database ristoranti per ID uscita.
-fetch("./ristoranti.json")
+ristorantiDatabaseReady = fetch("./ristoranti.json")
   .then(function(response) {
     if (!response.ok) throw new Error("Impossibile caricare ristoranti.json");
     return response.json();
