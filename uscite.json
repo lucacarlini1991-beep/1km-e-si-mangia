@@ -200,50 +200,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0019",
-    "nome": "A15",
-    "autostrada": "A1",
-    "nome_autostrada": "Autostrada del Sole",
-    "numero_uscita": null,
-    "lat": 44.863953,
-    "lon": 10.2387106,
-    "punti_osm": [
-      {
-        "osm_id": "node/9187672",
-        "lat": 44.863953,
-        "lon": 10.2387106,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0020",
-    "nome": "A15",
-    "autostrada": "A1",
-    "nome_autostrada": "Autostrada del Sole",
-    "numero_uscita": null,
-    "lat": 44.8674079,
-    "lon": 10.2234372,
-    "punti_osm": [
-      {
-        "osm_id": "node/4557079515",
-        "lat": 44.8674079,
-        "lon": 10.2234372,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-0091",
     "nome": "A16 Napoli-Canosa",
     "autostrada": "A1",
@@ -314,50 +270,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0358",
-    "nome": "A30",
-    "autostrada": "A1",
-    "nome_autostrada": "Autostrada del Sole",
-    "numero_uscita": null,
-    "lat": 41.0346472,
-    "lon": 14.3224851,
-    "punti_osm": [
-      {
-        "osm_id": "node/158641848",
-        "lat": 41.0346472,
-        "lon": 14.3224851,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0359",
-    "nome": "A30",
-    "autostrada": "A1",
-    "nome_autostrada": "Autostrada del Sole",
-    "numero_uscita": null,
-    "lat": 41.042537,
-    "lon": 14.3224159,
-    "punti_osm": [
-      {
-        "osm_id": "node/193772902",
-        "lat": 41.042537,
-        "lon": 14.3224159,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0945",
@@ -2566,78 +2478,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0647",
-    "nome": "A26",
-    "autostrada": "A10",
-    "nome_autostrada": "Autostrada dei Fiori",
-    "numero_uscita": null,
-    "lat": 44.4286257,
-    "lon": 8.7427975,
-    "punti_osm": [
-      {
-        "osm_id": "node/261737030",
-        "lat": 44.4286257,
-        "lon": 8.7427975,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0648",
-    "nome": "A26",
-    "autostrada": "A10",
-    "nome_autostrada": "Autostrada dei Fiori",
-    "numero_uscita": null,
-    "lat": 44.4321754,
-    "lon": 8.7519336,
-    "punti_osm": [
-      {
-        "osm_id": "node/292040842",
-        "lat": 44.4321754,
-        "lon": 8.7519336,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0338",
-    "nome": "A6",
-    "autostrada": "A10",
-    "nome_autostrada": "Autostrada dei Fiori",
-    "numero_uscita": null,
-    "lat": 44.2896133,
-    "lon": 8.4434113,
-    "punti_osm": [
-      {
-        "osm_id": "node/314065445",
-        "lat": 44.2890725,
-        "lon": 8.4426939,
-        "distanza_autostrada_m": 12.1
-      },
-      {
-        "osm_id": "node/148361905",
-        "lat": 44.2901541,
-        "lon": 8.4441287,
-        "distanza_autostrada_m": 17.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0431",
@@ -5316,34 +5156,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0994",
-    "nome": "A13-Diramazione Padova Sud",
-    "autostrada": "A13",
-    "nome_autostrada": "Diramazione Padova sud",
-    "numero_uscita": "9",
-    "lat": 45.365987,
-    "lon": 11.8548541,
-    "punti_osm": [
-      {
-        "osm_id": "node/331210709",
-        "lat": 45.3658135,
-        "lon": 11.8547856,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/1716406439",
-        "lat": 45.3661605,
-        "lon": 11.8549226,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-1853",
     "nome": "Altedo",
     "autostrada": "A13",
@@ -5850,50 +5662,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0531",
-    "nome": "A16",
-    "autostrada": "A14",
-    "nome_autostrada": "Autostrada Adriatica",
-    "numero_uscita": null,
-    "lat": 41.252703,
-    "lon": 16.0136536,
-    "punti_osm": [
-      {
-        "osm_id": "node/248980220",
-        "lat": 41.252703,
-        "lon": 16.0136536,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0532",
-    "nome": "A16",
-    "autostrada": "A14",
-    "nome_autostrada": "Autostrada Adriatica",
-    "numero_uscita": null,
-    "lat": 41.2466956,
-    "lon": 16.0258904,
-    "punti_osm": [
-      {
-        "osm_id": "node/392257931",
-        "lat": 41.2466956,
-        "lon": 16.0258904,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0807",
@@ -8628,28 +8396,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0533",
-    "nome": "A14",
-    "autostrada": "A16",
-    "nome_autostrada": "Autostrada dei Due Mari",
-    "numero_uscita": null,
-    "lat": 41.2441996,
-    "lon": 16.0156059,
-    "punti_osm": [
-      {
-        "osm_id": "node/248981042",
-        "lat": 41.2441996,
-        "lon": 16.0156059,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0085",
@@ -13158,96 +12904,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0269",
-    "nome": "A26",
-    "autostrada": "A21",
-    "nome_autostrada": "Autostrada dei Vini",
-    "numero_uscita": null,
-    "lat": 44.9359063,
-    "lon": 8.5700034,
-    "punti_osm": [
-      {
-        "osm_id": "node/455043817",
-        "lat": 44.9348591,
-        "lon": 8.5625729,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/289793511",
-        "lat": 44.9360231,
-        "lon": 8.5710718,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/78230974",
-        "lat": 44.9361366,
-        "lon": 8.572525,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/78231383",
-        "lat": 44.9366064,
-        "lon": 8.5738441,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 4,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0243",
-    "nome": "A7",
-    "autostrada": "A21",
-    "nome_autostrada": "Autostrada dei Vini",
-    "numero_uscita": null,
-    "lat": 44.9164371,
-    "lon": 8.843775,
-    "punti_osm": [
-      {
-        "osm_id": "node/45605223",
-        "lat": 44.9164371,
-        "lon": 8.843775,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0244",
-    "nome": "A7",
-    "autostrada": "A21",
-    "nome_autostrada": "Autostrada dei Vini",
-    "numero_uscita": null,
-    "lat": 44.9145812,
-    "lon": 8.8266742,
-    "punti_osm": [
-      {
-        "osm_id": "node/460400995",
-        "lat": 44.9145089,
-        "lon": 8.8287972,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/364987651",
-        "lat": 44.9146535,
-        "lon": 8.8245512,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-1239",
     "nome": "Alessandria Est",
     "autostrada": "A21",
@@ -15944,34 +15600,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0288",
-    "nome": "A24",
-    "autostrada": "A24",
-    "nome_autostrada": null,
-    "numero_uscita": null,
-    "lat": 41.9007977,
-    "lon": 12.5297948,
-    "punti_osm": [
-      {
-        "osm_id": "node/101181735",
-        "lat": 41.9000474,
-        "lon": 12.5290468,
-        "distanza_autostrada_m": 209.5
-      },
-      {
-        "osm_id": "node/101181731",
-        "lat": 41.901548,
-        "lon": 12.5305427,
-        "distanza_autostrada_m": 71.7
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-0311",
     "nome": "Assergi",
     "autostrada": "A24",
@@ -17156,28 +16784,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0797",
-    "nome": "A21",
-    "autostrada": "A26",
-    "nome_autostrada": "Autostrada dei Trafori",
-    "numero_uscita": null,
-    "lat": 44.9347888,
-    "lon": 8.5722015,
-    "punti_osm": [
-      {
-        "osm_id": "node/289793175",
-        "lat": 44.9347888,
-        "lon": 8.5722015,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-0267",
     "nome": "A21 - Autostrada dei Vini",
     "autostrada": "A26",
@@ -17220,50 +16826,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0002",
-    "nome": "A4",
-    "autostrada": "A26",
-    "nome_autostrada": "Autostrada dei Trafori",
-    "numero_uscita": null,
-    "lat": 45.4704418,
-    "lon": 8.4485329,
-    "punti_osm": [
-      {
-        "osm_id": "node/172129",
-        "lat": 45.4704418,
-        "lon": 8.4485329,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0838",
-    "nome": "A8/A26",
-    "autostrada": "A26",
-    "nome_autostrada": "Autostrada dei Trafori",
-    "numero_uscita": null,
-    "lat": 45.692744,
-    "lon": 8.5411226,
-    "punti_osm": [
-      {
-        "osm_id": "node/295724694",
-        "lat": 45.692744,
-        "lon": 8.5411226,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0305",
@@ -17554,34 +17116,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0273",
-    "nome": "Diramazione A7",
-    "autostrada": "A26",
-    "nome_autostrada": "Autostrada dei Trafori",
-    "numero_uscita": null,
-    "lat": 44.7576331,
-    "lon": 8.6449988,
-    "punti_osm": [
-      {
-        "osm_id": "node/81232501",
-        "lat": 44.7560094,
-        "lon": 8.6458693,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/455178904",
-        "lat": 44.7592568,
-        "lon": 8.6441283,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-0003",
     "nome": "Gravellona Toce",
     "autostrada": "A26",
@@ -17860,28 +17394,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-1087",
-    "nome": "A4",
-    "autostrada": "A26/A4",
-    "nome_autostrada": "A26/A4 Diramazione Stroppiana-Santhià",
-    "numero_uscita": null,
-    "lat": 45.372023,
-    "lon": 8.1317541,
-    "punti_osm": [
-      {
-        "osm_id": "node/375768818",
-        "lat": 45.372023,
-        "lon": 8.1317541,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-1471",
     "nome": "Vercelli Ovest",
     "autostrada": "A26/A4",
@@ -17910,50 +17422,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-1936",
-    "nome": "A26",
-    "autostrada": "A26/A7",
-    "nome_autostrada": "Diramazione Predosa-Bettole",
-    "numero_uscita": null,
-    "lat": 44.7634135,
-    "lon": 8.6474943,
-    "punti_osm": [
-      {
-        "osm_id": "node/6838469501",
-        "lat": 44.7634135,
-        "lon": 8.6474943,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-1143",
-    "nome": "A7",
-    "autostrada": "A26/A7",
-    "nome_autostrada": "Diramazione Predosa-Bettole",
-    "numero_uscita": null,
-    "lat": 44.8323838,
-    "lon": 8.8238957,
-    "punti_osm": [
-      {
-        "osm_id": "node/409858879",
-        "lat": 44.8323838,
-        "lon": 8.8238957,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-1421",
     "nome": "Novi Ligure",
     "autostrada": "A26/A7",
@@ -17980,34 +17448,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0195",
-    "nome": "A4",
-    "autostrada": "A27",
-    "nome_autostrada": "Autostrada d'Alemagna",
-    "numero_uscita": null,
-    "lat": 45.5801566,
-    "lon": 12.2905805,
-    "punti_osm": [
-      {
-        "osm_id": "node/664457941",
-        "lat": 45.5796299,
-        "lon": 12.2899391,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/31728484",
-        "lat": 45.5806834,
-        "lon": 12.291222,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-1407",
@@ -19880,72 +19320,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0457",
-    "nome": "Bivio A1",
-    "autostrada": "A3",
-    "nome_autostrada": "Autostrada A3 Napoli-Salerno",
-    "numero_uscita": null,
-    "lat": 40.8476077,
-    "lon": 14.3091045,
-    "punti_osm": [
-      {
-        "osm_id": "node/244401575",
-        "lat": 40.8476077,
-        "lon": 14.3091045,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0458",
-    "nome": "Bivio A1",
-    "autostrada": "A3",
-    "nome_autostrada": "Autostrada A3 Napoli-Salerno",
-    "numero_uscita": null,
-    "lat": 40.8459483,
-    "lon": 14.3205153,
-    "punti_osm": [
-      {
-        "osm_id": "node/244401645",
-        "lat": 40.8459483,
-        "lon": 14.3205153,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0411",
-    "nome": "Bivio San Giovanni/Gianturco",
-    "autostrada": "A3",
-    "nome_autostrada": "Autostrada A3 Napoli-Salerno",
-    "numero_uscita": null,
-    "lat": 40.8462715,
-    "lon": 14.301639,
-    "punti_osm": [
-      {
-        "osm_id": "node/210543094",
-        "lat": 40.8462715,
-        "lon": 14.301639,
-        "distanza_autostrada_m": 16.1
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": true
-  },
-  {
     "id": "uscita-0073",
     "nome": "Castellamare di Stabia",
     "autostrada": "A3",
@@ -20000,34 +19374,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-1861",
-    "nome": "Diramazione SS268",
-    "autostrada": "A3",
-    "nome_autostrada": "Autostrada A3 Napoli-Salerno",
-    "numero_uscita": null,
-    "lat": 40.7369037,
-    "lon": 14.5462842,
-    "punti_osm": [
-      {
-        "osm_id": "node/4144196988",
-        "lat": 40.7364351,
-        "lon": 14.5484003,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/8368085869",
-        "lat": 40.7373723,
-        "lon": 14.5441682,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0389",
@@ -23276,50 +22622,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0147",
-    "nome": "A26",
-    "autostrada": "A4",
-    "nome_autostrada": "Autostrada Serenissima",
-    "numero_uscita": null,
-    "lat": 45.466517,
-    "lon": 8.4638871,
-    "punti_osm": [
-      {
-        "osm_id": "node/29925701",
-        "lat": 45.466517,
-        "lon": 8.4638871,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0148",
-    "nome": "A26",
-    "autostrada": "A4",
-    "nome_autostrada": "Autostrada Serenissima",
-    "numero_uscita": null,
-    "lat": 45.4643361,
-    "lon": 8.4356209,
-    "punti_osm": [
-      {
-        "osm_id": "node/375703169",
-        "lat": 45.4643361,
-        "lon": 8.4356209,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-1088",
     "nome": "A26dir",
     "autostrada": "A4",
@@ -23484,28 +22786,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0292",
-    "nome": "A55",
-    "autostrada": "A4",
-    "nome_autostrada": "Autostrada Serenissima",
-    "numero_uscita": null,
-    "lat": 45.1341167,
-    "lon": 7.7327356,
-    "punti_osm": [
-      {
-        "osm_id": "node/107925237",
-        "lat": 45.1341167,
-        "lon": 7.7327356,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-1026",
@@ -27116,34 +26396,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-1474",
-    "nome": "A4",
-    "autostrada": "A4/A5",
-    "nome_autostrada": "A4/A5 Diramazione Ivrea-Santhià",
-    "numero_uscita": null,
-    "lat": 45.3725549,
-    "lon": 8.128283,
-    "punti_osm": [
-      {
-        "osm_id": "node/867491772",
-        "lat": 45.3724953,
-        "lon": 8.1282482,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/3412643086",
-        "lat": 45.3726145,
-        "lon": 8.1283178,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-1089",
     "nome": "A4 Torino",
     "autostrada": "A4/A5",
@@ -27192,34 +26444,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0863",
-    "nome": "A4/A5 Diramazione Ivrea-Santhià",
-    "autostrada": "A5",
-    "nome_autostrada": "Autostrada della Valle d'Aosta",
-    "numero_uscita": null,
-    "lat": 45.4237308,
-    "lon": 7.8468549,
-    "punti_osm": [
-      {
-        "osm_id": "node/299237696",
-        "lat": 45.4221236,
-        "lon": 7.8469954,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/11049384606",
-        "lat": 45.4253381,
-        "lon": 7.8467144,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-1645",
@@ -27692,28 +26916,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-1850",
-    "nome": "A1",
-    "autostrada": "A50",
-    "nome_autostrada": "Tangenziale Ovest di Milano",
-    "numero_uscita": null,
-    "lat": 45.3824528,
-    "lon": 9.2591234,
-    "punti_osm": [
-      {
-        "osm_id": "node/3815238984",
-        "lat": 45.3824528,
-        "lon": 9.2591234,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0047",
@@ -29728,34 +28930,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-1681",
-    "nome": "A32",
-    "autostrada": "A55",
-    "nome_autostrada": "Tangenziale Sud",
-    "numero_uscita": null,
-    "lat": 45.0799873,
-    "lon": 7.5505861,
-    "punti_osm": [
-      {
-        "osm_id": "node/1629364909",
-        "lat": 45.0782226,
-        "lon": 7.5483632,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/12089335967",
-        "lat": 45.0817519,
-        "lon": 7.5528091,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0886",
@@ -32256,50 +31430,6 @@
     "visualizza_mappa": true
   },
   {
-    "id": "uscita-0241",
-    "nome": "A21",
-    "autostrada": "A7",
-    "nome_autostrada": "Autostrada dei Giovi - Serravalle",
-    "numero_uscita": null,
-    "lat": 44.9137581,
-    "lon": 8.8442651,
-    "punti_osm": [
-      {
-        "osm_id": "node/45596083",
-        "lat": 44.9137581,
-        "lon": 8.8442651,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0242",
-    "nome": "A21",
-    "autostrada": "A7",
-    "nome_autostrada": "Autostrada dei Giovi - Serravalle",
-    "numero_uscita": null,
-    "lat": 44.9220002,
-    "lon": 8.8455969,
-    "punti_osm": [
-      {
-        "osm_id": "node/364987707",
-        "lat": 44.9220002,
-        "lon": 8.8455969,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
     "id": "uscita-0168",
     "nome": "Assago",
     "autostrada": "A7",
@@ -32554,34 +31684,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0249",
-    "nome": "Diramazione per A26",
-    "autostrada": "A7",
-    "nome_autostrada": "Autostrada dei Giovi - Serravalle",
-    "numero_uscita": null,
-    "lat": 44.8380823,
-    "lon": 8.8286824,
-    "punti_osm": [
-      {
-        "osm_id": "node/457418187",
-        "lat": 44.8348767,
-        "lon": 8.8285872,
-        "distanza_autostrada_m": 0.0
-      },
-      {
-        "osm_id": "node/59482129",
-        "lat": 44.8412879,
-        "lon": 8.8287776,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 2,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0274",
@@ -32892,50 +31994,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0172",
-    "nome": "A8/A26",
-    "autostrada": "A8",
-    "nome_autostrada": "Autostrada dei Laghi",
-    "numero_uscita": null,
-    "lat": 45.6735865,
-    "lon": 8.8012506,
-    "punti_osm": [
-      {
-        "osm_id": "node/31284156",
-        "lat": 45.6735865,
-        "lon": 8.8012506,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0173",
-    "nome": "A8/A26",
-    "autostrada": "A8",
-    "nome_autostrada": "Autostrada dei Laghi",
-    "numero_uscita": null,
-    "lat": 45.6893813,
-    "lon": 8.8051034,
-    "punti_osm": [
-      {
-        "osm_id": "node/31284170",
-        "lat": 45.6893813,
-        "lon": 8.8051034,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-0114",
@@ -39822,72 +38880,6 @@
     "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
     "tipo": "uscita",
     "visualizza_mappa": true
-  },
-  {
-    "id": "uscita-0150",
-    "nome": "A26/A4",
-    "autostrada": null,
-    "nome_autostrada": "Autostrada dei Trafori",
-    "numero_uscita": null,
-    "lat": 45.2511281,
-    "lon": 8.4668106,
-    "punti_osm": [
-      {
-        "osm_id": "node/29925941",
-        "lat": 45.2511281,
-        "lon": 8.4668106,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0151",
-    "nome": "A26/A4",
-    "autostrada": null,
-    "nome_autostrada": "Autostrada dei Trafori",
-    "numero_uscita": null,
-    "lat": 45.2388346,
-    "lon": 8.4698756,
-    "punti_osm": [
-      {
-        "osm_id": "node/139089043",
-        "lat": 45.2388346,
-        "lon": 8.4698756,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
-  },
-  {
-    "id": "uscita-0149",
-    "nome": "A4",
-    "autostrada": null,
-    "nome_autostrada": "Autostrada dei Trafori",
-    "numero_uscita": null,
-    "lat": 45.4600525,
-    "lon": 8.4524254,
-    "punti_osm": [
-      {
-        "osm_id": "node/29925897",
-        "lat": 45.4600525,
-        "lon": 8.4524254,
-        "distanza_autostrada_m": 0.0
-      }
-    ],
-    "punti_osm_count": 1,
-    "fonte": "OpenStreetMap",
-    "nota": "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione.",
-    "tipo": "uscita",
-    "visualizza_mappa": false
   },
   {
     "id": "uscita-1932",
