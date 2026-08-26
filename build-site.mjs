@@ -69,6 +69,25 @@ for (const file of htmlFiles) {
     html = html.replace(/(<a href="contatti\.html"[^>]*>)/g, comingSoonLink + '$1');
   }
 
+  // Spiegazione completa dell'integrazione Google nella pagina Come funziona.
+  if (file === 'come-funziona.html' && !html.includes('google-in-zona-box')) {
+    const googleBox = `
+<section id="google-in-zona-box" style="max-width:850px;margin:70px auto 0;background:#f3f6f3;border:1px solid #dce5df;border-radius:10px;padding:38px 30px;text-align:left">
+  <div class="eyebrow">RICERCA INTELLIGENTE</div>
+  <h2 style="margin:0 0 18px;font-size:38px;line-height:1.05;font-weight:900">GOOGLE PLACES, MA SOLO QUANDO SERVE</h2>
+  <p style="margin:0 0 16px;color:#60746e;font-size:17px;line-height:1.6"><strong>Il nostro database locale è sempre il primo livello</strong>: funziona senza aspettare il GPS e senza dipendere da Google. Quando selezioni un'uscita, il sito calcola le distanze con il nostro sistema e ti mostra subito i risultati disponibili.</p>
+  <p style="margin:0 0 16px;color:#60746e;font-size:17px;line-height:1.6"><strong>Google Places è un secondo livello di ricerca.</strong> Se hai una posizione GPS reale e sei effettivamente nella zona dell'uscita, possiamo usare anche la tua posizione come secondo punto di ricerca. Google può così trovare ristoranti aggiuntivi che non sono ancora presenti nel nostro database.</p>
+  <p style="margin:0;color:#60746e;font-size:17px;line-height:1.6"><strong>La cosa importante è che il GPS non blocca il servizio:</strong> se non hai una posizione disponibile, la ricerca dell'uscita e il calcolo delle distanze continuano normalmente. E anche i risultati Google vengono poi verificati dal nostro filtro di distanza prima di essere mostrati.</p>
+</section>`;
+    html = html.replace('<section class="range">', googleBox + '\n<section class="range">');
+  }
+
+  // Nella pagina delle uscite abilitiamo la ricerca Google aggiuntiva
+  // centrata sulla posizione reale dell'utente quando è in zona.
+  if (file === 'uscite.html' && !html.includes('google-zona.js')) {
+    html = html.replace(/<\/body>/i, '<script src="google-zona.js?v=20260826"></script>\n</body>');
+  }
+
   // Analytics invisibile: viene inserito una sola volta nel body.
   if (!html.includes('/_vercel/insights/script.js')) {
     html = html.replace(/<\/body>/i, `${analyticsSnippet}</body>`);
@@ -80,4 +99,5 @@ for (const file of htmlFiles) {
 console.log('Sito sincronizzato in dist/.');
 console.log('Pagine:', fs.readdirSync(out).filter(x => x.endsWith('.html')).join(', '));
 console.log('Analytics Vercel: snippet inserito nelle pagine HTML.');
+console.log('Google Places in zona: ricerca aggiuntiva attiva su uscite.html.');
 console.log('gps.js e gps-camion.js:', fs.existsSync(path.join(out,'gps.js')), fs.existsSync(path.join(out,'gps-camion.js')));
