@@ -1,6 +1,10 @@
 const fs = require("fs");
 
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+const OVERPASS_URLS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter"
+];
 const STATE_FILE = "./database-update-state.json";
 const OUTPUT_FILE = "./uscite.json";
 const FORCE = process.env.FORCE_UPDATE === "1";
@@ -46,15 +50,58 @@ node["highway"="motorway_junction"](area.it)->.junctions;
 out body geom;
 `;
 
+const REQUEST_HEADERS = {
+  "User-Agent": "1KM-E-SI-MANGIA/1.0 (https://1km-e-si-mangia.vercel.app)",
+  "Accept": "application/json,text/plain,*/*"
+};
+
 async function fetchOverpass() {
-  console.log("🌍 Interrogo OpenStreetMap / Overpass...");
-  const response = await fetch(OVERPASS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-    body: new URLSearchParams({ data: query })
-  });
-  if (!response.ok) throw new Error(`Overpass HTTP ${response.status}`);
-  return response.json();
+  let lastError = null;
+
+  for (const baseUrl of OVERPASS_URLS) {
+    console.log(`🌍 Interrogo OpenStreetMap / Overpass: ${baseUrl}`);
+
+    // Prima prova POST con User-Agent esplicito. Alcuni endpoint rifiutano
+    // richieste senza un'identificazione del client e rispondono 406.
+    try {
+      const response = await fetch(baseUrl, {
+        method: "POST",
+        headers: {
+          ...REQUEST_HEADERS,
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        body: new URLSearchParams({ data: query })
+      });
+
+      if (response.ok) return response.json();
+      const text = await response.text().catch(() => "");
+      lastError = new Error(`Overpass ${baseUrl} HTTP ${response.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
+      console.warn(`⚠️ ${lastError.message}`);
+    } catch (error) {
+      lastError = error;
+      console.warn(`⚠️ Errore POST Overpass: ${error.message}`);
+    }
+
+    // Fallback GET: è supportato da Overpass e aggira alcuni filtri/proxy
+    // che possono rifiutare il POST con 406.
+    try {
+      const url = `${baseUrl}?data=${encodeURIComponent(query)}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: REQUEST_HEADERS
+      });
+
+      if (response.ok) return response.json();
+      const text = await response.text().catch(() => "");
+      lastError = new Error(`Overpass ${baseUrl} GET HTTP ${response.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
+      console.warn(`⚠️ ${lastError.message}`);
+    } catch (error) {
+      lastError = error;
+      console.warn(`⚠️ Errore GET Overpass: ${error.message}`);
+    }
+  }
+
+  throw lastError || new Error("Nessun endpoint Overpass disponibile.");
 }
 
 function haversineMeters(aLat, aLon, bLat, bLon) {
@@ -135,8 +182,6 @@ async function main() {
     };
   });
 
-  // Raggruppa i punti che rappresentano lo stesso casello: stesso nome,
-  // stessa autostrada e distanza geografica massima di 5 km.
   const groups = [];
   for (const item of enriched) {
     let group = null;
