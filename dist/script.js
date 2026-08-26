@@ -697,27 +697,6 @@ function normalizzaNomeGoogle(value) {
     .trim();
 }
 
-function googlePlaceEUnRistorante(place) {
-  // Google assegna un solo primaryType a ogni luogo.
-  // Accettiamo restaurant e tutte le specializzazioni *_restaurant.
-  // Un bar/cafe/pub resta escluso se quello e il suo primaryType.
-  const primaryType = String(place?.primaryType || "").toLowerCase().trim();
-
-  if (primaryType) {
-    return primaryType === "restaurant" || primaryType.endsWith("_restaurant");
-  }
-
-  // Fallback per risposte API che non espongono ancora primaryType.
-  // Non blocchiamo un ristorante valido solo per un campo mancante.
-  const types = Array.isArray(place?.types) ? place.types.map(function(t) {
-    return String(t || "").toLowerCase();
-  }) : [];
-
-  return types.includes("restaurant") || types.some(function(t) {
-    return t.endsWith("_restaurant");
-  });
-}
-
 function unisciRistorantiGoogle(ristorantiLocali, placesGoogle, uscita) {
   const risultato = Array.isArray(ristorantiLocali) ? ristorantiLocali.slice() : [];
   const usati = new Set();
@@ -727,17 +706,6 @@ function unisciRistorantiGoogle(ristorantiLocali, placesGoogle, uscita) {
   });
 
   (Array.isArray(placesGoogle) ? placesGoogle : []).forEach(function(place) {
-    // FILTRO B: Google puo restituire un bar con restaurant come tipo secondario.
-    // Per la sezione Ristoranti conta il primaryType.
-    if (!googlePlaceEUnRistorante(place)) {
-      console.log("Google Places escluso: non e un ristorante principale", {
-        nome: place?.displayName?.text || "",
-        primaryType: place?.primaryType || null,
-        types: place?.types || []
-      });
-      return;
-    }
-
     const location = place?.location;
     const lat = Number(location?.latitude);
     const lon = Number(location?.longitude);
@@ -773,7 +741,6 @@ function unisciRistorantiGoogle(ristorantiLocali, placesGoogle, uscita) {
       duplicato.google_place_name = nome;
       duplicato.google_address = place?.formattedAddress || "";
       duplicato.google_types = Array.isArray(place?.types) ? place.types : [];
-      duplicato.google_primary_type = place?.primaryType || null;
       usati.add(placeId);
       return;
     }
@@ -784,7 +751,6 @@ function unisciRistorantiGoogle(ristorantiLocali, placesGoogle, uscita) {
       google_place_name: nome,
       google_address: place?.formattedAddress || "",
       google_types: Array.isArray(place?.types) ? place.types : [],
-      google_primary_type: place?.primaryType || null,
       nome,
       lat,
       lon,
@@ -820,11 +786,17 @@ async function mostraTuttiRistoranti(uscita) {
     ? window.GPSManager.getLastPosition()
     : null;
 
+  // PRIMA REGOLA: i ristoranti del nostro database locale devono essere
+  // sempre visibili. Il GPS serve esclusivamente per autorizzare la chiamata
+  // a Google Places, non per bloccare il database locale.
+  const locali = ristorantiPerUscita(uscita);
+  window._ristorantiVisualizzati = locali;
+  mostraRistorantiDatabase(uscita, locali);
+
+  // Google Places viene interrogato solo se abbiamo una posizione GPS valida
+  // e l’utente si trova abbastanza vicino al casello selezionato.
   if (!gps || !Number.isFinite(Number(gps.lat)) || !Number.isFinite(Number(gps.lng))) {
-    mostraAvvisoGoogle(
-      "Posizione necessaria",
-      "Per mostrare i ristoranti devi prima attivare la tua posizione GPS. Senza una posizione valida non facciamo nessuna chiamata a Google Places."
-    );
+    console.log("Google Places BLOCCATO: GPS non disponibile. Database locale mostrato.");
     return;
   }
 
@@ -838,10 +810,6 @@ async function mostraTuttiRistoranti(uscita) {
   const limiteGps = CONFIG.googlePlacesMaxGpsDistanceKm * 1000 + tolleranzaGps;
 
   if (!Number.isFinite(distanzaGps) || distanzaGps > limiteGps) {
-    mostraAvvisoGoogle(
-      "Uscita troppo lontana",
-      `Sei a circa ${Math.round(distanzaGps / 1000)} km da questa uscita. Google Places viene interrogato solo quando il GPS conferma che sei vicino al casello selezionato (massimo ${CONFIG.googlePlacesMaxGpsDistanceKm} km).`
-    );
     console.log("Google Places BLOCCATO: uscita lontana dal GPS", {
       uscita: uscita.nome,
       distanzaGpsMetri: Math.round(distanzaGps),
@@ -849,12 +817,6 @@ async function mostraTuttiRistoranti(uscita) {
     });
     return;
   }
-
-  // Mostriamo subito i dati gia presenti nel nostro database, poi li arricchiamo
-  // con Google. La chiave Google resta sempre sul server Vercel.
-  const locali = ristorantiPerUscita(uscita);
-  window._ristorantiVisualizzati = locali;
-  mostraRistorantiDatabase(uscita, locali);
 
   const panel = document.getElementById("ristorantiMapPanel");
   if (panel) {
@@ -869,8 +831,7 @@ async function mostraTuttiRistoranti(uscita) {
       body: JSON.stringify({
         exit: { lat: Number(uscita.lat), lon: Number(uscita.lon) },
         radius: CONFIG.googlePlacesRadiusMeters,
-        maxResultCount: CONFIG.googlePlacesMaxResults,
-        includedPrimaryTypes: ["restaurant"]
+        maxResultCount: CONFIG.googlePlacesMaxResults
       })
     });
 
