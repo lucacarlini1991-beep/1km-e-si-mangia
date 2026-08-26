@@ -46,15 +46,7 @@
     }catch(e){ console.error(e);status('Errore nell’inizializzazione della mappa',true);return false; }
   }
 
-  function exitIcon(){
-    return L.icon({
-      iconUrl:'assets/pin-posizione.png',
-      iconRetinaUrl:'assets/pin-posizione.png',
-      iconSize:[48,60],
-      iconAnchor:[24,60],
-      popupAnchor:[0,-54]
-    });
-  }
+  function exitIcon(){ return L.divIcon({className:'',html:'<div class="custom-marker"></div>',iconSize:[36,36],iconAnchor:[18,18],popupAnchor:[0,-18]}); }
   function parkingIcon(){
     return L.icon({
       iconUrl:'assets/pin-camion.png',
@@ -352,7 +344,21 @@
 
   function start(){
     const ok=initMap();if(!ok)return;
-    if(window.GPSCamionManager) window.GPSCamionManager.attachMap(state.map);
+
+    // Nella pagina PARCHEGGI il GPS serve esclusivamente a trovare
+    // l'uscita più vicina. Il pin "📍 TU SEI QUI" appartiene invece
+    // alla funzione "USA LA MIA POSIZIONE" e non deve comparire
+    // sulla mappa dei parcheggi. Per questo NON colleghiamo la mappa
+    // al GPS manager.
+    if(window.GPSCamionManager){
+      if(typeof window.GPSCamionManager.removeMapPosition==='function'){
+        window.GPSCamionManager.removeMapPosition();
+      }
+      if(typeof window.GPSCamionManager.attachMap==='function'){
+        window.GPSCamionManager.attachMap(null);
+      }
+    }
+
     loadProfile();
     $('mpLocate')?.addEventListener('click',locate);
     $('mpNearestExit')?.addEventListener('click',()=>{
