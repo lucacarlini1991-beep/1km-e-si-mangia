@@ -5,6 +5,7 @@ const OVERPASS_URLS = [
   "https://overpass.kumi.systems/api/interpreter",
   "https://overpass.private.coffee/api/interpreter"
 ];
+
 const STATE_FILE = "./database-update-state.json";
 const OUTPUT_FILE = "./uscite.json";
 const FORCE = process.env.FORCE_UPDATE === "1";
@@ -17,15 +18,12 @@ function localNow() {
 function daysSince(dateString) {
   if (!dateString) return Infinity;
   const last = new Date(`${dateString}T00:00:00`);
-  const now = localNow();
-  return Math.floor((now - last) / 86400000);
+  return Math.floor((localNow() - last) / 86400000);
 }
 
 const now = localNow();
-const hour = now.getHours();
-
-if (!FORCE && hour !== 3) {
-  console.log(`⏭️ Skip: ora locale ${hour}:00, non sono le 03:00.`);
+if (!FORCE && now.getHours() !== 3) {
+  console.log(`⏭️ Skip: ora locale ${now.getHours()}:00, non sono le 03:00.`);
   process.exit(0);
 }
 
@@ -40,67 +38,50 @@ if (!FORCE && daysSince(state.lastSuccessfulRun) < DAYS) {
 }
 
 const query = `
-[out:json][timeout:240];
+[out:json][timeout:180];
 area["ISO3166-1"="IT"][boundary="administrative"]->.it;
-node["highway"="motorway_junction"](area.it)->.junctions;
 (
-  .junctions;
-  way(around.junctions:1000)["highway"="motorway"];
+  node["highway"="motorway_junction"](area.it);
+  nwr["highway"="services"](area.it);
+  way["highway"="motorway"](area.it);
 );
 out body geom;
 `;
 
 const REQUEST_HEADERS = {
-  "User-Agent": "1KM-E-SI-MANGIA/1.0 (https://1km-e-si-mangia.vercel.app)",
+  "User-Agent": "1KM-E-SI-MANGIA/1.0 (https://1km-e-si-mangia.it)",
   "Accept": "application/json,text/plain,*/*"
 };
 
 async function fetchOverpass() {
   let lastError = null;
-
   for (const baseUrl of OVERPASS_URLS) {
     console.log(`🌍 Interrogo OpenStreetMap / Overpass: ${baseUrl}`);
-
-    // Prima prova POST con User-Agent esplicito. Alcuni endpoint rifiutano
-    // richieste senza un'identificazione del client e rispondono 406.
-    try {
-      const response = await fetch(baseUrl, {
-        method: "POST",
-        headers: {
-          ...REQUEST_HEADERS,
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-        },
-        body: new URLSearchParams({ data: query })
-      });
-
-      if (response.ok) return response.json();
-      const text = await response.text().catch(() => "");
-      lastError = new Error(`Overpass ${baseUrl} HTTP ${response.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
-      console.warn(`⚠️ ${lastError.message}`);
-    } catch (error) {
-      lastError = error;
-      console.warn(`⚠️ Errore POST Overpass: ${error.message}`);
-    }
-
-    // Fallback GET: è supportato da Overpass e aggira alcuni filtri/proxy
-    // che possono rifiutare il POST con 406.
-    try {
-      const url = `${baseUrl}?data=${encodeURIComponent(query)}`;
-      const response = await fetch(url, {
-        method: "GET",
-        headers: REQUEST_HEADERS
-      });
-
-      if (response.ok) return response.json();
-      const text = await response.text().catch(() => "");
-      lastError = new Error(`Overpass ${baseUrl} GET HTTP ${response.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
-      console.warn(`⚠️ ${lastError.message}`);
-    } catch (error) {
-      lastError = error;
-      console.warn(`⚠️ Errore GET Overpass: ${error.message}`);
+    for (const method of ["POST", "GET"]) {
+      try {
+        const options = method === "POST"
+          ? {
+              method,
+              headers: { ...REQUEST_HEADERS, "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+              body: new URLSearchParams({ data: query })
+            }
+          : { method, headers: REQUEST_HEADERS };
+        const url = method === "GET" ? `${baseUrl}?data=${encodeURIComponent(query)}` : baseUrl;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 120000);
+        options.signal = controller.signal;
+        const response = await fetch(url, options);
+        clearTimeout(timer);
+        if (response.ok) return response.json();
+        const text = await response.text().catch(() => "");
+        lastError = new Error(`Overpass ${baseUrl} ${method} HTTP ${response.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
+        console.warn(`⚠️ ${lastError.message}`);
+      } catch (error) {
+        lastError = error;
+        console.warn(`⚠️ Errore ${method} Overpass: ${error.message}`);
+      }
     }
   }
-
   throw lastError || new Error("Nessun endpoint Overpass disponibile.");
 }
 
@@ -114,138 +95,159 @@ function haversineMeters(aLat, aLon, bLat, bLon) {
   return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-function segmentDistanceMeters(lat, lon, a, b) {
-  const lat0 = lat * Math.PI / 180;
-  const kx = 111320 * Math.cos(lat0);
-  const ky = 110540;
-  const px = (lon - a[0]) * kx;
-  const py = (lat - a[1]) * ky;
-  const bx = (b[0] - a[0]) * kx;
-  const by = (b[1] - a[1]) * ky;
-  const denom = bx * bx + by * by;
-  let t = denom ? (px * bx + py * by) / denom : 0;
-  t = Math.max(0, Math.min(1, t));
-  const dx = px - t * bx;
-  const dy = py - t * by;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-function nearestWay(lat, lon, ways) {
-  let best = null;
-  let bestDistance = Infinity;
-  for (const way of ways) {
-    const g = way.geometry || [];
-    for (let i = 1; i < g.length; i++) {
-      const d = segmentDistanceMeters(lat, lon, [g[i - 1].lon, g[i - 1].lat], [g[i].lon, g[i].lat]);
-      if (d < bestDistance) {
-        bestDistance = d;
-        const t = way.tags || {};
-        best = {
-          ref: t.ref || t.nat_ref || "",
-          name: t.name || t.loc_name || ""
-        };
-      }
-    }
-  }
-  return best ? { ...best, distance: Number(bestDistance.toFixed(1)) } : null;
-}
-
 function normalizeName(value) {
   return String(value || "").trim().replace(/\s+/g, " ");
 }
 
-function makeId(nodes) {
-  return `uscita-${nodes.map(n => n.id).sort((a, b) => a - b)[0]}`;
+function normalizeSearch(value) {
+  return normalizeName(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function coordinate(element) {
+  if (Number.isFinite(Number(element?.lat)) && Number.isFinite(Number(element?.lon))) {
+    return { lat: Number(element.lat), lon: Number(element.lon) };
+  }
+  if (Number.isFinite(Number(element?.center?.lat)) && Number.isFinite(Number(element?.center?.lon))) {
+    return { lat: Number(element.center.lat), lon: Number(element.center.lon) };
+  }
+  return null;
+}
+
+function makeId(element) {
+  return `uscita-${element.type}-${element.id}`;
+}
+
+const SERVICE_WORDS = [
+  "area di servizio", "area servizio", "area di sosta", "area sosta",
+  "autogrill", "service area", "service station", "rest area", "truck stop",
+  "stazione di servizio", "stazione servizio"
+];
+
+const HIDDEN_WORDS = [
+  "svincolo", "svincoli", "snodo", "snodi", "interconnessione", "interconnessioni",
+  "raccordo", "raccordi", "diramazione", "diramazioni", "bretella", "bretelle",
+  "allacciamento", "allacciamenti", "deviazione", "deviazioni", "intersezione autostradale"
+];
+
+function classify(element) {
+  const tags = element?.tags || {};
+  const text = normalizeSearch([
+    tags.name, tags.operator, tags.description, tags.ref, tags["motorway:ref"],
+    tags["junction:ref"], tags.highway, tags.amenity
+  ].filter(Boolean).join(" "));
+
+  const isService = tags.highway === "services" || SERVICE_WORDS.some(word => text.includes(normalizeSearch(word)));
+  if (isService) {
+    return { tipo: "area_servizio", visibile: false, visualizza_mappa: false, mostra_ristoranti: false, mostra_carburante: true };
+  }
+
+  const isHidden = HIDDEN_WORDS.some(word => text.includes(normalizeSearch(word))) ||
+    ["motorway_link", "trunk_link"].includes(tags.highway) ||
+    tags.junction === "interchange";
+
+  if (isHidden) {
+    return { tipo: "svincolo", visibile: false, visualizza_mappa: false, mostra_ristoranti: false, mostra_carburante: false };
+  }
+
+  return { tipo: "casello", visibile: true, visualizza_mappa: true, mostra_ristoranti: true, mostra_carburante: false };
+}
+
+function nearestMotorway(lat, lon, ways) {
+  let best = null;
+  let bestDistance = Infinity;
+  for (const way of ways) {
+    const geometry = way.geometry || [];
+    for (let i = 1; i < geometry.length; i++) {
+      const a = geometry[i - 1];
+      const b = geometry[i];
+      const candidate = Math.min(
+        haversineMeters(lat, lon, a.lat, a.lon),
+        haversineMeters(lat, lon, b.lat, b.lon)
+      );
+      if (candidate < bestDistance) {
+        bestDistance = candidate;
+        const tags = way.tags || {};
+        best = { ref: tags.ref || tags["motorway:ref"] || tags.nat_ref || null, name: tags.name || tags.loc_name || null };
+      }
+    }
+  }
+  return best ? { ...best, distanza: Number(bestDistance.toFixed(1)) } : null;
 }
 
 async function main() {
   const data = await fetchOverpass();
   const elements = Array.isArray(data.elements) ? data.elements : [];
-  const nodes = elements.filter(e => e.type === "node" && e.tags?.highway === "motorway_junction");
-  const ways = elements.filter(e => e.type === "way" && e.tags?.highway === "motorway");
+  const junctions = elements.filter(e => e.type === "node" && e.tags?.highway === "motorway_junction");
+  const services = elements.filter(e => e.tags?.highway === "services");
+  const motorwayWays = elements.filter(e => e.type === "way" && e.tags?.highway === "motorway");
 
-  if (nodes.length < 100) throw new Error(`Risposta Overpass sospetta: solo ${nodes.length} uscite.`);
+  if (junctions.length < 100) throw new Error(`Risposta Overpass sospetta: solo ${junctions.length} caselli motorway_junction.`);
 
-  console.log(`📍 Uscite OSM: ${nodes.length}`);
-  console.log(`🛣️ Tratti autostradali di supporto: ${ways.length}`);
+  console.log(`📍 Junction OSM: ${junctions.length}`);
+  console.log(`⛽ Aree di servizio OSM: ${services.length}`);
 
-  const enriched = nodes.map(node => {
-    const t = node.tags || {};
-    const nearest = nearestWay(node.lat, node.lon, ways);
-    return {
-      node,
-      name: normalizeName(t.name),
-      number: t.ref || null,
-      motorway: nearest?.ref || t["motorway:ref"] || t.nat_ref || null,
-      motorwayName: nearest?.name || null,
-      motorwayDistance: nearest?.distance ?? null
-    };
-  });
+  const records = [];
+  const seen = new Set();
 
-  const groups = [];
-  for (const item of enriched) {
-    let group = null;
-    if (item.name) {
-      group = groups.find(g =>
-        g.name === item.name &&
-        (g.motorway || "") === (item.motorway || "") &&
-        g.nodes.some(n => haversineMeters(n.node.lat, n.node.lon, item.node.lat, item.node.lon) <= 5000)
-      );
-    }
-    if (!group) {
-      group = {
-        name: item.name || "Uscita senza nome",
-        motorway: item.motorway,
-        motorwayName: item.motorwayName,
-        nodes: []
-      };
-      groups.push(group);
-    }
-    group.nodes.push(item);
-    if (!group.motorway && item.motorway) group.motorway = item.motorway;
-    if (!group.motorwayName && item.motorwayName) group.motorwayName = item.motorwayName;
+  for (const element of [...junctions, ...services]) {
+    const c = coordinate(element);
+    if (!c) continue;
+    const classification = classify(element);
+    const tags = element.tags || {};
+    const motorway = nearestMotorway(c.lat, c.lon, motorwayWays);
+    const key = `${classification.tipo}|${normalizeSearch(tags.name)}|${motorway?.ref || ""}|${c.lat.toFixed(5)}|${c.lon.toFixed(5)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    records.push({
+      id: makeId(element),
+      nome: normalizeName(tags.name) || (classification.tipo === "area_servizio" ? "Area di servizio" : "Svincolo autostradale"),
+      autostrada: motorway?.ref || tags["motorway:ref"] || tags.nat_ref || null,
+      nome_autostrada: motorway?.name || null,
+      numero_uscita: tags.ref || tags["junction:ref"] || null,
+      lat: Number(c.lat.toFixed(7)),
+      lon: Number(c.lon.toFixed(7)),
+      tipo: classification.tipo,
+      visibile: classification.visibile,
+      visualizza_mappa: classification.visualizza_mappa,
+      mostra_ristoranti: classification.mostra_ristoranti,
+      mostra_carburante: classification.mostra_carburante,
+      punti_osm: [{ osm_id: `${element.type}/${element.id}`, lat: c.lat, lon: c.lon, distanza_autostrada_m: motorway?.distanza ?? null }],
+      punti_osm_count: 1,
+      fonte: "OpenStreetMap",
+      nota: classification.tipo === "casello"
+        ? "Casello/uscita autostradale visibile."
+        : classification.tipo === "area_servizio"
+          ? "Area di servizio conservata nel database ma nascosta dalla mappa e senza elenco ristoranti."
+          : "Svincolo/snodo autostradale conservato nel database ma non visualizzato."
+    });
   }
 
-  const database = groups.map(group => {
-    const nodes = group.nodes;
-    const lat = nodes.reduce((s, x) => s + x.node.lat, 0) / nodes.length;
-    const lon = nodes.reduce((s, x) => s + x.node.lon, 0) / nodes.length;
-    const number = nodes.map(x => x.number).find(Boolean) || null;
-
-    return {
-      id: makeId(nodes.map(x => x.node)),
-      nome: group.name,
-      autostrada: group.motorway,
-      nome_autostrada: group.motorwayName,
-      numero_uscita: number,
-      lat: Number(lat.toFixed(7)),
-      lon: Number(lon.toFixed(7)),
-      punti_osm: nodes.map(x => ({
-        osm_id: `node/${x.node.id}`,
-        lat: x.node.lat,
-        lon: x.node.lon,
-        distanza_autostrada_m: x.motorwayDistance
-      })),
-      punti_osm_count: nodes.length,
-      fonte: "OpenStreetMap",
-      nota: "Punti OSM raggruppati per nome/autostrada e prossimità; i punti originali sono conservati per la futura gestione della direzione."
-    };
-  });
-
-  database.sort((a, b) =>
+  records.sort((a, b) =>
     String(a.autostrada || "ZZZ").localeCompare(String(b.autostrada || "ZZZ"), "it") ||
     String(a.nome || "").localeCompare(String(b.nome || ""), "it")
   );
 
-  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(database, null, 2) + "\n", "utf8");
+  const visible = records.filter(r => r.visibile).length;
+  const servicesCount = records.filter(r => r.tipo === "area_servizio").length;
+  const junctionHidden = records.filter(r => r.tipo === "svincolo").length;
+
+  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(records, null, 2) + "\n", "utf8");
   fs.writeFileSync(STATE_FILE, JSON.stringify({
     lastSuccessfulRun: now.toISOString().slice(0, 10),
     updatedAt: now.toISOString(),
-    exits: database.length,
+    exits: records.length,
+    visibleExits: visible,
+    hiddenElements: records.length - visible,
+    serviceAreas: servicesCount,
+    hiddenJunctions: junctionHidden,
     source: "OpenStreetMap / Overpass"
   }, null, 2) + "\n", "utf8");
 
-  console.log(`✅ DATABASE AGGIORNATO: ${database.length} uscite`);
+  console.log(`✅ DATABASE AGGIORNATO: ${records.length} elementi`);
+  console.log(`🚗 Caselli visibili: ${visible}`);
+  console.log(`⛽ Aree servizio nascoste: ${servicesCount}`);
+  console.log(`🔀 Svincoli/snodi nascosti: ${junctionHidden}`);
 }
 
 main().catch(error => {
