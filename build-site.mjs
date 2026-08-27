@@ -5,10 +5,10 @@ const root = path.dirname(new URL(import.meta.url).pathname);
 const out = path.join(root, 'dist');
 const skip = new Set(['dist', 'node_modules', '.git', '.env']);
 
-// IMPORTANTE: dist/ contiene la copia funzionante del vecchio script principale
-// della mappa. Prima di ricreare dist/ la conserviamo, perché script.js nella
-// root è invece il filtro delle uscite di servizio e NON il motore della mappa.
-const mainMapScriptPath = path.join(out, 'script.js');
+// Il motore della pagina uscite viene preparato da preserve-uscite-main.mjs
+// PRIMA di Vite. Non usare dist/script.js qui: dopo vite build quello è il
+// filtro delle aree di servizio, non il motore principale della mappa.
+const mainMapScriptPath = path.join(root, 'uscite-main.js');
 const mainMapScript = fs.existsSync(mainMapScriptPath)
   ? fs.readFileSync(mainMapScriptPath, 'utf8')
   : null;
@@ -26,7 +26,14 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
   }
 
   const ext = path.extname(entry.name).toLowerCase();
-  const skipFiles = new Set(['package.json', 'package-lock.json', 'vercel.json', 'build-database.js', 'genera_ristoranti.js']);
+  const skipFiles = new Set([
+    'package.json',
+    'package-lock.json',
+    'vercel.json',
+    'build-database.js',
+    'genera_ristoranti.js',
+    'uscite-main.js'
+  ]);
   const allowed = ['.html', '.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.ico', '.txt'];
   const copyJson = ['ristoranti.json', 'uscite.json', 'parcheggi-database.json'].includes(entry.name);
   if (!skipFiles.has(entry.name) && (allowed.includes(ext) || copyJson)) {
@@ -35,14 +42,12 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
 }
 
 // Ricrea esplicitamente il vero motore della pagina uscite.
-// Il file root script.js resta il filtro delle aree di servizio e viene
-// caricato prima: così il fetch di uscite.json viene filtrato senza perdere
-// nessuna delle funzioni della mappa, dei raggruppamenti e delle schede.
+// script.js nella root resta esclusivamente il filtro delle aree di servizio.
 if (mainMapScript) {
   fs.writeFileSync(path.join(out, 'uscite-main.js'), mainMapScript);
   console.log('Motore mappa salvato in dist/uscite-main.js');
 } else {
-  console.warn('ATTENZIONE: dist/script.js originale non trovato; motore mappa non recuperato.');
+  throw new Error('uscite-main.js non trovato: il motore della mappa uscite non può essere pubblicato.');
 }
 
 for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
