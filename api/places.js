@@ -1,6 +1,8 @@
 // 1 KM E SI MANGIA - Google Places proxy
 // Vercel Node Serverless Function (CommonJS)
-// Variabile Vercel richiesta: GOOGLE_PLACES_API_KEY
+//
+// Variabile Vercel consigliata: GOOGLE_PLACES_API_KEY
+// Sono accettati anche GOOGLE_MAPS_API_KEY e GOOGLE_API_KEY.
 
 const ENDPOINT = "https://places.googleapis.com/v1/places:searchNearby";
 
@@ -10,10 +12,13 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Metodo non consentito." });
   }
 
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const apiKey =
+    process.env.GOOGLE_PLACES_API_KEY ||
+    process.env.GOOGLE_MAPS_API_KEY ||
+    process.env.GOOGLE_API_KEY;
 
   if (!apiKey) {
-    console.error("GOOGLE_PLACES_API_KEY non configurata.");
+    console.error("Nessuna chiave Google Places configurata.");
     return res.status(500).json({
       error: "Google Places non configurato sul server."
     });
@@ -30,8 +35,8 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Google riceve una ricerca più ampia; il frontend applica poi
-    // il limite definitivo di 2 km di distanza STRADALE.
+    // Google cerca in un'area più ampia.
+    // Il limite vero resta quello del frontend: massimo 2 km DI STRADA.
     const radius = 5000;
     const rawMax = Number(body.maxResultCount);
     const maxResultCount = Number.isFinite(rawMax)
@@ -46,6 +51,8 @@ module.exports = async function handler(req, res) {
         "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types"
       },
       body: JSON.stringify({
+        // IMPORTANTE: la ricerca parte sempre dall'uscita selezionata.
+        // Non usiamo il GPS dell'utente come centro della ricerca.
         includedTypes: ["restaurant"],
         maxResultCount,
         rankPreference: "DISTANCE",
@@ -65,6 +72,7 @@ module.exports = async function handler(req, res) {
 
     const text = await response.text();
     let data = {};
+
     try {
       data = text ? JSON.parse(text) : {};
     } catch (_) {
@@ -72,15 +80,14 @@ module.exports = async function handler(req, res) {
     }
 
     if (!response.ok) {
-      console.error("Google Places API error:", response.status, data?.error || text);
-      return res.status(response.status).json({
-        error: data?.error?.message || `Google Places HTTP ${response.status}`
-      });
+      const message = data?.error?.message || `Google Places HTTP ${response.status}`;
+      console.error("Google Places API error:", response.status, message);
+      return res.status(response.status).json({ error: message });
     }
 
-    return res.status(200).json({
-      places: Array.isArray(data?.places) ? data.places : []
-    });
+    const places = Array.isArray(data?.places) ? data.places : [];
+
+    return res.status(200).json({ places });
   } catch (error) {
     console.error("Errore /api/places:", error);
     return res.status(500).json({
