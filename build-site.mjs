@@ -26,7 +26,6 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
   }
 }
 
-// Copia i file necessari per Google AdSense e Google
 for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
   const source = path.join(root, file);
   const destination = path.join(out, file);
@@ -39,12 +38,6 @@ for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
   }
 }
 
-// =====================================================
-// POST-PROCESSING DELLE PAGINE HTML
-// =====================================================
-// Tutte le pagine ricevono Vercel Web Analytics senza
-// mostrare alcun contatore all'utente. I dati si leggono
-// dal pannello Analytics di Vercel.
 const analyticsSnippet = `\n<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>\n<script defer src="/_vercel/insights/script.js"></script>\n`;
 
 const htmlFiles = fs.readdirSync(out).filter(name => name.toLowerCase().endsWith('.html'));
@@ -53,8 +46,6 @@ for (const file of htmlFiles) {
   const filePath = path.join(out, file);
   let html = fs.readFileSync(filePath, 'utf8');
 
-  // Titolo e descrizione della sezione uscite: il progetto
-  // evolve da "Esplora le uscite" a "Esplora cosa offre l'uscita".
   html = html.replaceAll('ESPLORA LE USCITE', "ESPLORA COSA OFFRE L'USCITA");
   html = html.replaceAll('Esplora le uscite', "Esplora cosa offre l'uscita");
   html = html.replaceAll("Trova l'uscita più vicina", "Scopri cosa offre ogni uscita");
@@ -63,13 +54,11 @@ for (const file of htmlFiles) {
     "Avvicinati sulla mappa e scopri cosa offre ogni uscita autostradale."
   );
 
-  // Aggiunge una voce Coming Soon ai menu esistenti, prima dei Contatti.
   if (!html.includes('href="coming-soon.html"')) {
     const comingSoonLink = '<a href="coming-soon.html" class="menu-link"><strong>🚧 PROSSIME NOVITÀ</strong><span>Scopri cosa stiamo preparando</span></a>\n';
     html = html.replace(/(<a href="contatti\.html"[^>]*>)/g, comingSoonLink + '$1');
   }
 
-  // Spiegazione completa dell'integrazione Google nella pagina Come funziona.
   if (file === 'come-funziona.html' && !html.includes('google-in-zona-box')) {
     const googleBox = `
 <section id="google-in-zona-box" style="max-width:850px;margin:70px auto 0;background:#f3f6f3;border:1px solid #dce5df;border-radius:10px;padding:38px 30px;text-align:left">
@@ -82,13 +71,17 @@ for (const file of htmlFiles) {
     html = html.replace('<section class="range">', googleBox + '\n<section class="range">');
   }
 
-  // Nella pagina delle uscite abilitiamo la ricerca Google aggiuntiva
-  // centrata sulla posizione reale dell'utente quando è in zona.
   if (file === 'uscite.html' && !html.includes('google-zona.js')) {
     html = html.replace(/<\/body>/i, '<script src="google-zona.js?v=20260826"></script>\n</body>');
   }
 
-  // Analytics invisibile: viene inserito una sola volta nel body.
+  // uscita.html nasce con un riferimento alla copia sorgente in dist/.
+  // Vercel pubblica già la cartella dist/ come root: il motore della mappa
+  // viene quindi preservato dal pre-build e deve essere referenziato direttamente.
+  if (file === 'uscite.html') {
+    html = html.replaceAll('src="dist/script.js', 'src="uscite-main.js');
+  }
+
   if (!html.includes('/_vercel/insights/script.js')) {
     html = html.replace(/<\/body>/i, `${analyticsSnippet}</body>`);
   }
