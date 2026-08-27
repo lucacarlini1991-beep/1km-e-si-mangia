@@ -141,10 +141,13 @@
     const cluster = trovaCluster(map);
     if (!cluster) return false;
 
-    // I cluster devono tornare cliccabili: un tocco porta verso i singoli caselli.
-    // Disattiviamo il comportamento automatico e ne usiamo uno controllato,
-    // evitando lo zoom eccessivo che rendeva difficile premere i marker su iPhone.
+    // I cluster restano cliccabili con lo zoom controllato già testato.
     cluster.options.zoomToBoundsOnClick = false;
+
+    // Il database delle uscite NON deve perdere i marker lontani
+    // quando il GPS porta la mappa vicino all'utente.
+    cluster.options.removeOutsideVisibleBounds = false;
+
     cluster.options.maxClusterRadius = window.innerWidth <= 750 ? 30 : 40;
 
     if (!cluster._clickFix1km) {
@@ -175,6 +178,11 @@
     }
 
     filtraAreeDiServizioMappa(cluster);
+
+    if (typeof cluster.refreshClusters === "function") {
+      cluster.refreshClusters();
+    }
+
     return true;
   }
 
