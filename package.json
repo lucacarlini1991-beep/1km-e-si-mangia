@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "start": "vite --host 0.0.0.0",
-    "build": "node preserve-uscite-main.mjs && vite build && node build-site.mjs",
+    "build": "node preserve-uscite-main.mjs && vite build --outDir .vite-dist && node build-site.mjs",
     "google:sync": "node google-places-sync.js"
   },
   "keywords": [],
