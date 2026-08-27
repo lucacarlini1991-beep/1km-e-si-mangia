@@ -3,11 +3,12 @@ import path from 'node:path';
 
 const root = path.dirname(new URL(import.meta.url).pathname);
 const out = path.join(root, 'dist');
-const skip = new Set(['dist', 'node_modules', '.git', '.env']);
+const skip = new Set(['dist', 'node_modules', '.git', '.env', '.vite-dist']);
 
-// Il motore della pagina uscite viene preparato da preserve-uscite-main.mjs
-// PRIMA di Vite. Non usare dist/script.js qui: dopo vite build quello è il
-// filtro delle aree di servizio, non il motore principale della mappa.
+// Il motore originale della pagina uscite viene salvato PRIMA di Vite
+// e viene poi ripubblicato come file indipendente. La cartella dist/
+// contiene il database e il motore funzionanti e NON deve essere svuotata
+// da Vite.
 const mainMapScriptPath = path.join(root, 'uscite-main.js');
 const mainMapScript = fs.existsSync(mainMapScriptPath)
   ? fs.readFileSync(mainMapScriptPath, 'utf8')
@@ -100,7 +101,10 @@ for (const file of htmlFiles) {
   }
 
   if (file === 'uscite.html') {
-    html = html.replaceAll('src="dist/script.js', 'src="uscite-main.js');
+    // Il motore vero è quello preservato da dist/script.js prima del build.
+    // Il parametro versione evita che Safari/iPhone riutilizzi il vecchio JS.
+    html = html.replaceAll('src="dist/script.js', 'src="uscite-main.js?v=20260827-mapfix4');
+    html = html.replaceAll('src="script.js?v=20260827-filter3"', 'src="script.js?v=20260827-filter4"');
   }
 
   if (!html.includes('/_vercel/insights/script.js')) {
