@@ -1,5 +1,7 @@
 // Generatore database ristoranti OSM
-// Versione ottimizzata: richieste piccole, timeout brevi e fallback Overpass.
+// Cerca ristoranti e parcheggi solo per le vere uscite/caselli visibili.
+// Svincoli, snodi e aree di servizio restano nel database uscite.json
+// ma non vengono mai usati come destinazioni per i ristoranti.
 
 const fs = require("fs");
 
@@ -7,9 +9,9 @@ const CONFIG = {
   input: "uscite.json",
   output: "ristoranti.json",
   distanzaMassima: 2100,
-  batchSize: 5,
-  timeoutMs: 45000,
-  pausaMs: 1200,
+  batchSize: 20,
+  timeoutMs: 90000,
+  pausaMs: 800,
   tentativi: 2
 };
 
@@ -19,15 +21,15 @@ const OVERPASS_SERVERS = [
   "https://overpass.private.coffee/api/interpreter"
 ];
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-function normalizzaTesto(valore) {
-  return String(valore || "")
+function normalizzaTesto(value) {
+  return String(value || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function distanzaMetri(lat1, lon1, lat2, lon2) {
@@ -41,11 +43,11 @@ function distanzaMetri(lat1, lon1, lat2, lon2) {
 }
 
 function coordinateElemento(elemento) {
-  if (typeof elemento.lat === "number" && typeof elemento.lon === "number") {
-    return { lat: elemento.lat, lon: elemento.lon };
+  if (Number.isFinite(Number(elemento?.lat)) && Number.isFinite(Number(elemento?.lon))) {
+    return { lat: Number(elemento.lat), lon: Number(elemento.lon) };
   }
-  if (elemento.center && typeof elemento.center.lat === "number" && typeof elemento.center.lon === "number") {
-    return { lat: elemento.center.lat, lon: elemento.center.lon };
+  if (Number.isFinite(Number(elemento?.center?.lat)) && Number.isFinite(Number(elemento?.center?.lon))) {
+    return { lat: Number(elemento.center.lat), lon: Number(elemento.center.lon) };
   }
   return null;
 }
@@ -53,7 +55,13 @@ function coordinateElemento(elemento) {
 function caricaUscite() {
   const dati = JSON.parse(fs.readFileSync(CONFIG.input, "utf8"));
   const uscite = Array.isArray(dati) ? dati : (dati.uscite || []);
-  return uscite.filter(u => Number.isFinite(Number(u.lat)) && Number.isFinite(Number(u.lon)));
+  const validi = uscite.filter(u =>
+    Number.isFinite(Number(u?.lat)) && Number.isFinite(Number(u?.lon)) &&
+    u?.visibile !== false && u?.visualizza_mappa !== false &&
+    u?.mostra_ristoranti !== false && u?.tipo !== "svincolo" && u?.tipo !== "area_servizio"
+  );
+  console.log(`🚗 Caselli destinazione ristoranti: ${validi.length} (su ${uscite.length} elementi nel database)`);
+  return validi;
 }
 
 function eAreaDiServizio(tags) {
@@ -64,15 +72,15 @@ function eAreaDiServizio(tags) {
   return [
     "area di servizio", "area servizio", "area di sosta", "area sosta",
     "autogrill", "service area", "service station", "rest area", "truck stop"
-  ].some(p => testo.includes(p));
+  ].some(p => testo.includes(normalizzaTesto(p)));
 }
 
 function creaQuery(uscite) {
-  let query = "[out:json][timeout:45];\n(\n";
+  let query = "[out:json][timeout:90];\n(\n";
   for (const u of uscite) {
-    query += `nwr["amenity"="restaurant"]["name"](around:2100,${u.lat},${u.lon});\n`;
-    query += `nwr["amenity"="parking"](around:2100,${u.lat},${u.lon});\n`;
-    query += `nwr["amenity"="parking_entrance"](around:2100,${u.lat},${u.lon});\n`;
+    query += `nwr["amenity"="restaurant"]["name"](around:${CONFIG.distanzaMassima},${u.lat},${u.lon});\n`;
+    query += `nwr["amenity"="parking"](around:${CONFIG.distanzaMassima},${u.lat},${u.lon});\n`;
+    query += `nwr["amenity"="parking_entrance"](around:${CONFIG.distanzaMassima},${u.lat},${u.lon});\n`;
   }
   query += ");\nout center tags;";
   return query;
@@ -85,12 +93,12 @@ async function richiestaOverpass(query) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), CONFIG.timeoutMs);
       try {
-        console.log("Overpass:", server);
+        console.log("🌍 Overpass:", server);
         const response = await fetch(server, {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "User-Agent": "1KMESIMANGIA/1.0 (+https://1kmesimangia.it)"
+            "User-Agent": "1KM-E-SI-MANGIA/1.0 (https://1km-e-si-mangia.it)"
           },
           body: "data=" + encodeURIComponent(query),
           signal: controller.signal
@@ -102,7 +110,7 @@ async function richiestaOverpass(query) {
       } catch (errore) {
         clearTimeout(timer);
         ultimoErrore = errore;
-        console.warn("Overpass fallito:", server, errore.message);
+        console.warn("⚠️ Overpass fallito:", errore.message);
       }
     }
     await sleep(1500 * (tentativo + 1));
@@ -112,8 +120,7 @@ async function richiestaOverpass(query) {
 
 function creaRistorante(elemento, uscita, distanza) {
   const coordinate = coordinateElemento(elemento);
-  if (!coordinate || eAreaDiServizio(elemento.tags)) return null;
-  if (distanza > CONFIG.distanzaMassima) return null;
+  if (!coordinate || eAreaDiServizio(elemento.tags) || distanza > CONFIG.distanzaMassima) return null;
   const tags = elemento.tags || {};
   return {
     id: `osm-${elemento.type}-${elemento.id}`,
@@ -136,16 +143,7 @@ function creaRistorante(elemento, uscita, distanza) {
       autostrada: uscita.autostrada || "",
       distanza_m: Math.round(distanza)
     },
-    parcheggio: {
-      presente: false,
-      tipo: null,
-      distanza_m: null,
-      osm_id: null,
-      lat: null,
-      lon: null,
-      accesso: null,
-      capacity: null
-    },
+    parcheggio: { presente: false, tipo: null, distanza_m: null, osm_id: null, lat: null, lon: null, accesso: null, capacity: null },
     mezzi_voluminosi: { stato: "non_verificato", hgv: null, maxheight: null, maxweight: null, maxlength: null },
     area_manovra: { stato: "non_verificato", fonte: null },
     fonti: ["OpenStreetMap"],
@@ -173,8 +171,8 @@ function associaParcheggio(ristorante, parcheggi) {
     tipo: tags.parking || null,
     distanza_m: Math.round(distanzaMigliore),
     osm_id: migliore.id,
-    lat: c?.lat || null,
-    lon: c?.lon || null,
+    lat: c?.lat ?? null,
+    lon: c?.lon ?? null,
     accesso: tags.access || null,
     capacity: tags.capacity || null
   };
@@ -201,7 +199,7 @@ function deduplica(ristoranti) {
 async function main() {
   console.log("==========================================");
   console.log("1 KM E SI MANGIA - DATABASE RISTORANTI");
-  console.log("Distanza massima:", CONFIG.distanzaMassima, "m");
+  console.log("==========================================");
   const uscite = caricaUscite();
   const risultati = [];
   const totaleBatch = Math.ceil(uscite.length / CONFIG.batchSize);
@@ -209,13 +207,13 @@ async function main() {
   for (let i = 0; i < uscite.length; i += CONFIG.batchSize) {
     const batch = uscite.slice(i, i + CONFIG.batchSize);
     const numero = Math.floor(i / CONFIG.batchSize) + 1;
-    console.log(`BATCH ${numero}/${totaleBatch} - ${batch.length} uscite`);
+    console.log(`📦 BATCH ${numero}/${totaleBatch} - ${batch.length} caselli`);
     try {
       const dati = await richiestaOverpass(creaQuery(batch));
-      const elementi = dati.elements || [];
+      const elementi = Array.isArray(dati.elements) ? dati.elements : [];
       const ristorantiOSM = elementi.filter(e => e.tags?.amenity === "restaurant" && e.tags?.name);
       const parcheggiOSM = elementi.filter(e => e.tags?.amenity === "parking" || e.tags?.amenity === "parking_entrance");
-      console.log("Elementi:", elementi.length, "Ristoranti:", ristorantiOSM.length, "Parcheggi:", parcheggiOSM.length);
+      console.log(`   Elementi ${elementi.length} · ristoranti ${ristorantiOSM.length} · parcheggi ${parcheggiOSM.length}`);
 
       for (const elemento of ristorantiOSM) {
         const c = coordinateElemento(elemento);
@@ -236,21 +234,21 @@ async function main() {
         risultati.push(ristorante);
       }
     } catch (errore) {
-      console.error("ERRORE BATCH:", errore.message);
+      console.error(`❌ ERRORE BATCH ${numero}:`, errore.message);
+      // Il batch fallito non sostituisce il database esistente.
     }
     if (i + CONFIG.batchSize < uscite.length) await sleep(CONFIG.pausaMs);
   }
 
   const databaseFinale = deduplica(risultati).sort((a, b) => a.uscita.distanza_m - b.uscita.distanza_m);
-  fs.writeFileSync(CONFIG.output, JSON.stringify(databaseFinale, null, 2), "utf8");
+  if (!databaseFinale.length) throw new Error("Nessun ristorante prodotto: database non sovrascritto.");
+  fs.writeFileSync(CONFIG.output, JSON.stringify(databaseFinale, null, 2) + "\n", "utf8");
   console.log("==========================================");
-  console.log("DATABASE COMPLETATO");
-  console.log("Ristoranti totali:", databaseFinale.length);
-  console.log("File:", CONFIG.output);
+  console.log(`✅ DATABASE RISTORANTI COMPLETATO: ${databaseFinale.length}`);
   console.log("==========================================");
 }
 
 main().catch(errore => {
-  console.error("ERRORE FATALE:", errore);
+  console.error("❌ ERRORE FATALE:", errore.message);
   process.exit(1);
 });
