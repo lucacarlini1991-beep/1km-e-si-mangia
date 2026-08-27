@@ -71,10 +71,20 @@
       .trim();
   }
 
+  function trovaCluster(map) {
+    if (!map?.eachLayer) return null;
+    let trovato = null;
+    map.eachLayer(layer => {
+      if (!trovato && layer && typeof layer.eachLayer === "function" && layer.options && "zoomToBoundsOnClick" in layer.options) {
+        trovato = layer;
+      }
+    });
+    return trovato;
+  }
+
   function eAreaDiServizio(marker) {
     if (!marker) return false;
 
-    // Prima controlliamo eventuali dati direttamente associati al marker.
     const dati = marker.options?.uscita || marker.options?.exit || marker._uscita || marker._exit;
     const testoDati = normalizza(
       dati?.nome || dati?.name || dati?.descrizione || dati?.tipo || dati?.category
@@ -116,9 +126,7 @@
     return false;
   }
 
-  function filtraAreeDiServizioMappa() {
-    const map = window.appMap || window.map;
-    const cluster = window.clusterUscite;
+  function filtraAreeDiServizioMappa(map, cluster) {
     if (!map || !cluster) return;
 
     const daRimuovere = [];
@@ -136,26 +144,27 @@
     const map = window.appMap || window.map;
     if (!map) return false;
 
-    // Il click su un gruppo NON deve far cambiare immediatamente lo zoom.
-    // Così sul telefono i singoli caselli restano facili da premere.
-    const cluster = window.clusterUscite;
-    if (cluster) {
-      cluster.options.zoomToBoundsOnClick = false;
-      cluster.options.maxClusterRadius = window.innerWidth <= 750 ? 30 : 40;
-    }
+    const cluster = trovaCluster(map);
+    if (!cluster) return false;
 
-    filtraAreeDiServizioMappa();
+    // Il click su un gruppo NON deve far cambiare immediatamente lo zoom.
+    // Sul telefono i singoli caselli restano quindi più facili da premere.
+    cluster.options.zoomToBoundsOnClick = false;
+    cluster.options.maxClusterRadius = window.innerWidth <= 750 ? 30 : 40;
+
+    filtraAreeDiServizioMappa(map, cluster);
     return true;
   }
 
   function avviaFixMappa() {
-    // script.js costruisce la mappa dopo il caricamento della pagina.
+    // script.js costruisce la mappa e carica il database in modo asincrono.
     // Controlliamo per pochi secondi, senza toccare GPS o dati.
     let tentativi = 0;
     const timer = setInterval(() => {
       tentativi++;
       const pronta = sistemaClusterMappa();
-      if (pronta || tentativi >= 30) clearInterval(timer);
+      if (pronta && tentativi >= 8) clearInterval(timer);
+      if (tentativi >= 40) clearInterval(timer);
     }, 250);
   }
 
