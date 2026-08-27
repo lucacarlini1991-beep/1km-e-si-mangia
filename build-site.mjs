@@ -5,6 +5,14 @@ const root = path.dirname(new URL(import.meta.url).pathname);
 const out = path.join(root, 'dist');
 const skip = new Set(['dist', 'node_modules', '.git', '.env']);
 
+// IMPORTANTE: dist/ contiene la copia funzionante del vecchio script principale
+// della mappa. Prima di ricreare dist/ la conserviamo, perché script.js nella
+// root è invece il filtro delle uscite di servizio e NON il motore della mappa.
+const mainMapScriptPath = path.join(out, 'script.js');
+const mainMapScript = fs.existsSync(mainMapScriptPath)
+  ? fs.readFileSync(mainMapScriptPath, 'utf8')
+  : null;
+
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
@@ -24,6 +32,17 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
   if (!skipFiles.has(entry.name) && (allowed.includes(ext) || copyJson)) {
     fs.copyFileSync(path.join(root, entry.name), path.join(out, entry.name));
   }
+}
+
+// Ricrea esplicitamente il vero motore della pagina uscite.
+// Il file root script.js resta il filtro delle aree di servizio e viene
+// caricato prima: così il fetch di uscite.json viene filtrato senza perdere
+// nessuna delle funzioni della mappa, dei raggruppamenti e delle schede.
+if (mainMapScript) {
+  fs.writeFileSync(path.join(out, 'uscite-main.js'), mainMapScript);
+  console.log('Motore mappa salvato in dist/uscite-main.js');
+} else {
+  console.warn('ATTENZIONE: dist/script.js originale non trovato; motore mappa non recuperato.');
 }
 
 for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
@@ -75,9 +94,6 @@ for (const file of htmlFiles) {
     html = html.replace(/<\/body>/i, '<script src="google-zona.js?v=20260826"></script>\n</body>');
   }
 
-  // uscita.html nasce con un riferimento alla copia sorgente in dist/.
-  // Vercel pubblica già la cartella dist/ come root: il motore della mappa
-  // viene quindi preservato dal pre-build e deve essere referenziato direttamente.
   if (file === 'uscite.html') {
     html = html.replaceAll('src="dist/script.js', 'src="uscite-main.js');
   }
