@@ -58,9 +58,6 @@
     });
   }
 
-  // =====================================================
-  // MAPPA - FIX USCITE / AREE DI SERVIZIO
-  // =====================================================
   function normalizza(testo) {
     return String(testo || "")
       .toLowerCase()
@@ -115,19 +112,16 @@
     ];
 
     if (paroleServizio.some(p => testo.includes(p))) return true;
-
-    // Caso specifico visibile a Ronco Scrivia: Area Giovi Est/Ovest.
     if (/\barea\s+giovi\s+(est|ovest)\b/.test(testo)) return true;
 
-    // Altri casi tipici delle aree autostradali: A7 KM 28, A1 KM 100, ecc.
     const autostradaKm = /\b(?:a\d+|ra\d+|ss\d+)\s*(?:mi|me|ge|na|bo|rm|fi|to|ve|pd|ts|ba|it)?\s*km\s*\d+/;
     if (autostradaKm.test(testo) && /\b(?:est|ovest|nord|sud)\b/.test(testo)) return true;
 
     return false;
   }
 
-  function filtraAreeDiServizioMappa(map, cluster) {
-    if (!map || !cluster) return;
+  function filtraAreeDiServizioMappa(cluster) {
+    if (!cluster) return;
 
     const daRimuovere = [];
     cluster.eachLayer(layer => {
@@ -147,18 +141,44 @@
     const cluster = trovaCluster(map);
     if (!cluster) return false;
 
-    // Il click su un gruppo NON deve far cambiare immediatamente lo zoom.
-    // Sul telefono i singoli caselli restano quindi più facili da premere.
+    // I cluster devono tornare cliccabili: un tocco porta verso i singoli caselli.
+    // Disattiviamo il comportamento automatico e ne usiamo uno controllato,
+    // evitando lo zoom eccessivo che rendeva difficile premere i marker su iPhone.
     cluster.options.zoomToBoundsOnClick = false;
     cluster.options.maxClusterRadius = window.innerWidth <= 750 ? 30 : 40;
 
-    filtraAreeDiServizioMappa(map, cluster);
+    if (!cluster._clickFix1km) {
+      cluster._clickFix1km = true;
+      cluster.on("clusterclick", function (event) {
+        const gruppo = event.layer;
+        if (!gruppo || typeof gruppo.getAllChildMarkers !== "function") return;
+
+        const markers = gruppo.getAllChildMarkers();
+        if (!markers.length) return;
+
+        const bounds = L.latLngBounds([]);
+        markers.forEach(marker => {
+          if (marker?.getLatLng) bounds.extend(marker.getLatLng());
+        });
+        if (!bounds.isValid()) return;
+
+        const centro = bounds.getCenter();
+        const zoomAttuale = map.getZoom();
+        const zoomNecessario = map.getBoundsZoom(bounds, false, [55, 55]);
+        const zoomTarget = Math.min(14, Math.max(zoomAttuale + 2, zoomNecessario));
+
+        map.flyTo(centro, zoomTarget, {
+          animate: true,
+          duration: 0.35
+        });
+      });
+    }
+
+    filtraAreeDiServizioMappa(cluster);
     return true;
   }
 
   function avviaFixMappa() {
-    // script.js costruisce la mappa e carica il database in modo asincrono.
-    // Controlliamo per pochi secondi, senza toccare GPS o dati.
     let tentativi = 0;
     const timer = setInterval(() => {
       tentativi++;
