@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Scarica repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -61,6 +61,17 @@ jobs:
         if: steps.time.outputs.run == 'true' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
+          set -e
+          mkdir -p /tmp/1km-generated
+          cp uscite.json database-update-state.json ristoranti.json ristoranti-wikidata.json /tmp/1km-generated/
+
+          # Allinea il checkout all'ultimo main prima del push, così un commit
+          # fatto mentre l'aggiornamento era in corso non causa più un push  non-fast-forward.
+          git fetch origin main
+          git reset --hard origin/main
+
+          cp /tmp/1km-generated/uscite.json database-update-state.json /tmp/1km-generated/ristoranti.json /tmp/1km-generated/ristoranti-wikidata.json .
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add uscite.json database-update-state.json ristoranti.json ristoranti-wikidata.json
@@ -68,5 +79,5 @@ jobs:
             echo "Nessuna modifica da salvare."
           else
             git commit -m "chore: aggiorna database OSM e ristoranti"
-            git push
+            git push origin main
           fi
