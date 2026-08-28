@@ -7,6 +7,7 @@
   const GOOGLE_RADIUS = 2000;
   const GOOGLE_MAX = 15;
   const routeCache = new Map();
+  const googleCache = new Map();
   let dbPromise = null;
   let uscitePromise = null;
 
@@ -79,7 +80,7 @@
     window.apriRientroAutostrada(r);
   }
 
-  function show(exit,items){
+  function show(exit,items,googleSearched=false){
     close();
     window._ristorantiCorrenti=items;
     window.ristorantiCorrenti=items;
@@ -89,7 +90,11 @@
     p.id="ristorantiMapPanel";
     p.style.cssText="position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(94vw,540px);height:min(92vh,820px);background:#fff;border-radius:22px;box-shadow:0 16px 55px rgba(0,0,0,.35);overflow:hidden;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;color:#173b31;display:flex;flex-direction:column;";
 
-    p.innerHTML=`<div style="flex:0 0 auto;padding:18px 18px 14px;background:#075c3b;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#f5a719">1 KM E SI MANGIA</div><div style="font-size:22px;font-weight:800;line-height:1.15;margin-top:3px">🍴 Ristoranti</div><div style="font-size:14px;opacity:.9;margin-top:3px">${esc(exit.nome||"Uscita")} · entro 2 km di strada</div></div><button id="chiudiRistorantiMap" type="button" aria-label="Chiudi" style="flex:0 0 auto;border:0;border-radius:50%;width:42px;height:42px;background:rgba(255,255,255,.16);color:#fff;font-size:28px;line-height:1;cursor:pointer">×</button></div></div><div data-restaurant-scroll style="flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 18px;background:#f5f8f6"></div>`;
+    const googleButton=googleSearched
+      ? `<div style="margin:10px 12px 0;padding:9px 12px;border-radius:12px;background:#eef6f1;color:#075c3b;text-align:center;font-size:12px;font-weight:800">✓ Ricerca Google Places già effettuata</div>`
+      : `<button id="cercaAltriGoogle" type="button" style="margin:10px 12px 0;border:1px solid #075c3b;border-radius:12px;background:#fff;color:#075c3b;padding:11px 12px;font-weight:800;font-size:13px;cursor:pointer">🔎 CERCA ALTRI RISTORANTI CON GOOGLE</button>`;
+
+    p.innerHTML=`<div style="flex:0 0 auto;padding:18px 18px 14px;background:#075c3b;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#f5a719">1 KM E SI MANGIA</div><div style="font-size:22px;font-weight:800;line-height:1.15;margin-top:3px">🍴 Ristoranti</div><div style="font-size:14px;opacity:.9;margin-top:3px">${esc(exit.nome||"Uscita")} · entro 2 km di strada</div></div><button id="chiudiRistorantiMap" type="button" aria-label="Chiudi" style="flex:0 0 auto;border:0;border-radius:50%;width:42px;height:42px;background:rgba(255,255,255,.16);color:#fff;font-size:28px;line-height:1;cursor:pointer">×</button></div></div>${googleButton}<div data-google-status style="min-height:0"></div><div data-restaurant-scroll style="flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 18px;background:#f5f8f6"></div>`;
 
     const lista=p.querySelector("[data-restaurant-scroll]");
     if(!items.length){
@@ -111,17 +116,30 @@
     }
     document.body.appendChild(p);
     p.querySelector("#chiudiRistorantiMap")?.addEventListener("click",close);
+
+    const gb=p.querySelector("#cercaAltriGoogle");
+    if(gb) gb.addEventListener("click",async e=>{
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      gb.disabled=true;gb.style.opacity=".7";gb.textContent="🔎 CERCO ALTRI RISTORANTI...";
+      await arricchisciConGoogle(exit,items);
+    });
   }
 
   async function cercaGoogle(exit){
-    const response=await fetch("/api/places",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({exit:{lat:Number(exit.lat),lon:Number(exit.lon)},radius:GOOGLE_RADIUS,maxResultCount:GOOGLE_MAX})
-    });
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok) throw new Error(data?.error||`Google Places HTTP ${response.status}`);
-    return Array.isArray(data.places)?data.places:[];
+    const key=String(exit.id||`${exit.lat},${exit.lon}`);
+    if(googleCache.has(key)) return googleCache.get(key);
+    const promise=(async()=>{
+      const response=await fetch("/api/places",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({exit:{lat:Number(exit.lat),lon:Number(exit.lon)},radius:GOOGLE_RADIUS,maxResultCount:GOOGLE_MAX})
+      });
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok) throw new Error(data?.error||`Google Places HTTP ${response.status}`);
+      return Array.isArray(data.places)?data.places:[];
+    })();
+    googleCache.set(key,promise);
+    try{return await promise;}catch(e){googleCache.delete(key);throw e;}
   }
 
   function mergeGoogle(locali,places,exit){
@@ -149,6 +167,26 @@
     return out;
   }
 
+  async function arricchisciConGoogle(exit,localiVerificati){
+    const status=panel()?.querySelector("[data-google-status]");
+    try{
+      const places=await cercaGoogle(exit);
+      const combinati=mergeGoogle(localiVerificati,places,exit);
+      let roadsAll=await osrmTable(exit,combinati);
+      const missingAll=combinati.filter(r=>!roadsAll.has(r));
+      if(missingAll.length&&missingAll.length<=8) for(const r of missingAll){const d=await routeOne(exit,r);if(d!=null)roadsAll.set(r,d);}
+      const finali=combinati.filter(r=>roadsAll.has(r)&&roadsAll.get(r)<=MAX_ROAD).map(r=>{r._road=roadsAll.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
+      window._ristorantiVisualizzati=finali;
+      show(exit,finali,true);
+      console.log("RISTORANTI GOOGLE",{uscita:exit.nome,locali:localiVerificati.length,google:places.length,finali:finali.length});
+    }catch(e){
+      console.warn("Google Places non disponibile:",e);
+      if(status) status.innerHTML=`<div style="margin:8px 12px;padding:9px 12px;border-radius:12px;background:#fff4e5;color:#8a5a00;text-align:center;font-size:12px;font-weight:700">Google Places non disponibile. I ristoranti locali restano disponibili.</div>`;
+      const gb=panel()?.querySelector("#cercaAltriGoogle");
+      if(gb){gb.disabled=false;gb.style.opacity="1";gb.textContent="🔎 Riprova con Google Places";}
+    }
+  }
+
   async function run(exit){
     try{
       const db=await loadDB();
@@ -158,20 +196,9 @@
       if(missing.length&&missing.length<=8) for(const r of missing){const d=await routeOne(exit,r);if(d!=null)roads.set(r,d);}
       const localiVerificati=locali.filter(r=>roads.has(r)&&roads.get(r)<=MAX_ROAD).map(r=>{r._road=roads.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
 
-      // Mostra subito i locali verificati, poi arricchisce con Google.
-      show(exit,localiVerificati);
+      // Prima scelta: solo il database locale. Google viene interrogato esclusivamente su richiesta.
       window._ristorantiVisualizzati=localiVerificati;
-
-      let places=[];
-      try{places=await cercaGoogle(exit);}catch(e){console.warn("Google Places non disponibile:",e);return;}
-      const combinati=mergeGoogle(localiVerificati,places,exit);
-      let roadsAll=await osrmTable(exit,combinati);
-      const missingAll=combinati.filter(r=>!roadsAll.has(r));
-      if(missingAll.length&&missingAll.length<=8) for(const r of missingAll){const d=await routeOne(exit,r);if(d!=null)roadsAll.set(r,d);}
-      const finali=combinati.filter(r=>roadsAll.has(r)&&roadsAll.get(r)<=MAX_ROAD).map(r=>{r._road=roadsAll.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
-      window._ristorantiVisualizzati=finali;
-      show(exit,finali);
-      console.log("RISTORANTI",{uscita:exit.nome,locali:localiVerificati.length,google:places.length,finali:finali.length});
+      show(exit,localiVerificati,false);
     }catch(e){console.error("Ricerca ristoranti:",e);show(exit,[]);}
   }
 
