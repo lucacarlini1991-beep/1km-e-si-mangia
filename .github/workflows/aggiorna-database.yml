@@ -66,11 +66,16 @@ jobs:
           cp uscite.json database-update-state.json ristoranti.json ristoranti-wikidata.json /tmp/1km-generated/
 
           # Allinea il checkout all'ultimo main prima del push, così un commit
-          # fatto mentre l'aggiornamento era in corso non causa più un push  non-fast-forward.
+          # fatto mentre l'aggiornamento era in corso non causa più un push non-fast-forward.
           git fetch origin main
           git reset --hard origin/main
 
-          cp /tmp/1km-generated/uscite.json database-update-state.json /tmp/1km-generated/ristoranti.json /tmp/1km-generated/ristoranti-wikidata.json .
+          # Ripristina i file generati. Il database-update-state.json viene
+          # copiato separatamente per evitare il caso "source and destination are the same file".
+          cp /tmp/1km-generated/uscite.json .
+          cp /tmp/1km-generated/ristoranti.json .
+          cp /tmp/1km-generated/ristoranti-wikidata.json .
+          cp /tmp/1km-generated/database-update-state.json ./database-update-state.json
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
