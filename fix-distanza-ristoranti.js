@@ -62,6 +62,27 @@
     const coords=`${exit.lon},${exit.lat};${r.lon},${r.lat}`;
     const urls=[`https://router.project-osrm.org/route/v1/driving/${coords}?overview=false`,`https://routing.openstreetmap.de/routed-car/route/v1/driving/${coords}?overview=false`];
     for(const url of urls){try{const x=await fetch(url,{cache:"no-store"});if(!x.ok)continue;const j=await x.json();const d=Number(j?.routes?.[0]?.distance);if(Number.isFinite(d)){routeCache.set(key,d);return d;}}catch(e){}}
+
+    // Ultimo fallback: Google Routes. Evita che un errore temporaneo
+    // dei server OSRM faccia sparire tutti i ristoranti Google.
+    try{
+      const x=await fetch("/api/route",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          origin:{lat:Number(exit.lat),lon:Number(exit.lon)},
+          destination:{lat:Number(r.lat),lon:Number(r.lon)}
+        })
+      });
+      if(x.ok){
+        const j=await x.json();
+        const d=Number(j?.distanceMeters);
+        if(Number.isFinite(d)){routeCache.set(key,d);return d;}
+      }
+    }catch(e){
+      console.warn("Google Routes fallback non disponibile:",e);
+    }
+
     return null;
   }
 
