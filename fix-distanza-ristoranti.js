@@ -174,7 +174,7 @@
       const combinati=mergeGoogle(localiVerificati,places,exit);
       let roadsAll=await osrmTable(exit,combinati);
       const missingAll=combinati.filter(r=>!roadsAll.has(r));
-      if(missingAll.length&&missingAll.length<=8) for(const r of missingAll){const d=await routeOne(exit,r);if(d!=null)roadsAll.set(r,d);}
+      if(missingAll.length) for(const r of missingAll){const d=await routeOne(exit,r);if(d!=null)roadsAll.set(r,d);}
       const finali=combinati.filter(r=>roadsAll.has(r)&&roadsAll.get(r)<=MAX_ROAD).map(r=>{r._road=roadsAll.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
       window._ristorantiVisualizzati=finali;
       show(exit,finali,true);
@@ -193,7 +193,7 @@
       const locali=db.filter(r=>clean(r)&&Number.isFinite(Number(r.lat))&&Number.isFinite(Number(r.lon))&&dist(Number(exit.lat),Number(exit.lon),Number(r.lat),Number(r.lon))<=CANDIDATE_RADIUS);
       let roads=await osrmTable(exit,locali);
       const missing=locali.filter(r=>!roads.has(r));
-      if(missing.length&&missing.length<=8) for(const r of missing){const d=await routeOne(exit,r);if(d!=null)roads.set(r,d);}
+      if(missing.length) for(const r of missing){const d=await routeOne(exit,r);if(d!=null)roads.set(r,d);}
       const localiVerificati=locali.filter(r=>roads.has(r)&&roads.get(r)<=MAX_ROAD).map(r=>{r._road=roads.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
 
       // Prima scelta: solo il database locale. Google viene interrogato esclusivamente su richiesta.
