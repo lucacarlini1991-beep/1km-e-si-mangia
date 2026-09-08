@@ -1,21 +1,11 @@
-/**
- * 1 KM E SI MANGIA - Uscita 2.0
- * Estrae parcheggi da OpenStreetMap tramite Overpass e genera data/parcheggi.json.
- * Uso: node scripts/build-parcheggi-overpass.js
- */
-const fs=require("fs");
-const https=require("https");
+/** Esplora Uscite: parcheggi entro 20 km dalle uscite */
+const fs=require("fs"),https=require("https");
+const exits=JSON.parse(fs.readFileSync("data/uscite.json","utf8")).items||[];
 const endpoints=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
-const query=`[out:json][timeout:180];
-area["ISO3166-1"="IT"][admin_level=2]->.italy;
-(
- nwr["amenity"="parking"](area.italy);
- nwr["amenity"="parking_space"](area.italy);
- nwr["highway"="rest_area"](area.italy);
- nwr["highway"="services"](area.italy);
-);
-out center tags;`;
-function request(url,body){return new Promise((resolve,reject)=>{const req=https.request(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded","Content-Length":Buffer.byteLength(body)}},res=>{let d="";res.on("data",x=>d+=x);res.on("end",()=>res.statusCode===200?resolve(d):reject(new Error("HTTP "+res.statusCode)));});req.on("error",reject);req.write(body);req.end();});}
+const RADIUS=20000,CHUNK=35;
+function post(url,body){return new Promise((resolve,reject)=>{const q=https.request(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded","Content-Length":Buffer.byteLength(body)},res=>{let d="";res.on("data",x=>d+=x);res.on("end",()=>res.statusCode===200?resolve(d):reject(Error("HTTP "+res.statusCode)));});q.on("error",reject);q.write(body);q.end();});}
 function coords(x){return x.type==="node"?{lat:x.lat,lng:x.lon}:{lat:x.center?.lat,lng:x.center?.lon};}
-function type(t){if(t.highway==="rest_area"||t.highway==="services")return"rest";if(t.fee==="no"||t.access==="yes"&&t.fee!=="yes")return"free";if(t.fee==="yes")return"paid";return"auto";}
-(async()=>{let raw,last;for(const ep of endpoints){try{raw=await request(ep,"data="+encodeURIComponent(query));console.log("Scaricato da",ep);break;}catch(e){last=e;console.warn("Endpoint non disponibile:",ep);}}if(!raw)throw last;const json=JSON.parse(raw);const items=json.elements.map(x=>{const c=coords(x),t=x.tags||{};if(!c.lat||!c.lng)return null;return{id:`${x.type}-${x.id}`,name:t.name||"Parcheggio",lat:c.lat,lng:c.lng,type:type(t),capacity:t.capacity?Number(t.capacity):null,covered:t.covered==="yes",source:"OpenStreetMap",osm_type:x.type,osm_id:x.id};}).filter(Boolean);const out={version:"1.1",source:"OpenStreetMap / Overpass",updated_at:new Date().toISOString(),items};fs.writeFileSync("data/parcheggi.json",JSON.stringify(out,null,2));console.log("Creati",items.length,"parcheggi");})();
+function circles(chunk){return chunk.map(e=>"(around:"+RADIUS+","+e.lat+","+e.lng+")").join("");}
+async function fetchAll(selector){const all=[];for(let i=0;i<exits.length;i+=CHUNK){const q="[out:json][timeout:180];("+selector(circles(exits.slice(i,i+CHUNK)))+");out center tags;";let raw,last;for(const ep of endpoints){try{raw=await post(ep,"data="+encodeURIComponent(q));break}catch(e){last=e}}if(!raw)throw last;all.push(...JSON.parse(raw).elements);console.log("Blocco",Math.floor(i/CHUNK)+1,"→",all.length)}return all;}
+function selector(c){return 'nwr["amenity"="parking"]'+c+';nwr["highway"="rest_area"]'+c+';';}
+function type(t){if(t.highway==="rest_area")return"rest";if(t.fee==="no")return"free";if(t.fee==="yes")return"paid";return"auto";}(async()=>{const seen=new Set,items=(await fetchAll(selector)).map(x=>{const p=coords(x),t=x.tags||{},id=x.type+"-"+x.id;if(!p.lat||!p.lng||seen.has(id))return null;seen.add(id);return{id,name:t.name||"Parcheggio",lat:p.lat,lng:p.lng,type:type(t),capacity:t.capacity?Number(t.capacity):null,covered:t.covered==="yes",source:"OpenStreetMap",osm_type:x.type,osm_id:x.id};}).filter(Boolean);fs.writeFileSync("data/parcheggi.json",JSON.stringify({version:"2.0",source:"OpenStreetMap, entro 20 km dalle uscite",updated_at:new Date().toISOString(),radius_m:RADIUS,items},null,2));console.log("Creati",items.length)})();
