@@ -1,0 +1,29 @@
+name: Aggiorna parcheggi Esplora Uscite
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/build-parcheggi-overpass.js'
+
+permissions:
+  contents: write
+
+jobs:
+  update-parking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Scarica parcheggi OpenStreetMap
+        run: node scripts/build-parcheggi-overpass.js
+      - name: Salva database parcheggi
+        run: |
+          git config user.name "1KM Data Bot"
+          git config user.email "actions@github.com"
+          git add data/parcheggi.json
+          git diff --cached --quiet || git commit -m "Aggiorna database parcheggi"
+          git push
