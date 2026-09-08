@@ -9,8 +9,8 @@
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="/" aria-label="Torna a 1 KM E SI MANGIA"><span>1 KM E SI</span><strong>MANGIA</strong><small>Esci. Mangia. Riparti.</small></a>
-  <div class="title">🛣️ USCITA <b>2.0</b></div>
+  <a class="brand" href="/" aria-label="Torna a 1 KM E SI MANGIA"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA"></a>
+  <div class="title">USCITA <b>2.0</b></div>
   <a class="back" href="/">← Home</a>
 </header>
 <section class="hero">
@@ -18,13 +18,15 @@
     <p class="eyebrow">ESPLORA USCITE 2.0</p>
     <h1>Tutto quello che ti serve,<br><em>a 1 km dall'uscita.</em></h1>
     <p class="subtitle">Scegli un'uscita e scopri cosa puoi trovare nei dintorni.</p>
-    <label class="search"><span>🔎</span><input id="exitSearch" autocomplete="off" placeholder="Cerca uscita, città o autostrada"><button id="clearSearch" hidden>×</button></label>
+    <label class="search"><span>🔎</span><input id="exitSearch" autocomplete="off" placeholder="Cerca uscita, città o autostrada"><button id="clearSearch" hidden aria-label="Cancella ricerca">×</button></label>
+    <button class="locate" id="locateMe" type="button"><img src="assets/pin-posizione.png" alt=""><span><b>Trova la mia posizione</b><small>Mostra prima le uscite più vicine</small></span></button>
+    <div id="locationStatus" class="location-status" aria-live="polite"></div>
     <div id="suggestions" class="suggestions" aria-live="polite"></div>
   </div>
 </section>
 <main class="shell">
   <section id="chooser" class="chooser">
-    <div class="section-head"><div><p class="eyebrow">PARTI DA QUI</p><h2>Scegli la tua uscita</h2></div><span id="exitCount"></span></div>
+    <div class="section-head"><div><p class="eyebrow">PARTI DA QUI</p><h2 id="chooserTitle">Scegli la tua uscita</h2></div><span id="exitCount"></span></div>
     <div id="exitList" class="exit-list"></div>
   </section>
   <section id="detail" class="detail hidden" aria-live="polite">
