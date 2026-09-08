@@ -532,24 +532,22 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
       const ristorante = ristoranti[index];
       if (!ristorante) return;
 
-      // Apriamo prima la navigazione: in questo modo la chiusura
-      // del pannello ristoranti non può interferire con il click.
-      if (typeof window.apriNavigazione === "function") {
-        window.apriNavigazione(ristorante);
-        chiudiPannelloRistoranti();
-        return;
+      // NAVIGA deve funzionare sempre: prima prova il pannello di scelta
+      // Google Maps / Waze / Apple Maps, poi usa Google Maps nello stesso tab.
+      try {
+        if (typeof window.apriNavigazione === "function") {
+          window.apriNavigazione(ristorante);
+          return;
+        }
+      } catch (error) {
+        console.error("Errore apertura scelta navigazione:", error);
       }
 
-      // Fallback immediato: il tasto NAVIGA deve funzionare anche se
-      // il modulo di scelta Google/Waze/Apple non è ancora disponibile.
       const url = "https://www.google.com/maps/dir/?api=1&destination=" +
-        encodeURIComponent(ristorante.lat + "," + ristorante.lon) +
+        encodeURIComponent(Number(ristorante.lat) + "," + Number(ristorante.lon)) +
         "&travelmode=driving";
-      window.open(url, "_blank", "noopener,noreferrer");
-      chiudiPannelloRistoranti();
+      window.location.href = url;
       return;
-
-      // Codice precedente mantenuto come riferimento.
 
       ristorantiLayer.eachLayer(function(layer) {
         if (
@@ -1089,6 +1087,41 @@ document.addEventListener("click", function(event) {
       alert("La navigazione non è disponibile. Ricarica la pagina.");
     }
   }
+}, true);
+
+
+// =====================================================
+// SICUREZZA CLICK NAVIGA NELLE SCHEDE RISTORANTI
+// =====================================================
+document.addEventListener("click", function(event) {
+  const button = event.target.closest && event.target.closest("#ristorantiMapPanel [data-ristorante-index]");
+  if (!button) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+
+  const index = Number(button.getAttribute("data-ristorante-index"));
+  const elenco = Array.isArray(window._ristorantiVisualizzati)
+    ? window._ristorantiVisualizzati
+    : [];
+  const ristorante = elenco[index];
+  if (!ristorante || !Number.isFinite(Number(ristorante.lat)) || !Number.isFinite(Number(ristorante.lon))) {
+    alert("Coordinate del ristorante non disponibili.");
+    return;
+  }
+
+  try {
+    if (typeof window.apriNavigazione === "function") {
+      window.apriNavigazione(ristorante);
+      return;
+    }
+  } catch (error) {
+    console.error("Errore navigazione scheda:", error);
+  }
+
+  window.location.href =
+    "https://www.google.com/maps/dir/?api=1&destination=" +
+    encodeURIComponent(Number(ristorante.lat) + "," + Number(ristorante.lon)) +
+    "&travelmode=driving";
 }, true);
 
 // Carica e indicizza il database ristoranti per ID uscita.
