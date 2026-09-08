@@ -435,6 +435,9 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
   const ristoranti = Array.isArray(ristorantiOverride)
     ? ristorantiOverride
     : ristorantiPerUscita(uscita);
+
+  // Mantiene disponibile lo stesso elenco per tutti i pulsanti NAVIGA.
+  window._ristorantiVisualizzati = ristoranti;
   ristorantiLayer.clearLayers();
   chiudiPannelloRistoranti();
 
@@ -1081,10 +1084,20 @@ document.addEventListener("click", function(event) {
       console.error("Navigazione: ristorante non trovato:", id);
       return;
     }
-    if (typeof window.apriNavigazione === "function") {
-      window.apriNavigazione(ristorante);
-    } else {
-      alert("La navigazione non è disponibile. Ricarica la pagina.");
+    try {
+      if (typeof window.apriNavigazione === "function") {
+        window.apriNavigazione(ristorante);
+        return;
+      }
+    } catch (error) {
+      console.error("Errore apertura navigazione:", error);
+    }
+
+    if (Number.isFinite(Number(ristorante.lat)) && Number.isFinite(Number(ristorante.lon))) {
+      window.location.href =
+        "https://www.google.com/maps/dir/?api=1&destination=" +
+        encodeURIComponent(Number(ristorante.lat) + "," + Number(ristorante.lon)) +
+        "&travelmode=driving";
     }
   }
 }, true);
