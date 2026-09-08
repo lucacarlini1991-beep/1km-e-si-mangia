@@ -1,0 +1,29 @@
+name: Aggiorna aree camper Esplora Uscite
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/build-camper-overpass.js'
+
+permissions:
+  contents: write
+
+jobs:
+  update-camper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Scarica aree camper OpenStreetMap
+        run: node scripts/build-camper-overpass.js
+      - name: Salva database camper
+        run: |
+          git config user.name "1KM Data Bot"
+          git config user.email "actions@github.com"
+          git add data/camper.json
+          git diff --cached --quiet || git commit -m "Aggiorna database aree camper"
+          git push
