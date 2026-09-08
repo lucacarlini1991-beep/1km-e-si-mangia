@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "source": "OpenStreetMap / Overpass",
+  "updated_at": "2026-09-08",
+  "schema": {
+    "id": "string",
+    "name": "string",
+    "lat": "number",
+    "lng": "number",
+    "services": [
+      "area",
+      "water",
+      "grey",
+      "wc",
+      "service",
+      "electricity"
+    ],
+    "source": "string"
+  },
+  "items": []
+}
