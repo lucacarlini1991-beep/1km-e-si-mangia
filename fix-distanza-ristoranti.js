@@ -129,7 +129,7 @@
         const parcheggio=r.parcheggio?.presente===true?"🅿️ Parcheggio presente":"🅿️ Parcheggio da verificare";
         const card=document.createElement("article");
         card.style.cssText="background:#fff;border:1px solid #dfe8e3;border-radius:18px;padding:15px;margin:0 2px 10px;box-shadow:0 2px 8px rgba(7,92,59,.07)";
-        card.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0"><div style="font-size:18px;font-weight:800;line-height:1.2">${i+1}. ${esc(r.nome||"Ristorante")}</div><div style="font-size:13px;color:#53635e;margin-top:5px">🍽️ ${cucina}</div></div><div style="flex:0 0 auto;background:#eef6f1;color:#075c3b;border-radius:12px;padding:6px 8px;font-weight:800;font-size:12px;white-space:nowrap">📍 ${d} m</div></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:12px;color:#53635e"><span style="background:#f4f6f5;border-radius:8px;padding:5px 7px">${parcheggio}</span>${r.telefono?`<span style="background:#f4f6f5;border-radius:8px;padding:5px 7px">📞 ${esc(r.telefono)}</span>`:""}${fonte}</div>${indirizzo}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button type="button" data-naviga-ristorante style="border:0;border-radius:11px;background:#075c3b;color:#fff;padding:11px 7px;font-weight:800;font-size:13px;cursor:pointer">🧭 NAVIGA</button><button type="button" data-rientro-autostrada style="border:1px solid #075c3b;border-radius:11px;background:#fff;color:#075c3b;padding:10px 7px;font-weight:800;font-size:12px;cursor:pointer">🔄 RIENTRA IN AUTOSTRADA</button></div>`;
+        card.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0"><div style="font-size:18px;font-weight:800;line-height:1.2">${i+1}. ${esc(r.nome||"Ristorante")}</div><div style="font-size:13px;color:#53635e;margin-top:5px">🍽️ ${cucina}</div></div><div style="flex:0 0 auto;background:#eef6f1;color:#075c3b;border-radius:12px;padding:6px 8px;font-weight:800;font-size:12px;white-space:nowrap">📍 ${d} m</div></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:12px;color:#53635e"><span style="background:#f4f6f5;border-radius:8px;padding:5px 7px">${parcheggio}</span>${r.telefono?`<span style="background:#f4f6f5;border-radius:8px;padding:5px 7px">📞 ${esc(r.telefono)}</span>`:""}${fonte}</div>${indirizzo}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button type="button" data-naviga-ristorante data-nav-lat="${Number(r.lat)}" data-nav-lon="${Number(r.lon)}" data-nav-name="${esc(r.nome||'Ristorante')}" style="border:0;border-radius:11px;background:#075c3b;color:#fff;padding:11px 7px;font-weight:800;font-size:13px;cursor:pointer">🧭 NAVIGA</button><button type="button" data-rientro-autostrada style="border:1px solid #075c3b;border-radius:11px;background:#fff;color:#075c3b;padding:10px 7px;font-weight:800;font-size:12px;cursor:pointer">🔄 RIENTRA IN AUTOSTRADA</button></div>`;
         card.querySelector("[data-naviga-ristorante]").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();mostraNavigazione(r);});
         card.querySelector("[data-rientro-autostrada]").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();mostraRientro(r);});
         lista.appendChild(card);
@@ -229,6 +229,21 @@
     e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
     const id=b.getAttribute("data-ristoranti-uscita");
     loadExits().then(list=>{const exit=(Array.isArray(list)?list:[]).find(x=>String(x.id||"")===String(id));if(exit)run(exit);}).catch(err=>console.error("Uscite non disponibili:",err));
+  },true);
+
+  // NAVIGA: handler in cattura con coordinate sul bottone.
+  // Evita conflitti con i vecchi listener ancora caricati nella pagina.
+  document.addEventListener("click",function(e){
+    const b=e.target&&e.target.closest?e.target.closest("#ristorantiMapPanel [data-naviga-ristorante][data-nav-lat]"):null;
+    if(!b)return;
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    const lat=Number(b.dataset.navLat),lon=Number(b.dataset.navLon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon)){alert("Coordinate del ristorante non disponibili.");return;}
+    const r={lat,lon,nome:b.dataset.navName||"Ristorante"};
+    if(typeof window.apriNavigazione==="function"){
+      try{window.apriNavigazione(r);return;}catch(err){console.error("Errore NAVIGA:",err);}
+    }
+    window.location.assign("https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(lat+","+lon)+"&travelmode=driving");
   },true);
 
   window.__offlineRistorantiFix={run};
