@@ -173,7 +173,7 @@ module.exports = async function handler(req, res) {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType"
+          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.rating,places.userRatingCount"
       },
       body: JSON.stringify({
         includedTypes: ["restaurant"],
