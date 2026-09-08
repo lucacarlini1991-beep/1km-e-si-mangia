@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "source": "OpenStreetMap / Overpass",
+  "updated_at": "2026-09-08",
+  "schema": {
+    "id": "string",
+    "name": "string",
+    "lat": "number",
+    "lng": "number",
+    "type": "auto|free|paid|rest",
+    "source": "string"
+  },
+  "items": []
+}
