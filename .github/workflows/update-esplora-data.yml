@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Aggiorna uscite
+        run: node scripts/build-uscite-overpass.js
       - name: Aggiorna parcheggi
         run: node scripts/build-parcheggi-overpass.js
       - name: Aggiorna camper
