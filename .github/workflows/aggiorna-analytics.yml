@@ -1,0 +1,41 @@
+name: Aggiorna Analytics Vercel
+
+on:
+  schedule:
+    - cron: "35 21 * * *"
+      timezone: "Europe/Rome"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  analytics:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Leggi Vercel Analytics
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: 1km-e-si-mangia
+        run: node scripts/update-analytics.mjs
+
+      - name: Salva report su GitHub
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add analytics-report.json
+          if git diff --cached --quiet; then
+            echo "Nessuna variazione da salvare"
+          else
+            git commit -m "Aggiorna report Analytics"
+            git push
+          fi
