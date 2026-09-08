@@ -532,19 +532,24 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
       const ristorante = ristoranti[index];
       if (!ristorante) return;
 
-      chiudiPannelloRistoranti();
-
-      // Il pulsante della scheda ristorante porta direttamente
-      // alla scelta dell'app di navigazione.
-      // navigazione.js espone apriNavigazione().
+      // Apriamo prima la navigazione: in questo modo la chiusura
+      // del pannello ristoranti non può interferire con il click.
       if (typeof window.apriNavigazione === "function") {
         window.apriNavigazione(ristorante);
+        chiudiPannelloRistoranti();
         return;
       }
 
-      // Fallback: se navigazione.js non fosse ancora disponibile,
-      // manteniamo comunque il comportamento precedente.
-      map.setView([ristorante.lat, ristorante.lon], 17, { animate: true });
+      // Fallback immediato: il tasto NAVIGA deve funzionare anche se
+      // il modulo di scelta Google/Waze/Apple non è ancora disponibile.
+      const url = "https://www.google.com/maps/dir/?api=1&destination=" +
+        encodeURIComponent(ristorante.lat + "," + ristorante.lon) +
+        "&travelmode=driving";
+      window.open(url, "_blank", "noopener,noreferrer");
+      chiudiPannelloRistoranti();
+      return;
+
+      // Codice precedente mantenuto come riferimento.
 
       ristorantiLayer.eachLayer(function(layer) {
         if (
