@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "source": "OpenStreetMap + selezione 1 KM E SI MANGIA",
   "updated_at": "2026-09-08",
   "schema": {
@@ -12,11 +12,6 @@
     "description": "string",
     "source": "string"
   },
-  "rules": {
-    "near_km": 3,
-    "nature_km": 5,
-    "culture_km": 10,
-    "must_km": 15
-  },
-  "items": []
+  "items": [],
+  "description": "Nessun limite di distanza imposto dal database: il filtro viene scelto dall'utente in Uscita 2.0."
 }
