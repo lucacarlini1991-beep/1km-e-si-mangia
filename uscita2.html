@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Uscita 2.0 - tutto quello che ti serve vicino all'uscita autostradale.">
+  <title>Uscita 2.0 | 1 KM E SI MANGIA</title>
+  <link rel="stylesheet" href="uscita2.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Torna a 1 KM E SI MANGIA"><span>1 KM E SI</span><strong>MANGIA</strong><small>Esci. Mangia. Riparti.</small></a>
+  <div class="title">🛣️ USCITA <b>2.0</b></div>
+  <a class="back" href="/">← Home</a>
+</header>
+<section class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">ESPLORA USCITE 2.0</p>
+    <h1>Tutto quello che ti serve,<br><em>a 1 km dall'uscita.</em></h1>
+    <p class="subtitle">Scegli un'uscita e scopri cosa puoi trovare nei dintorni.</p>
+    <label class="search"><span>🔎</span><input id="exitSearch" autocomplete="off" placeholder="Cerca uscita, città o autostrada"><button id="clearSearch" hidden>×</button></label>
+    <div id="suggestions" class="suggestions" aria-live="polite"></div>
+  </div>
+</section>
+<main class="shell">
+  <section id="chooser" class="chooser">
+    <div class="section-head"><div><p class="eyebrow">PARTI DA QUI</p><h2>Scegli la tua uscita</h2></div><span id="exitCount"></span></div>
+    <div id="exitList" class="exit-list"></div>
+  </section>
+  <section id="detail" class="detail hidden" aria-live="polite">
+    <button class="all-exits" id="allExits">← Torna alle uscite</button>
+    <div class="exit-header">
+      <div class="road-icon">🛣️</div>
+      <div><p class="eyebrow" id="roadName"></p><h2 id="exitName"></h2><p id="exitDescription"></p></div>
+      <a id="mapLink" class="map-link" target="_blank" rel="noopener">🗺️ Vedi sulla mappa →</a>
+    </div>
+    <div id="categoryGrid" class="category-grid"></div>
+    <div class="features"><div>🕐 <b>Tutto organizzato</b><span>Risparmia tempo in viaggio</span></div><div>✓ <b>Informazioni separate</b><span>Ogni categoria ha la sua pagina</span></div><div>🛣️ <b>Pensato per chi viaggia</b><span>Auto, camper e molto altro</span></div></div>
+  </section>
+</main>
+<footer>1kmesimangia.it <span>•</span> Esci. Mangia. Riparti.</footer>
+<script src="uscita2-data.js"></script>
+<script src="uscita2.js"></script>
+</body>
+</html>
