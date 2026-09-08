@@ -13,7 +13,7 @@ const endpoints = [
 const query = `[out:json][timeout:240];
 area["ISO3166-1"="IT"][admin_level=2]->.it;
 node["highway"="motorway_junction"](area.it);
-out tags;`;
+out body;`;
 
 function post(url, body) {
   return new Promise((resolve, reject) => {
