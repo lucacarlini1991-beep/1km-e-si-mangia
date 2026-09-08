@@ -153,3 +153,4 @@ function kind(tags) {
 
   console.log("Database creato:", items.length, "strutture camper uniche");
 })();
+// Trigger aggiornamento database camper.
