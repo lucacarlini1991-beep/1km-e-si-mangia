@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-09-08",
+  "description": "Database base delle uscite autostradali",
+  "items": [
+    {
+      "id": "genova-ovest",
+      "name": "Genova Ovest",
+      "road": "A10",
+      "city": "Genova",
+      "lat": 44.4108,
+      "lng": 8.8902
+    },
+    {
+      "id": "genova-est",
+      "name": "Genova Est",
+      "road": "A12",
+      "city": "Genova",
+      "lat": 44.4278,
+      "lng": 8.9632
+    },
+    {
+      "id": "nervi",
+      "name": "Genova Nervi",
+      "road": "A12",
+      "city": "Genova",
+      "lat": 44.392,
+      "lng": 9.04
+    },
+    {
+      "id": "recco",
+      "name": "Recco",
+      "road": "A12",
+      "city": "Recco",
+      "lat": 44.362,
+      "lng": 9.143
+    },
+    {
+      "id": "rapallo",
+      "name": "Rapallo",
+      "road": "A12",
+      "city": "Rapallo",
+      "lat": 44.348,
+      "lng": 9.229
+    },
+    {
+      "id": "serravalle",
+      "name": "Serravalle Scrivia",
+      "road": "A7",
+      "city": "Serravalle Scrivia",
+      "lat": 44.722,
+      "lng": 8.857
+    }
+  ]
+}
