@@ -79,13 +79,29 @@
 
   function loadParkingDb(){
     if(parkingDbPromise)return parkingDbPromise;
-    parkingDbPromise=fetch('./parcheggi-database.json?v=3',{cache:'no-store'})
-      .then(r=>{if(!r.ok)throw new Error('parcheggi-database.json HTTP '+r.status);return r.json();})
-      .then(data=>{
-        if(!data || typeof data!=='object') throw new Error('Database parcheggi non valido');
-        state.parkingDb=data;
-        return data;
-      });
+
+    // Database leggero diviso in 8 parti per evitare un singolo file troppo grande.
+    const files=[
+      './data/parcheggi-leggeri-v2-01.json',
+      './data/parcheggi-leggeri-v2-02.json',
+      './data/parcheggi-leggeri-v2-03.json',
+      './data/parcheggi-leggeri-v2-04.json',
+      './data/parcheggi-leggeri-v2-05.json',
+      './data/parcheggi-leggeri-v2-06.json',
+      './data/parcheggi-leggeri-v2-07.json',
+      './data/parcheggi-leggeri-v2-08.json'
+    ];
+
+    parkingDbPromise=Promise.all(files.map(async url=>{
+      const r=await fetch(url,{cache:'force-cache'});
+      if(!r.ok)throw new Error(url+' HTTP '+r.status);
+      return r.json();
+    })).then(parts=>{
+      const allParking=parts.flat().filter(x=>x&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon)));
+      const data={allParking};
+      state.parkingDb=data;
+      return data;
+    });
     return parkingDbPromise;
   }
 
@@ -129,11 +145,29 @@
       }
 
       if(!candidates.length && Array.isArray(db.allParking)){
-        candidates=db.allParking.map(x=>{
-          const d=distance({lat:Number(exit.lat),lon:Number(exit.lon)},{lat:Number(x.lat),lon:Number(x.lon)});
-          return {...x,distance:Math.round(d)};
-        }).sort((a,b)=>a.distance-b.distance).slice(0,2);
-        usedRadius=Number((Number(candidates[candidates.length-1]?.distance||0)/1000).toFixed(1));
+        // Ricerca diretta nel database leggero senza creare centinaia di migliaia
+        // di oggetti temporanei. Manteniamo i risultati entro 2/5/10 km e i 2 più vicini.
+        const within2=[],within5=[],within10=[],nearest=[];
+        const addNearest=item=>{
+          nearest.push(item);
+          nearest.sort((a,b)=>a.distance-b.distance);
+          if(nearest.length>2)nearest.length=2;
+        };
+        for(const x of db.allParking){
+          const d=Math.round(distance({lat:Number(exit.lat),lon:Number(exit.lon)},{lat:Number(x.lat),lon:Number(x.lon)}));
+          const item={...x,distance:d};
+          addNearest(item);
+          if(d<=2000 && within2.length<100)within2.push(item);
+          else if(d<=5000 && within5.length<100)within5.push(item);
+          else if(d<=10000 && within10.length<100)within10.push(item);
+        }
+        if(within2.length){candidates=within2;usedRadius=2;}
+        else if(within5.length){candidates=within5;usedRadius=5;}
+        else if(within10.length){candidates=within10;usedRadius=10;}
+        else {
+          candidates=nearest;
+          usedRadius=Number((Number(nearest[nearest.length-1]?.distance||0)/1000).toFixed(1));
+        }
       }
 
       state.parking=candidates.slice(0,100);
