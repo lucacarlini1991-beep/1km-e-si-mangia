@@ -2,9 +2,9 @@
 (function(){
   "use strict";
 
-  const MAX_ROAD = 2000;
-  const CANDIDATE_RADIUS = 5000;
-  const GOOGLE_RADIUS = 2000;
+  const MAX_ROAD = 20000;
+  const CANDIDATE_RADIUS = 25000;
+  const GOOGLE_RADIUS = 20000;
   const GOOGLE_MAX = 15;
   const routeCache = new Map();
   const googleCache = new Map();
@@ -101,7 +101,10 @@
     window.apriRientroAutostrada(r);
   }
 
-  function show(exit,items,googleSearched=false){
+  function show(exit,items,googleSearched=false,radius=1000){
+    const visibleItems=(radius==='all'?items:items.filter(r=>Number(r._road)<=Number(radius)));
+    const filters=[['1 km',1000],['2 km',2000],['5 km',5000],['10 km',10000],['20 km',20000],['Tutti','all']];
+    const filterBar='<div style="display:flex;gap:7px;overflow-x:auto;padding:10px 12px 2px;background:#fff">'+filters.map(([label,value])=>'<button type="button" data-distance-filter="'+value+'" style="flex:0 0 auto;border:1px solid '+(String(radius)===String(value)?'#075c3b':'#cbd8d2')+';border-radius:20px;background:'+(String(radius)===String(value)?'#075c3b':'#fff')+';color:'+(String(radius)===String(value)?'#fff':'#075c3b')+';padding:8px 12px;font-weight:800;font-size:12px;cursor:pointer">'+label+'</button>').join('')+'</div>';
     close();
     window._ristorantiCorrenti=items;
     window.ristorantiCorrenti=items;
@@ -115,13 +118,13 @@
       ? `<div style="margin:10px 12px 0;padding:9px 12px;border-radius:12px;background:#eef6f1;color:#075c3b;text-align:center;font-size:12px;font-weight:800">✓ Ricerca Google Places già effettuata</div>`
       : `<button id="cercaAltriGoogle" type="button" style="margin:10px 12px 0;border:1px solid #075c3b;border-radius:12px;background:#fff;color:#075c3b;padding:11px 12px;font-weight:800;font-size:13px;cursor:pointer">🔎 CERCA ALTRI RISTORANTI CON GOOGLE</button>`;
 
-    p.innerHTML=`<div style="flex:0 0 auto;padding:18px 18px 14px;background:#075c3b;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#f5a719">1 KM E SI MANGIA</div><div style="font-size:22px;font-weight:800;line-height:1.15;margin-top:3px">🍴 Ristoranti</div><div style="font-size:14px;opacity:.9;margin-top:3px">${esc(exit.nome||"Uscita")} · entro 2 km di strada</div></div><button id="chiudiRistorantiMap" type="button" aria-label="Chiudi" style="flex:0 0 auto;border:0;border-radius:50%;width:42px;height:42px;background:rgba(255,255,255,.16);color:#fff;font-size:28px;line-height:1;cursor:pointer">×</button></div></div>${googleButton}<div data-google-status style="min-height:0"></div><div data-restaurant-scroll style="flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 18px;background:#f5f8f6"></div>`;
+    p.innerHTML=`<div style="flex:0 0 auto;padding:18px 18px 14px;background:#075c3b;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#f5a719">1 KM E SI MANGIA</div><div style="font-size:22px;font-weight:800;line-height:1.15;margin-top:3px">🍴 Ristoranti</div><div style="font-size:14px;opacity:.9;margin-top:3px">${esc(exit.nome||"Uscita")} · prima entro 1 km, poi amplia la ricerca</div></div><button id="chiudiRistorantiMap" type="button" aria-label="Chiudi" style="flex:0 0 auto;border:0;border-radius:50%;width:42px;height:42px;background:rgba(255,255,255,.16);color:#fff;font-size:28px;line-height:1;cursor:pointer">×</button></div></div>${filterBar}${googleButton}<div data-google-status style="min-height:0"></div><div data-restaurant-scroll style="flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 18px;background:#f5f8f6"></div>`;
 
     const lista=p.querySelector("[data-restaurant-scroll]");
-    if(!items.length){
-      lista.innerHTML=`<div style="background:#fff;border-radius:16px;padding:22px;margin:2px;text-align:center;color:#53635e">Nessun ristorante entro <b>2 km di strada</b> da questa uscita.</div>`;
+    if(!visibleItems.length){
+      lista.innerHTML=`<div style="background:#fff;border-radius:16px;padding:22px;margin:2px;text-align:center;color:#53635e">Nessun ristorante entro <b>${radius==='all'?'20 km':Number(radius)/1000+' km'} di strada</b>. Prova ad ampliare la ricerca.</div>`;
     }else{
-      items.forEach((r,i)=>{
+      visibleItems.forEach((r,i)=>{
         const d=Math.round(Number(r._road));
         const cucina=r.cucina?esc(r.cucina):"Ristorante";
         const indirizzo=r.google_address?`<div style="font-size:12px;color:#66756f;margin-top:6px;line-height:1.35">📍 ${esc(r.google_address)}</div>`:"";
@@ -139,6 +142,10 @@
       });
     }
     document.body.appendChild(p);
+    p.querySelectorAll("[data-distance-filter]").forEach(btn=>btn.addEventListener("click",()=>{
+      const value=btn.dataset.distanceFilter==='all'?'all':Number(btn.dataset.distanceFilter);
+      show(exit,items,googleSearched,value);
+    }));
     p.querySelector("#chiudiRistorantiMap")?.addEventListener("click",close);
 
     const gb=p.querySelector("#cercaAltriGoogle");
