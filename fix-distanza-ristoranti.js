@@ -32,7 +32,7 @@
     return uscitePromise;
   }
 
-  function loadDB(){
+  // Fallback prudente: se i servizi di routing esterni sono temporaneamente\n  // irraggiungibili, non facciamo sparire ristoranti realmente vicini.\n  function fallbackRoad(exit,r){\n    const lineare=dist(Number(exit.lat),Number(exit.lon),Number(r.lat),Number(r.lon));\n    if(!Number.isFinite(lineare)) return null;\n    return Math.round(lineare*1.35+80);\n  }\n\n  function loadDB(){
     if(!dbPromise) dbPromise=fetch("./ristoranti.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("ristoranti.json "+r.status);return r.json();});
     return dbPromise;
   }
@@ -135,7 +135,7 @@
         const parcheggio=r.parcheggio?.presente===true?"🅿️ Parcheggio presente":"🅿️ Parcheggio da verificare";
         const card=document.createElement("article");
         card.style.cssText="background:#fff;border:1px solid #dfe8e3;border-radius:18px;padding:15px;margin:0 2px 10px;box-shadow:0 2px 8px rgba(7,92,59,.07)";
-        card.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0"><div style="font-size:18px;font-weight:800;line-height:1.2">${i+1}. ${esc(r.nome||"Ristorante")}</div><div style="font-size:13px;color:#53635e;margin-top:5px">🍽️ ${cucina}</div></div><div style="flex:0 0 auto;background:#eef6f1;color:#075c3b;border-radius:12px;padding:6px 8px;font-weight:800;font-size:12px;white-space:nowrap">📍 ${d} m</div></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:12px;color:#53635e"><span style="background:#f4f6f5;border-radius:8px;padding:5px 7px">${parcheggio}</span>${r.telefono?`<span style="background:#f4f6f5;border-radius:8px;padding:5px 7px">📞 ${esc(r.telefono)}</span>`:""}${fonte}</div>${stelle}${indirizzo}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button type="button" data-naviga-ristorante data-nav-lat="${Number(r.lat)}" data-nav-lon="${Number(r.lon)}" data-nav-name="${esc(r.nome||'Ristorante')}" style="border:0;border-radius:11px;background:#075c3b;color:#fff;padding:11px 7px;font-weight:800;font-size:13px;cursor:pointer">🧭 NAVIGA</button><button type="button" data-rientro-autostrada style="border:1px solid #075c3b;border-radius:11px;background:#fff;color:#075c3b;padding:10px 7px;font-weight:800;font-size:12px;cursor:pointer">🔄 RIENTRA IN AUTOSTRADA</button></div>`;
+        card.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0"><div style="font-size:18px;font-weight:800;line-height:1.2">${i+1}. ${esc(r.nome||"Ristorante")}</div><div style="font-size:13px;color:#53635e;margin-top:5px">🍽️ ${cucina}</div></div><div style="flex:0 0 auto;background:#eef6f1;color:#075c3b;border-radius:12px;padding:6px 8px;font-weight:800;font-size:12px;white-space:nowrap">📍 ${dLabel}</div></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:12px;color:#53635e"><span style="background:#f4f6f5;border-radius:8px;padding:5px 7px">${parcheggio}</span>${r.telefono?`<span style="background:#f4f6f5;border-radius:8px;padding:5px 7px">📞 ${esc(r.telefono)}</span>`:""}${fonte}</div>${stelle}${indirizzo}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button type="button" data-naviga-ristorante data-nav-lat="${Number(r.lat)}" data-nav-lon="${Number(r.lon)}" data-nav-name="${esc(r.nome||'Ristorante')}" style="border:0;border-radius:11px;background:#075c3b;color:#fff;padding:11px 7px;font-weight:800;font-size:13px;cursor:pointer">🧭 NAVIGA</button><button type="button" data-rientro-autostrada style="border:1px solid #075c3b;border-radius:11px;background:#fff;color:#075c3b;padding:10px 7px;font-weight:800;font-size:12px;cursor:pointer">🔄 RIENTRA IN AUTOSTRADA</button></div>`;
         card.querySelector("[data-naviga-ristorante]").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();mostraNavigazione(r);});
         card.querySelector("[data-rientro-autostrada]").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();mostraRientro(r);});
         lista.appendChild(card);
@@ -225,7 +225,7 @@
       let roads=await osrmTable(exit,locali);
       const missing=locali.filter(r=>!roads.has(r));
       if(missing.length) for(const r of missing){const d=await routeOne(exit,r);if(d!=null)roads.set(r,d);}
-      const localiVerificati=locali.filter(r=>roads.has(r)&&roads.get(r)<=MAX_ROAD).map(r=>{r._road=roads.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
+      for(const r of locali){\n        if(!roads.has(r)){\n          const stima=fallbackRoad(exit,r);\n          if(stima!=null){roads.set(r,stima);r._roadFallback=true;}\n        }\n      }\n      const localiVerificati=locali.filter(r=>roads.has(r)&&roads.get(r)<=MAX_ROAD).map(r=>{r._road=roads.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
 
       // Prima scelta: solo il database locale. Google viene interrogato esclusivamente su richiesta.
       window._ristorantiVisualizzati=localiVerificati;
