@@ -32,7 +32,15 @@
     return uscitePromise;
   }
 
-  // Fallback prudente: se i servizi di routing esterni sono temporaneamente\n  // irraggiungibili, non facciamo sparire ristoranti realmente vicini.\n  function fallbackRoad(exit,r){\n    const lineare=dist(Number(exit.lat),Number(exit.lon),Number(r.lat),Number(r.lon));\n    if(!Number.isFinite(lineare)) return null;\n    return Math.round(lineare*1.35+80);\n  }\n\n  function loadDB(){
+  // Fallback prudente: se i servizi di routing esterni sono temporaneamente
+  // irraggiungibili, non facciamo sparire ristoranti realmente vicini.
+  function fallbackRoad(exit,r){
+    const lineare=dist(Number(exit.lat),Number(exit.lon),Number(r.lat),Number(r.lon));
+    if(!Number.isFinite(lineare)) return null;
+    return Math.round(lineare*1.35+80);
+  }
+
+  function loadDB(){
     if(!dbPromise) dbPromise=fetch("./ristoranti.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("ristoranti.json "+r.status);return r.json();});
     return dbPromise;
   }
@@ -126,6 +134,7 @@
     }else{
       visibleItems.forEach((r,i)=>{
         const d=Math.round(Number(r._road));
+        const dLabel=r._roadFallback?`≈ ${d} m`:`${d} m`;
         const cucina=r.cucina?esc(r.cucina):"Ristorante";
         const indirizzo=r.google_address?`<div style="font-size:12px;color:#66756f;margin-top:6px;line-height:1.35">📍 ${esc(r.google_address)}</div>`:"";
         const fonte=r.fonte==="Google Places"?`<span style="background:#eef6f1;color:#075c3b;border-radius:8px;padding:5px 7px;font-weight:800">Google Places</span>`:"";
@@ -206,6 +215,7 @@
       let roadsAll=await osrmTable(exit,combinati);
       const missingAll=combinati.filter(r=>!roadsAll.has(r));
       if(missingAll.length) for(const r of missingAll){const d=await routeOne(exit,r);if(d!=null)roadsAll.set(r,d);}
+      for(const r of combinati){if(!roadsAll.has(r)){const stima=fallbackRoad(exit,r);if(stima!=null){roadsAll.set(r,stima);r._roadFallback=true;}}}
       const finali=combinati.filter(r=>roadsAll.has(r)&&roadsAll.get(r)<=MAX_ROAD).map(r=>{r._road=roadsAll.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
       window._ristorantiVisualizzati=finali;
       show(exit,finali,true);
@@ -225,11 +235,18 @@
       let roads=await osrmTable(exit,locali);
       const missing=locali.filter(r=>!roads.has(r));
       if(missing.length) for(const r of missing){const d=await routeOne(exit,r);if(d!=null)roads.set(r,d);}
-      for(const r of locali){\n        if(!roads.has(r)){\n          const stima=fallbackRoad(exit,r);\n          if(stima!=null){roads.set(r,stima);r._roadFallback=true;}\n        }\n      }\n      const localiVerificati=locali.filter(r=>roads.has(r)&&roads.get(r)<=MAX_ROAD).map(r=>{r._road=roads.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
+      for(const r of locali){
+        if(!roads.has(r)){
+          const stima=fallbackRoad(exit,r);
+          if(stima!=null){roads.set(r,stima);r._roadFallback=true;}
+        }
+      }
+      const localiVerificati=locali.filter(r=>roads.has(r)&&roads.get(r)<=MAX_ROAD).map(r=>{r._road=roads.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
 
-      // Prima scelta: solo il database locale. Google viene interrogato esclusivamente su richiesta.
+      // Mostra subito il database locale e integra automaticamente Google Places.
       window._ristorantiVisualizzati=localiVerificati;
       show(exit,localiVerificati,false);
+      arricchisciConGoogle(exit,localiVerificati);
     }catch(e){console.error("Ricerca ristoranti:",e);show(exit,[]);}
   }
 
