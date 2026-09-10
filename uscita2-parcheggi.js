@@ -31,7 +31,15 @@ async function render(exit,container,limit){
  try{
   const results=await loadParkingNear(exit,limit);
   container.innerHTML='<section class="panel"><div class="panel-head"><div><h3>🅿️ Parcheggi</h3><p>Parcheggi vicino all’uscita selezionata.</p></div><b>'+results.length+' risultati</b></div>'+
-   (results.length?'<div class="place-list">'+results.map(x=>'<article class="place-card"><div class="place-icon">🅿️</div><div class="place-main"><h4>'+esc(x.name||'Parcheggio')+'</h4><p>'+esc(x.access||x.type||x.parking||'Parcheggio')+' · '+x.distance.toFixed(1)+' km dall’uscita</p></div><a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+x.lat+','+x.lon+'">Naviga →</a></article>').join('')+'</div>':'<p class="empty-state">Nessun parcheggio nel raggio selezionato.</p>')+'</section>';
+   (results.length?'<div class="place-list">'+results.map((x,i)=>'<article class="place-card"><div class="place-icon">🅿️</div><div class="place-main"><h4>'+esc(x.name||'Parcheggio')+'</h4><p>'+esc(x.access||x.type||x.parking||'Parcheggio')+' · '+x.distance.toFixed(1)+' km dall’uscita</p></div><button type="button" class="parking-navigate" data-parking="'+i+'">Naviga →</button></article>').join('')+'</div>':'<p class="empty-state">Nessun parcheggio nel raggio selezionato.</p>')+'</section>';
+  container.querySelectorAll('.parking-navigate').forEach(btn=>btn.addEventListener('click',()=>{
+    const x=results[Number(btn.dataset.parking)];
+    if(window.apriNavigazione){
+      window.apriNavigazione({...x,nome:x.name||x.nome||'Parcheggio'});
+    }else{
+      console.error('Modulo navigazione non caricato');
+    }
+  }));
  }catch(err){console.error('Errore caricamento parcheggi',err);container.innerHTML='<section class="panel"><div class="panel-head"><div><h3>🅿️ Parcheggi</h3><p>Database parcheggi.</p></div></div><p class="empty-state">Impossibile caricare i parcheggi. Riprova tra poco.</p></section>'}
 }
 return{render,loadParking:(exit,limit)=>loadParkingNear(exit,limit)}})();
