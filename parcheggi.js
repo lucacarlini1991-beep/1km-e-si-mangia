@@ -105,6 +105,33 @@
     return parkingDbPromise;
   }
 
+  async function loadParkingFromSupabase(exit){
+    const url='https://pyiheodneyvtcotuonpt.supabase.co/rest/v1/rpc/parcheggi_vicini';
+    const key='sb_publishable_6FGQBm1zXfwY8zVSuNmTlA_DRW5DMfQ';
+    const radii=[2,5,10];
+    for(const radius of radii){
+      const r=await fetch(url,{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'apikey':key,
+          'Authorization':'Bearer '+key
+        },
+        body:JSON.stringify({
+          p_lat:Number(exit.lat),
+          p_lon:Number(exit.lon),
+          p_raggio_km:radius,
+          p_limite:100
+        })
+      });
+      if(!r.ok) throw new Error('Supabase HTTP '+r.status);
+      const rows=await r.json();
+      if(Array.isArray(rows) && rows.length>=2) return {rows,radius};
+      if(radius===10 && Array.isArray(rows) && rows.length) return {rows,radius};
+    }
+    return {rows:[],radius:10};
+  }
+
   async function searchParking(exit){
     if(!exit||state.loading)return;
     state.loading=true;
@@ -115,8 +142,34 @@
     $('mpList').innerHTML='<div class="mp-loading">⏳ Carico i parcheggi…</div>';
 
     try{
+      // Database remoto Supabase: scarichiamo solo i parcheggi vicino
+      // all'uscita selezionata, mai l'intero database italiano.
+      try{
+        const remote=await loadParkingFromSupabase(exit);
+        state.parking=remote.rows.map(x=>({
+          id:String(x.id),
+          lat:Number(x.lat),
+          lon:Number(x.lon),
+          name:x.name||x.nome||'Parcheggio',
+          tags:{},
+          limits:{height:null,width:null,length:null,weight:null},
+          compat:null,
+          distance:Math.round(Number(x.distanza_km||0)*1000)
+        }));
+        renderParking(exit);
+        renderList(exit);
+        if(state.parking.length){
+          status(state.parking.length+' parcheggi trovati · Supabase · raggio '+remote.radius+' km · '+(exit.nome||'uscita'));
+        }else{
+          status('Nessun parcheggio trovato entro 10 km · '+(exit.nome||'uscita'));
+        }
+        return;
+      }catch(remoteError){
+        console.warn('Supabase parcheggi non disponibile, uso il database locale:',remoteError);
+      }
+
       const db=await loadParkingDb();
-      // Priorità: entro 2 km. Se sono meno di 2, allarghiamo
+      // Fallback locale: Priorità entro 2 km. Se sono meno di 2, allarghiamo
       // automaticamente a 5 km e poi a 10 km. Ultima risorsa:
       // i 2 parcheggi più vicini, mostrando sempre la distanza reale.
       const ix=db.index?.[String(exit.id)];
@@ -389,7 +442,8 @@
     });
     $('mpRefresh')?.addEventListener('click',()=>state.selectedExit?searchParking(state.selectedExit):loadExits());
     $('mpSave')?.addEventListener('click',saveProfile);
-    loadParkingDb().catch(e=>console.warn('Database parcheggi:',e));
+    // Non precarichiamo più centinaia di migliaia di parcheggi:
+    // la ricerca avviene su Supabase e restituisce solo quelli vicini.
     loadExits();
   }
 
