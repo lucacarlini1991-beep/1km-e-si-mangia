@@ -123,9 +123,9 @@
     let msg="Non siamo riusciti a ottenere la tua posizione.";
 
     if(e&&e.code===1){
-      msg="Permesso di posizione negato.\n\nSu iPhone vai in:\nImpostazioni → Privacy e sicurezza → Localizzazione → Safari\n\ne attiva la Posizione precisa.";
+      msg="Permesso di posizione negato.\n\nControlla le impostazioni di posizione del dispositivo e abilita la posizione precisa.";
     }else if(e&&e.code===2){
-      msg="La posizione non è disponibile.\n\nControlla la Localizzazione dell'iPhone e riprova.";
+      msg="La posizione non è disponibile.\n\nControlla che la posizione sia attiva sul dispositivo e riprova.";
     }else if(e&&e.code===3){
       msg="Il GPS sta impiegando troppo tempo.\n\nRiprova tra qualche secondo.";
     }else if(e&&e.code==="INSECURE_CONTEXT"){
