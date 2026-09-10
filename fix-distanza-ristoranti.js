@@ -40,6 +40,15 @@
     return Math.round(lineare*1.35+80);
   }
 
+  function storedExitDistance(exit,r){
+    const d=Number(r?.uscita?.distanza_m);
+    if(!Number.isFinite(d)||d<0) return null;
+    const sameName=norm(r?.uscita?.nome)===norm(exit?.nome);
+    const a=norm(r?.uscita?.autostrada), b=norm(exit?.autostrada);
+    const sameRoad=!a||!b||a===b;
+    return sameName&&sameRoad?d:null;
+  }
+
   function loadDB(){
     if(!dbPromise) dbPromise=fetch("./ristoranti.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("ristoranti.json "+r.status);return r.json();});
     return dbPromise;
@@ -212,7 +221,16 @@
     try{
       const places=await cercaGoogle(exit);
       const combinati=mergeGoogle(localiVerificati,places,exit);
-      let roadsAll=await osrmTable(exit,combinati);
+      const roadsAll=new Map();
+      for(const r of combinati){
+        const salvata=storedExitDistance(exit,r);
+        if(salvata!=null) roadsAll.set(r,salvata);
+      }
+      const daCalcolare=combinati.filter(r=>!roadsAll.has(r));
+      if(daCalcolare.length){
+        const calcolate=await osrmTable(exit,daCalcolare);
+        for(const [r,d] of calcolate) roadsAll.set(r,d);
+      }
       const missingAll=combinati.filter(r=>!roadsAll.has(r));
       if(missingAll.length) for(const r of missingAll){const d=await routeOne(exit,r);if(d!=null)roadsAll.set(r,d);}
       for(const r of combinati){if(!roadsAll.has(r)){const stima=fallbackRoad(exit,r);if(stima!=null){roadsAll.set(r,stima);r._roadFallback=true;}}}
@@ -232,11 +250,23 @@
     try{
       const db=await loadDB();
       const locali=db.filter(r=>clean(r)&&Number.isFinite(Number(r.lat))&&Number.isFinite(Number(r.lon))&&dist(Number(exit.lat),Number(exit.lon),Number(r.lat),Number(r.lon))<=CANDIDATE_RADIUS);
-      let roads=await osrmTable(exit,locali);
-      const missing=locali.filter(r=>!roads.has(r));
-      if(missing.length) for(const r of missing){const d=await routeOne(exit,r);if(d!=null)roads.set(r,d);}
+      // Prima usiamo la distanza dall'uscita già verificata nel database.
+      // È fondamentale per non far calcolare a OSRM un giro assurdo partendo dal nodo autostradale.
+      const roads=new Map();
       for(const r of locali){
-        if(!roads.has(r)){
+        const salvata=storedExitDistance(exit,r);
+        if(salvata!=null) roads.set(r,salvata);
+      }
+      const daCalcolare=locali.filter(r=>!roads.has(r));
+      if(daCalcolare.length){
+        const calcolate=await osrmTable(exit,daCalcolare);
+        for(const [r,d] of calcolate) roads.set(r,d);
+      }
+      const missing=locali.filter(r=>!roads.has(r));
+      for(const r of missing){
+        const d=await routeOne(exit,r);
+        if(d!=null) roads.set(r,d);
+        else{
           const stima=fallbackRoad(exit,r);
           if(stima!=null){roads.set(r,stima);r._roadFallback=true;}
         }
