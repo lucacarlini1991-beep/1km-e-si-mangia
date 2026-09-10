@@ -2,34 +2,26 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = path.dirname(new URL(import.meta.url).pathname);
-const sourceDir = path.join(root, 'dist');
-const mainSource = path.join(sourceDir, 'script.js');
-const mainTarget = path.join(root, 'uscite-main.js');
 
-if (!fs.existsSync(mainSource)) {
-  throw new Error('dist/script.js non trovato: impossibile preservare il motore della mappa uscite.');
-}
+// I sorgenti pubblicati devono vivere nella root del progetto.
+// Non dipendiamo più dalla vecchia cartella dist/, che viene ricreata a ogni build.
+const required = [
+  'uscite-main.js',
+  'uscite.json',
+  'ristoranti.json',
+  'parcheggi-database.json'
+];
 
-// Vite svuota/ricrea dist/. Prima del build preserviamo il motore della mappa
-// e i database che nella copia funzionante di dist/ sono completi. In root
-// uscite.json può essere solo un placeholder vuoto: non dobbiamo sovrascrivere
-// il database reale con quello vuoto durante il build.
-fs.copyFileSync(mainSource, mainTarget);
-console.log('Motore mappa uscite preservato in uscite-main.js');
-
-for (const file of ['uscite.json', 'ristoranti.json', 'parcheggi-database.json']) {
-  const source = path.join(sourceDir, file);
+for (const file of required) {
   const target = path.join(root, file);
-
-  if (!fs.existsSync(source)) {
-    throw new Error(`Database ${file} non trovato in dist/.`);
+  if (!fs.existsSync(target)) {
+    throw new Error(`Sorgente richiesto non trovato: ${file}`);
   }
-
-  const stat = fs.statSync(source);
-  if (stat.size < 10) {
-    throw new Error(`Database ${file} in dist/ sembra vuoto (${stat.size} byte).`);
+  const size = fs.statSync(target).size;
+  if (size < 10) {
+    throw new Error(`Sorgente ${file} sembra vuoto (${size} byte).`);
   }
-
-  fs.copyFileSync(source, target);
-  console.log(`Database preservato: ${file} (${stat.size} byte)`);
+  console.log(`Sorgente verificato: ${file} (${size} byte)`);
 }
+
+console.log('Build indipendente dalla vecchia cartella dist/.');
