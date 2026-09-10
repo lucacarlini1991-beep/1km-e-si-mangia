@@ -273,10 +273,11 @@
       }
       const localiVerificati=locali.filter(r=>roads.has(r)&&roads.get(r)<=MAX_ROAD).map(r=>{r._road=roads.get(r);r.uscita={...(r.uscita||{}),id:exit.id,nome:exit.nome,distanza_m:Math.round(r._road),lat:exit.lat,lon:exit.lon};return r;}).sort((a,b)=>a._road-b._road);
 
-      // Mostra subito il database locale e integra automaticamente Google Places.
+      // Mostra SUBITO il database locale. Google Places parte SOLO
+      // quando l'utente preme esplicitamente il pulsante "Cerca altri".
+      // Non deve mai aprirsi o aggiornarsi automaticamente.
       window._ristorantiVisualizzati=localiVerificati;
       show(exit,localiVerificati,false);
-      arricchisciConGoogle(exit,localiVerificati);
     }catch(e){console.error("Ricerca ristoranti:",e);show(exit,[]);}
   }
 
@@ -285,7 +286,20 @@
     if(!b)return;
     e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
     const id=b.getAttribute("data-ristoranti-uscita");
-    loadExits().then(list=>{const exit=(Array.isArray(list)?list:[]).find(x=>String(x.id||"")===String(id));if(exit)run(exit);}).catch(err=>console.error("Uscite non disponibili:",err));
+    loadExits().then(list=>{
+      const all=Array.isArray(list)?list:[];
+      const candidati=all.filter(x=>String(x.id||"")===String(id));
+      if(!candidati.length){console.error("Uscita non trovata:",id);return;}
+      // Alcuni database possono contenere ID ripetuti. In quel caso scegliamo
+      // l'uscita fisicamente più vicina al centro della mappa aperta, così un
+      // click su Ronco Scrivia non può riproporre Busalla.
+      let exit=candidati[0];
+      const centro=window.appMap&&typeof window.appMap.getCenter==="function"?window.appMap.getCenter():null;
+      if(centro&&candidati.length>1){
+        exit=candidati.slice().sort((a,b)=>dist(Number(centro.lat),Number(centro.lng),Number(a.lat),Number(a.lon))-dist(Number(centro.lat),Number(centro.lng),Number(b.lat),Number(b.lon)))[0];
+      }
+      run(exit);
+    }).catch(err=>console.error("Uscite non disponibili:",err));
   },true);
 
   // NAVIGA: handler in cattura con coordinate sul bottone.
