@@ -6,13 +6,23 @@
   <meta name="description" content="Esplora Uscite: scopri parcheggi, camper, luoghi e servizi intorno alla tua uscita autostradale.">
   <title>Esplora Uscite | 1 KM E SI MANGIA</title>
   <link rel="stylesheet" href="uscita2.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="/" aria-label="Torna a 1 KM E SI MANGIA"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA"></a>
+  <a class="brand" href="index.html" aria-label="Torna a 1 KM E SI MANGIA"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA"></a>
   <div class="title">ESPLORA <b>USCITE</b></div>
-  <a class="back" href="/">← Home</a>
+  <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
 </header>
+<nav class="mobile-menu" id="mobileMenu" aria-hidden="true"><div class="mobile-menu-inner"><button class="menu-close" id="menuClose" type="button" aria-label="Chiudi menu">×</button><div class="mobile-menu-title"><strong>1 KM</strong><span>E SI MANGIA</span></div><div class="menu-links">
+<a href="index.html" class="menu-link"><strong>HOME</strong><span>La nostra idea</span></a>
+<a href="uscite.html" class="menu-link"><strong>🍝 1 KM E SI MANGIA</strong><span>Trova dove mangiare vicino all'uscita</span></a>
+<a href="uscita2.html" class="menu-link"><strong>🧭 ESPLORA COSA OFFRE L'USCITA</strong><span>Scopri parcheggi, camper e luoghi intorno all'uscita</span></a>
+<a href="parcheggi.html" class="menu-link"><strong>🚛 PARCHEGGI MEZZI PESANTI</strong><span>Trova un parcheggio per il tuo mezzo</span></a>
+<a href="come-funziona.html" class="menu-link"><strong>COME FUNZIONA</strong><span>Scopri come utilizzare il servizio</span></a>
+<a href="distanze.html" class="menu-link"><strong>LE DISTANZE</strong><span>Quanto ti allontani dall'autostrada</span></a>
+<a href="contatti.html" class="menu-link"><strong>CONTATTI</strong><span>Scrivici</span></a>
+</div></div></nav>
 <section class="hero">
   <div class="hero-inner">
     <p class="eyebrow">1 KM E SI MANGIA PRESENTA</p>
@@ -40,6 +50,7 @@
   </section>
 </main>
 <footer>1kmesimangia.it <span>•</span> Esci. Mangia. Riparti.</footer>
+<script src="menu.js?v=20260910-menu-unico"></script>
 <script src="uscita2-data.js"></script>
 <script src="navigazione.js"></script>
 <script src="uscita2-parcheggi.js"></script>
