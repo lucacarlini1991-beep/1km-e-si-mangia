@@ -121,7 +121,8 @@
   function show(exit,items,googleSearched=false,radius=1000){
     const visibleItems=(radius==='all'?items:items.filter(r=>Number(r._road)<=Number(radius)));
     const filters=[['1 km',1000],['2 km',2000],['5 km',5000],['10 km',10000],['20 km',20000],['Tutti','all']];
-    const filterBar='<div style="display:flex;gap:7px;overflow-x:auto;padding:10px 12px 2px;background:#fff">'+filters.map(([label,value])=>'<button type="button" data-distance-filter="'+value+'" style="flex:0 0 auto;border:1px solid '+(String(radius)===String(value)?'#075c3b':'#cbd8d2')+';border-radius:20px;background:'+(String(radius)===String(value)?'#075c3b':'#fff')+';color:'+(String(radius)===String(value)?'#fff':'#075c3b')+';padding:8px 12px;font-weight:800;font-size:12px;cursor:pointer">'+label+'</button>').join('')+'</div>';
+    // Barra filtri separata: su mobile non deve mai finire sotto il pulsante Google.
+    const filterBar='<div style="position:relative;z-index:2;display:flex;gap:8px;overflow-x:auto;padding:14px 12px 14px;margin:0;background:#fff;border-bottom:1px solid #edf1ef;-webkit-overflow-scrolling:touch">'+filters.map(([label,value])=>'<button type="button" data-distance-filter="'+value+'" style="box-sizing:border-box;flex:0 0 auto;min-height:42px;border:1px solid '+(String(radius)===String(value)?'#075c3b':'#cbd8d2')+';border-radius:22px;background:'+(String(radius)===String(value)?'#075c3b':'#fff')+';color:'+(String(radius)===String(value)?'#fff':'#075c3b')+';padding:9px 15px;font-weight:800;font-size:13px;line-height:1;cursor:pointer;white-space:nowrap">'+label+'</button>').join('')+'</div>';
     close();
     window._ristorantiCorrenti=items;
     window.ristorantiCorrenti=items;
@@ -132,8 +133,8 @@
     p.style.cssText="position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(94vw,540px);height:min(92vh,820px);background:#fff;border-radius:22px;box-shadow:0 16px 55px rgba(0,0,0,.35);overflow:hidden;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;color:#173b31;display:flex;flex-direction:column;";
 
     const googleButton=googleSearched
-      ? `<div style="margin:10px 12px 0;padding:9px 12px;border-radius:12px;background:#eef6f1;color:#075c3b;text-align:center;font-size:12px;font-weight:800">✓ Ricerca Google Places già effettuata</div>`
-      : `<button id="cercaAltriGoogle" type="button" style="margin:10px 12px 0;border:1px solid #075c3b;border-radius:12px;background:#fff;color:#075c3b;padding:11px 12px;font-weight:800;font-size:13px;cursor:pointer">🔎 CERCA ALTRI RISTORANTI CON GOOGLE</button>`;
+      ? `<div style="position:relative;z-index:1;margin:12px 12px 0;padding:11px 12px;border-radius:12px;background:#eef6f1;color:#075c3b;text-align:center;font-size:12px;font-weight:800">✓ Ricerca Google Places già effettuata</div>`
+      : `<button id="cercaAltriGoogle" type="button" style="position:relative;z-index:1;margin:12px 12px 0;border:1px solid #075c3b;border-radius:12px;background:#fff;color:#075c3b;padding:11px 12px;font-weight:800;font-size:13px;cursor:pointer">🔎 CERCA ALTRI RISTORANTI CON GOOGLE</button>`;
 
     p.innerHTML=`<div style="flex:0 0 auto;padding:18px 18px 14px;background:#075c3b;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#f5a719">1 KM E SI MANGIA</div><div style="font-size:22px;font-weight:800;line-height:1.15;margin-top:3px">🍴 Ristoranti</div><div style="font-size:14px;opacity:.9;margin-top:3px">${esc(exit.nome||"Uscita")} · prima entro 1 km, poi amplia la ricerca</div></div><button id="chiudiRistorantiMap" type="button" aria-label="Chiudi" style="flex:0 0 auto;border:0;border-radius:50%;width:42px;height:42px;background:rgba(255,255,255,.16);color:#fff;font-size:28px;line-height:1;cursor:pointer">×</button></div></div>${filterBar}${googleButton}<div data-google-status style="min-height:0"></div><div data-restaurant-scroll style="flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 18px;background:#f5f8f6"></div>`;
 
