@@ -114,7 +114,7 @@ for (const file of htmlFiles) {
   fs.writeFileSync(filePath, html);
 }
 
-console.log('Sito sincronizzato in dist/.');
+console.log('Sito sincronizzato in dist/.');\nconsole.log('Cartella data/ copiata nel deploy:', fs.existsSync(path.join(out, 'data')));
 console.log('Pagine:', fs.readdirSync(out).filter(x => x.endsWith('.html')).join(', '));
 console.log('Analytics Vercel: snippet inserito nelle pagine HTML.');
 console.log('Google Places in zona: ricerca aggiuntiva attiva su uscite.html.');
