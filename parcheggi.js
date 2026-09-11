@@ -407,12 +407,21 @@
       status('GPS camion non disponibile: ricarica la pagina',true);
       return;
     }
+
+    // Il watch GPS può aggiornarsi più volte: per la ricerca parcheggi usiamo
+    // solo la prima posizione valida, così evitiamo il caricamento continuo.
+    let locationHandled=false;
     busy(b,true,'📍 CERCO LA POSIZIONE…','📍 USA LA MIA POSIZIONE');
+
     window.GPSCamionManager.start({
       onSuccess:function(pos){
+        if(locationHandled) return;
+        locationHandled=true;
+        window.GPSCamionManager.stop();
         handleNearestFromPosition(pos).finally(()=>busy(b,false,'','📍 USA LA MIA POSIZIONE'));
       },
       onError:function(err){
+        if(locationHandled) return;
         console.warn('GPS camion:',err);
         let text='Posizione non disponibile';
         if(err && err.code===1) text='Posizione negata dal browser';
