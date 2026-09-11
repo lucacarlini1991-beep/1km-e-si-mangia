@@ -75,7 +75,7 @@
 
       if(!window.GPSManager ||
          typeof window.GPSManager.start!=="function"){
-        alert("Modulo GPS non disponibile.\n\nRicarica la pagina e riprova.");
+        alert(window.I18N?.getLang?.()==="en"?"GPS module unavailable.\n\nReload the page and try again.":"Modulo GPS non disponibile.\n\nRicarica la pagina e riprova.");
         return;
       }
 
