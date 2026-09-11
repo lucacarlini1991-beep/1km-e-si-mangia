@@ -118,7 +118,7 @@
     b.type = 'button';
     b.setAttribute(BUTTON_ATTR, '');
     b.dataset.ristoranteIndex = String(indice);
-    b.textContent = '🔄 RIENTRA IN AUTOSTRADA';
+    b.textContent = window.I18N?.getLang?.()==='en' ? '🔄 RETURN TO MOTORWAY' : '🔄 RIENTRA IN AUTOSTRADA';
     b.style.cssText = [
       'box-sizing:border-box',
       'min-width:180px',
