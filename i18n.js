@@ -144,11 +144,5 @@
 
   // Se il menu viene aperto o ricostruito dopo il caricamento, ritraducilo sempre.
   document.addEventListener("1kmesimangia:language", function(){ apply(getLang()); });
-  // Se il build inserisce o modifica il menu dopo il caricamento, ritraduci automaticamente.
-  document.addEventListener("DOMContentLoaded", function(){
-    const observer = new MutationObserver(function(){ apply(getLang()); });
-    const menu = document.querySelector(".menu-links");
-    if (menu) observer.observe(menu, { childList:true, subtree:true });
-  });
   window.I18N = { getLang, setLang, apply, translations, tr };
 })();
