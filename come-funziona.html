@@ -102,12 +102,16 @@
   <section class="range"><div class="eyebrow" data-i18n="radius">IL NOSTRO RAGGIO</div><h2 data-i18n="max1">MASSIMO 1 KM</h2><p>Cerchiamo i locali nelle vicinanze dell'uscita. Il nostro servizio non ti porta lontano dal percorso.</p></section><div class="advertising" data-i18n="ad">SPAZIO PUBBLICITARIO</div></main>
   <footer><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="footer-logo"><p>Mangia bene.<br>Perdi poco tempo.<br>Riparti.</p></footer>
   <script>
-  const b=document.getElementById('menuButton'),m=document.getElementById('mobileMenu'),c=document.getElementById('menuClose'),o=document.getElementById('menuOverlay');
-  function openMenu(){m.classList.add('open');o.classList.add('open')}
-  function closeMenu(){m.classList.remove('open');o.classList.remove('open')}
-  b.onclick=()=>m.classList.contains('open')?closeMenu():openMenu();c.onclick=closeMenu;o.onclick=closeMenu;
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
-  m.querySelectorAll('.menu-link').forEach(a=>a.addEventListener('click',closeMenu));
+  (function(){
+    const menuButton=document.getElementById("menuButton"),menuOverlay=document.getElementById("menuOverlay"),menuClose=document.getElementById("menuClose");
+    if(!menuButton||!menuOverlay||!menuClose)return;
+    function openMenu(){if(window.I18N)window.I18N.apply(window.I18N.getLang());menuOverlay.classList.add("open");menuButton.setAttribute("aria-expanded","true");document.body.style.overflow="hidden";}
+    function closeMenu(){menuOverlay.classList.remove("open");menuButton.setAttribute("aria-expanded","false");document.body.style.overflow="";}
+    menuButton.addEventListener("click",openMenu);menuClose.addEventListener("click",closeMenu);
+    menuOverlay.addEventListener("click",e=>{if(e.target===menuOverlay)closeMenu()});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu()});
+    document.querySelectorAll("#menuOverlay .menu-links a").forEach(a=>a.addEventListener("click",closeMenu));
+  })();
   </script><script src="assets/menu-icons.js"></script>
 <script src="i18n.js?v=20260911-home-menu1"></script>
 </body>
