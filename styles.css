@@ -1268,38 +1268,33 @@ body {
 ========================================================= */
 
 footer {
-
-  background:
-    var(--verde-scuro);
-
-  color:
-    white;
-
-  text-align:
-    center;
-
-  padding:
-    35px;
-
+  background: #ffffff;
+  color: var(--verde-scuro);
+  text-align: center;
+  padding: 42px 20px;
 }
-
 
 footer strong {
-
-  font-size:
-    20px;
-
+  font-size: 20px;
 }
 
+footer .footer-logo {
+  display: block;
+  width: min(210px, 70vw);
+  height: auto;
+  margin: 0 auto 18px;
+  object-fit: contain;
+}
 
 footer p {
-
-  margin-top:
-    8px;
-
-  color:
-    rgba(255,255,255,0.75);
-
+  display: block;
+  margin: 14px 0 0;
+  color: var(--verde-scuro);
+  font-size: 22px;
+  line-height: 1.5;
+  font-weight: 500;
+  opacity: 1;
+  visibility: visible;
 }
 
 
