@@ -133,7 +133,85 @@
     });
   }
 
+  function installUnifiedMenu() {
+    if (document.getElementById("unifiedMenuOverlay")) return;
+
+    const oldOverlay = document.getElementById("menuOverlay");
+    const oldMobile = document.getElementById("mobileMenu");
+
+    const overlay = document.createElement("div");
+    overlay.id = "unifiedMenuOverlay";
+    overlay.className = "unified-menu-overlay";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = `
+      <div class="unified-menu-panel" role="dialog" aria-modal="true" aria-label="Menu">
+        <div class="unified-menu-top">
+          <a href="index.html" aria-label="1 KM E SI MANGIA">
+            <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="unified-menu-logo">
+          </a>
+          <button type="button" class="unified-menu-close" aria-label="Chiudi menu" data-i18n-aria="close">×</button>
+        </div>
+        <nav class="unified-menu-links menu-links">
+          <a href="come-funziona.html"><strong data-i18n="how">COME FUNZIONA</strong><span data-i18n="howDesc">Scopri come utilizzare il servizio</span></a>
+          <a href="index.html"><strong data-i18n="home">HOME</strong><span data-i18n="homeDesc">La nostra idea</span></a>
+          <a href="uscite.html"><strong>🍝 <span data-i18n="eatButton">1 KM E SI MANGIA</span></strong><span data-i18n="eatDesc">Trova dove mangiare vicino all'uscita</span></a>
+          <a href="uscita2.html"><strong>🧭 <span data-i18n="explore">ESPLORA USCITE</span></strong><span data-i18n="exploreDesc">Scopri cosa c'è intorno alla tua uscita</span></a>
+          <a href="parcheggi.html"><strong>🚛 <span data-i18n="parking">PARCHEGGI MEZZI PESANTI</span></strong><span data-i18n="parkingDesc">Trova un parcheggio per il tuo mezzo</span></a>
+          <a href="coming-soon.html"><strong>🚧 <span data-i18n="upcoming">PROSSIME NOVITÀ</span></strong><span data-i18n="upcomingDesc">Scopri cosa stiamo preparando</span></a>
+          <a href="contatti.html"><strong data-i18n="contacts">CONTATTI</strong><span data-i18n="contactsDesc">Scrivici</span></a>
+          <a href="fonti-licenze.html"><strong data-i18n="sources">FONTI E LICENZE</strong><span data-i18n="sourcesDesc">Dati, fonti e informazioni legali</span></a>
+        </nav>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    if (oldOverlay) oldOverlay.style.display = "none";
+    if (oldMobile) oldMobile.style.display = "none";
+
+    const style = document.createElement("style");
+    style.id = "unifiedMenuStyle";
+    style.textContent = `
+      .unified-menu-overlay{position:fixed!important;inset:0!important;z-index:2147483000!important;display:none!important;overflow-y:auto!important;background:rgba(3,69,45,.32)!important;padding:18px!important}
+      .unified-menu-overlay.is-open{display:block!important}
+      .unified-menu-panel{width:min(900px,92vw)!important;margin:0 auto!important;padding:24px 28px 38px!important;background:#fff!important;border:2px solid #05633f!important;border-radius:22px!important;box-shadow:0 18px 45px rgba(0,0,0,.24)!important;color:#004d36!important}
+      .unified-menu-top{height:70px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;margin-bottom:35px!important}
+      .unified-menu-logo{display:block!important;width:110px!important;height:75px!important;object-fit:contain!important}
+      .unified-menu-close{width:52px!important;height:52px!important;border:1px solid rgba(7,92,59,.30)!important;background:linear-gradient(145deg,#fff,#edf1ee)!important;color:#05633f!important;border-radius:14px!important;font:42px/1 Arial,sans-serif!important;cursor:pointer!important;box-shadow:4px 4px 10px rgba(7,69,45,.10),inset 1px 1px 0 rgba(255,255,255,.95)!important}
+      .unified-menu-links{display:flex!important;flex-direction:column!important;gap:12px!important}
+      .unified-menu-links a{display:block!important;padding:20px 24px!important;border:1px solid rgba(7,92,59,.18)!important;border-left:0!important;border-right:0!important;border-radius:0!important;background:transparent!important;color:#004d36!important;text-decoration:none!important;box-shadow:none!important}
+      .unified-menu-links a strong{display:block!important;margin-bottom:7px!important;color:#004d36!important;font-size:21px!important;line-height:1.15!important;font-weight:800!important}
+      .unified-menu-links a strong span{display:inline!important;color:inherit!important;font-size:inherit!important;font-weight:inherit!important}
+      .unified-menu-links a>span{display:block!important;color:#6f8279!important;font-size:15px!important;font-weight:400!important;line-height:1.35!important}
+      .unified-menu-links a:hover{background:#f5f7f6!important;border-color:#05633f!important}
+      #menuButton{width:52px!important;height:52px!important;border:0!important;background:transparent!important;color:#05633f!important;font-size:34px!important;line-height:1!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;cursor:pointer!important}
+      @media(max-width:750px){.unified-menu-overlay{padding:10px!important}.unified-menu-panel{width:90vw!important;margin:0 auto!important;padding:20px 18px 30px!important;border-radius:18px!important}.unified-menu-top{height:70px!important;margin-bottom:25px!important}.unified-menu-logo{width:110px!important;height:70px!important}.unified-menu-links a{padding:17px 20px!important}.unified-menu-links a strong{font-size:20px!important}.unified-menu-links a>span{font-size:15px!important}}
+    `;
+    document.head.appendChild(style);
+
+    const button = document.getElementById("menuButton");
+    const close = overlay.querySelector(".unified-menu-close");
+    function openMenu() {
+      apply(getLang());
+      overlay.classList.add("is-open");
+      overlay.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      if (button) button.setAttribute("aria-expanded", "true");
+    }
+    function closeMenu() {
+      overlay.classList.remove("is-open");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      if (button) button.setAttribute("aria-expanded", "false");
+    }
+    if (button) {
+      button.addEventListener("click", function(e){ e.stopImmediatePropagation(); openMenu(); }, true);
+    }
+    close.addEventListener("click", closeMenu);
+    overlay.addEventListener("click", function(e){ if (e.target === overlay) closeMenu(); });
+    document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeMenu(); });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    installUnifiedMenu();
     apply(getLang());
     document.querySelectorAll("[data-lang]").forEach(function (button) {
       button.addEventListener("click", function () {
