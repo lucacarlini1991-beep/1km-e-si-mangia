@@ -503,6 +503,123 @@
         padding: 17px 20px;
       }
     }
+  
+
+    /* =========================
+       FIX CENTRATURA + PULSANTI SEO 3D
+    ========================= */
+    .hero-buttons .primary {
+      position: relative;
+      justify-content: center;
+      padding-left: 82px;
+      padding-right: 28px;
+    }
+
+    .hero-buttons .primary .btn-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0;
+    }
+
+    .seo-links {
+      width: min(680px, 100%);
+      margin-left: 0;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .seo-links a {
+      width: 100%;
+      min-height: 92px;
+      padding: 14px 24px;
+      justify-content: flex-start;
+      gap: 18px;
+      background: linear-gradient(145deg, #ffffff, #edf1ee);
+      border: 1px solid rgba(7,92,59,.28);
+      border-radius: 16px;
+      box-shadow:
+        8px 8px 18px rgba(7,69,45,.10),
+        -5px -5px 14px rgba(255,255,255,.9),
+        inset 1px 1px 0 rgba(255,255,255,.95),
+        inset -2px -2px 6px rgba(7,69,45,.05);
+      color: var(--verde-scuro);
+      font-size: 22px;
+      letter-spacing: .3px;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .seo-links a:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(145deg, #ffffff, #e7eee9);
+      color: var(--verde-scuro);
+      box-shadow:
+        10px 10px 20px rgba(7,69,45,.13),
+        -5px -5px 14px rgba(255,255,255,.95),
+        inset 1px 1px 0 rgba(255,255,255,1),
+        inset -2px -2px 6px rgba(7,69,45,.05);
+    }
+
+    .seo-links .seo-icon {
+      width: 58px;
+      height: 58px;
+      flex: 0 0 58px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+      position: relative;
+      background: linear-gradient(145deg, #ffffff, #dfe8e2);
+      border: 1px solid rgba(7,92,59,.20);
+      box-shadow:
+        inset 2px 2px 0 rgba(255,255,255,.9),
+        inset -3px -3px 7px rgba(7,69,45,.10),
+        5px 5px 12px rgba(7,69,45,.12);
+    }
+
+    .seo-links .seo-icon::after {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 13px;
+      border: 1px solid rgba(7,92,59,.10);
+      pointer-events: none;
+    }
+
+    .seo-links .seo-icon svg {
+      width: 31px;
+      height: 31px;
+      position: relative;
+      z-index: 1;
+      filter: drop-shadow(0 2px 1px rgba(7,69,45,.16));
+    }
+
+    @media (max-width: 750px) {
+      .hero-buttons .primary {
+        padding-left: 82px;
+        padding-right: 28px;
+      }
+
+      .seo-links {
+        gap: 16px;
+      }
+
+      .seo-links a {
+        min-height: 88px;
+        padding: 13px 20px;
+        font-size: 19px;
+        border-radius: 15px;
+      }
+
+      .seo-links .seo-icon {
+        width: 54px;
+        height: 54px;
+        flex-basis: 54px;
+        border-radius: 17px;
+      }
+    }
+
   </style>
 
   <meta name="description" content="Trova ristoranti, trattorie e pizzerie vicino alle uscite autostradali. Esci, mangia e riparti senza perdere tempo con 1 KM E SI MANGIA.">
@@ -712,8 +829,34 @@
       <p>1 KM E SI MANGIA nasce per aiutarti a trovare ristoranti, trattorie e pizzerie vicino alle uscite autostradali. L'obiettivo è semplice: uscire dall'autostrada, mangiare e ripartire senza perdere tempo in lunghe deviazioni.</p>
       <p>Usa la tua posizione oppure scegli un’uscita per trovare ristoranti e locali nelle vicinanze. Per parcheggi, camper e luoghi da scoprire puoi usare Esplora Uscite.</p>
       <div class="seo-links">
-        <a href="uscite.html">1 KM E SI MANGIA</a><a href="uscita2.html">ESPLORA USCITE</a>
-        <a href="come-funziona.html">COME FUNZIONA</a>
+        <a href="uscite.html">
+          <span class="seo-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 41 17 7h14l7 34" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+              <path d="M24 11v7m0 6v7m0 6v2" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span>1 KM E SI MANGIA</span>
+        </a>
+        <a href="uscita2.html">
+          <span class="seo-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 5 7 14v20l17 9 17-9V14L24 5Z" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+              <path d="M7 14l17 9 17-9M24 23v20" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>ESPLORA USCITE</span>
+        </a>
+        <a href="come-funziona.html">
+          <span class="seo-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="3.5"/>
+              <path d="M19 19c.8-3.7 3.5-5.6 6.7-5.6 4.4 0 7.3 2.7 7.3 6.6 0 4.4-3.3 5.7-6.1 7.6-1.8 1.2-2.3 2.6-2.3 4.7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+              <circle cx="24" cy="36" r="1.8" fill="currentColor"/>
+            </svg>
+          </span>
+          <span>COME FUNZIONA</span>
+        </a>
       </div>
     </section>
 
