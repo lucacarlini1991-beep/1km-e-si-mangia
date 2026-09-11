@@ -1,0 +1,25 @@
+/* Icone di navigazione - 1 KM E SI MANGIA */
+.nav-icon{
+  width:24px;
+  height:24px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 24px;
+  color:currentColor;
+  vertical-align:middle;
+}
+.nav-icon svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.menu-link strong,
+.menu-links a strong{
+  align-items:center;
+  gap:10px;
+}
+.menu-link strong:has(.nav-icon),
+.menu-links a strong:has(.nav-icon){
+  display:flex !important;
+}
