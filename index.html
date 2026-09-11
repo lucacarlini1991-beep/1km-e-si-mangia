@@ -103,7 +103,7 @@
     .menu-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 58, 40, .96);
+      background: rgba(3, 69, 45, .32);
       z-index: 2000;
       display: none;
       overflow-y: auto;
@@ -115,8 +115,12 @@
 
     .menu-inner {
       width: min(900px, 92%);
-      margin: 0 auto;
-      padding: 30px 0 60px;
+      margin: 18px auto;
+      padding: 24px 28px 38px;
+      background: #ffffff;
+      border: 2px solid var(--verde);
+      border-radius: 22px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.24);
     }
 
     .menu-top {
@@ -136,7 +140,7 @@
     .menu-close {
       border: 0;
       background: transparent;
-      color: white;
+      color: var(--verde);
       font-size: 42px;
       cursor: pointer;
     }
@@ -150,10 +154,10 @@
     .menu-links a {
       display: block;
       padding: 20px 24px;
-      border: 1px solid rgba(255,255,255,.18);
+      border: 1px solid rgba(7,92,59,.18);
       border-left: 0;
       border-right: 0;
-      color: white;
+      color: var(--verde-scuro);
       text-decoration: none;
       font-size: 21px;
       font-weight: 700;
@@ -169,16 +173,16 @@
 
     .menu-links a span {
       display: block;
-      color: #a9c0b5;
+      color: #6f8279;
       font-size: 15px;
       font-weight: 400;
       line-height: 1.35;
     }
 
     .menu-links a:hover {
-      background: var(--arancio);
+      background: #f5f7f6;
       color: var(--verde-scuro);
-      border-color: var(--arancio);
+      border-color: var(--verde);
     }
 
     /* =========================
@@ -496,6 +500,9 @@
 
       .menu-inner {
         width: 90%;
+        margin: 10px auto;
+        padding: 20px 18px 30px;
+        border-radius: 18px;
       }
 
       .menu-links a {
