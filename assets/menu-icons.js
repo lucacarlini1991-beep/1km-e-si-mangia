@@ -1,6 +1,6 @@
 (function(){
   const icons={
-    food:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5"/><path d="M1.5 3v3.5a1.5 1.5 0 0 0 3 0V3"/><path d="M3 8v13"/><circle cx="13" cy="14" r="4.5"/><path d="M20.5 3v18"/><path d="M18.5 3v6a2 2 0 0 0 2 2"/></svg>',
+    food:'<svg viewBox="0 0 28 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5"/><path d="M1.5 3v3.5a1.5 1.5 0 0 0 3 0V3"/><path d="M3 8v13"/><circle cx="14" cy="14" r="4.2"/><path d="M24.5 3v18"/><path d="M22 3c0 3.8.5 6.2 2.5 7v11"/></svg>',
     map:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg>',
     truck:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M3 18h2m4 0h7"/></svg>',
     road:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 9 3h6l4 18"/><path d="M12 6v3m0 3v3m0 3v3"/></svg>',
