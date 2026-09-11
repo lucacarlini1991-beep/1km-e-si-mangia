@@ -52,8 +52,8 @@
   function icon() {
     if (!window.L) return null;
     return L.icon({
-      iconUrl: 'assets/pin-posizione.png',
-      iconRetinaUrl: 'assets/pin-posizione.png',
+      iconUrl: 'assets/pin-camion.png',
+      iconRetinaUrl: 'assets/pin-camion.png',
       iconSize: [46, 58],
       iconAnchor: [23, 58],
       popupAnchor: [0, -52]
