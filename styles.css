@@ -2006,3 +2006,20 @@ body.menu-open {
     flex-basis: 44px;
   }
 }
+
+
+/* =====================================================
+   HEADER CHIARO GLOBALE — NUOVA GRAFICA
+   ===================================================== */
+.topbar{
+  background:#ffffff !important;
+  color:var(--verde-scuro) !important;
+  border-bottom:1px solid #e3e9e6;
+  box-shadow:0 2px 10px rgba(3,69,45,.08);
+}
+.menu-button{
+  color:var(--verde) !important;
+}
+.menu-button:hover{
+  color:var(--verde-scuro) !important;
+}
