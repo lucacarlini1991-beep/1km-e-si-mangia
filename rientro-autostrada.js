@@ -4,39 +4,113 @@
 
   const BUTTON_ATTR = 'data-rientro-autostrada';
 
+  // L'uscita deve essere quella associata AL RISTORANTE, non quella
+  // rimasta globalmente aperta in precedenza.
+  function coordinateValide(obj){
+    const lat=Number(obj?.lat);
+    const lon=Number(obj?.lon);
+    return Number.isFinite(lat)&&Number.isFinite(lon)?{lat,lon}:null;
+  }
+
   function getUscita(ristorante){
-    const u = window._uscitaCorrente || ristorante?.uscita || ristorante?.uscita_autostrada;
-    if (!u) return null;
-    const lat = Number(u.lat);
-    const lon = Number(u.lon);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-    return { ...u, lat, lon };
+    const associata=ristorante?.uscita||ristorante?.uscita_autostrada;
+    const coordAssociate=coordinateValide(associata);
+    if(associata&&coordAssociate) return {...associata,...coordAssociate};
+
+    const corrente=window._uscitaCorrente;
+    const stessoId=associata?.id!=null&&corrente?.id!=null&&String(associata.id)===String(corrente.id);
+    if(corrente&&(!associata||stessoId)){
+      const coordCorrenti=coordinateValide(corrente);
+      if(coordCorrenti) return {...corrente,...coordCorrenti};
+    }
+
+    // Per i risultati Google Places spesso sono presenti solo id/nome
+    // dell'uscita: in quel caso la schermata corrente è la relativa uscita.
+    if(associata&&corrente&&(
+      associata.id==null||
+      corrente.id==null||
+      String(associata.id)===String(corrente.id)
+    )){
+      const coordCorrenti=coordinateValide(corrente);
+      if(coordCorrenti) return {...corrente,...associata,...coordCorrenti};
+    }
+    return null;
+  }
+
+  function getIngresso(ristorante, uscita){
+    const sorgenti=[
+      ristorante?.ingresso_autostrada,
+      ristorante?.casello_ingresso,
+      ristorante?.ingresso,
+      ristorante?.rientro,
+      uscita?.ingresso_autostrada,
+      uscita?.casello_ingresso,
+      uscita?.ingresso,
+      uscita?.rientro
+    ];
+    for(const punto of sorgenti){
+      const coord=coordinateValide(punto);
+      if(coord) return {...punto,...coord};
+    }
+
+    const coppie=[
+      ['ingresso_lat','ingresso_lon'],
+      ['entrata_lat','entrata_lon'],
+      ['casello_ingresso_lat','casello_ingresso_lon'],
+      ['rientro_lat','rientro_lon']
+    ];
+    for(const fonte of [ristorante,uscita]){
+      for(const [latKey,lonKey] of coppie){
+        const lat=Number(fonte?.[latKey]),lon=Number(fonte?.[lonKey]);
+        if(Number.isFinite(lat)&&Number.isFinite(lon)) return {lat,lon};
+      }
+    }
+    return null;
+  }
+
+  function queryIngresso(uscita){
+    const parti=['Ingresso autostradale'];
+    if(uscita?.nome) parti.push(uscita.nome);
+    if(uscita?.autostrada) parti.push(uscita.autostrada);
+    return parti.join(' ');
   }
 
   function apri(ristorante){
-    const u = getUscita(ristorante);
-    if (!u) {
-      alert('Coordinate del casello non disponibili.');
+    const u=getUscita(ristorante);
+    if(!u){
+      alert('Uscita associata al ristorante non disponibile.');
       return;
     }
 
-    const destinazione = {
-      nome: 'Rientro in autostrada - ' + (u.nome || 'uscita'),
-      lat: u.lat,
-      lon: u.lon,
-      rientro_autostrada: true,
-      uscita: u
+    const ingresso=getIngresso(ristorante,u);
+    const punto=ingresso||u;
+    const destinazione={
+      nome:'Ingresso autostrada - '+(u.nome||'casello'),
+      lat:punto.lat,
+      lon:punto.lon,
+      rientro_autostrada:true,
+      destinazione_tipo:'ingresso_autostrada',
+      uscita:u
     };
 
-    // Usa il navigatore interno del progetto se disponibile.
-    if (typeof window.apriNavigazione === 'function') {
+    // Se nel database non abbiamo ancora le coordinate precise della
+    // corsia di ingresso, chiediamo al navigatore il CASELLO DI INGRESSO
+    // per nome invece di puntare ciecamente al lato di uscita.
+    if(!ingresso){
+      destinazione.navigazioneQuery=queryIngresso(u);
+    }
+
+    if(typeof window.apriNavigazione==='function'){
       window.apriNavigazione(destinazione);
       return;
     }
 
-    // Fallback: apre direttamente Google Maps con le coordinate del casello.
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(u.lat + ',' + u.lon)}&travelmode=driving`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const destinazioneGoogle=destinazione.navigazioneQuery||(
+      destinazione.lat+','+destinazione.lon
+    );
+    const url='https://www.google.com/maps/dir/?api=1&destination='+
+      encodeURIComponent(destinazioneGoogle)+'&travelmode=driving';
+    window.open(url,'_blank','noopener,noreferrer');
   }
 
   function creaPulsante(ristorante, indice){
