@@ -23,7 +23,12 @@
       whereEat: "Dove mangiare vicino all'autostrada?",
       seo1: "1 KM E SI MANGIA nasce per aiutarti a trovare ristoranti, trattorie e pizzerie vicino alle uscite autostradali. L'obiettivo è semplice: uscire dall'autostrada, mangiare e ripartire senza perdere tempo in lunghe deviazioni.",
       seo2: "Usa la tua posizione oppure scegli un'uscita per trovare ristoranti e locali nelle vicinanze. Per parcheggi, camper e luoghi da scoprire puoi usare Esplora Uscite.",
-      footer: "Mangia bene.<br>Perdi poco tempo.<br>Riparti."
+      footer: "Mangia bene.<br>Perdi poco tempo.<br>Riparti.",
+      chooseExitTitle: "1 KM E SI MANGIA",
+      chooseExitText: "Scegli un'uscita dalla mappa e scopri dove mangiare nelle vicinanze.",
+      nearestExit: "📍 TROVA L'USCITA PIÙ VICINA",
+      chooseExit: "Scegli un'uscita",
+      chooseExitHint: "Seleziona dall'elenco o dalla mappa"
     },
     en: {
       menu: "MENU",
@@ -48,7 +53,12 @@
       whereEat: "Where to eat near the motorway?",
       seo1: "1 KM E SI MANGIA helps you find restaurants, trattorias and pizzerias near motorway exits. The goal is simple: leave the motorway, eat and get back on the road without wasting time on long detours.",
       seo2: "Use your location or choose an exit to find restaurants and places nearby. For parking, camper stops and places to discover, use Explore Exits.",
-      footer: "Eat well.<br>Waste little time.<br>Get back on the road."
+      footer: "Eat well.<br>Waste little time.<br>Get back on the road.",
+      chooseExitTitle: "1 KM E SI MANGIA",
+      chooseExitText: "Choose a motorway exit on the map and discover where to eat nearby.",
+      nearestExit: "📍 FIND THE NEAREST EXIT",
+      chooseExit: "Choose an exit",
+      chooseExitHint: "Select from the list or directly on the map"
     }
   };
 
