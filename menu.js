@@ -22,6 +22,8 @@
       menu.style.pointerEvents = "auto";
       document.body.classList.add("menu-open");
       document.body.style.overflow = "hidden";
+      // Il menu viene sempre riallineato alla lingua attiva al momento dell'apertura.
+      if (window.I18N) window.I18N.apply(window.I18N.getLang());
     }
 
     function closeMenu(event) {
