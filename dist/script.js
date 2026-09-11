@@ -84,7 +84,7 @@ const clusterUscite = L.markerClusterGroup({
 
   showCoverageOnHover: false,
 
-  spiderfyOnMaxZoom: true,
+  spiderfyOnMaxZoom: false,
 
   zoomToBoundsOnClick: false,
 
@@ -96,30 +96,32 @@ const clusterUscite = L.markerClusterGroup({
 
 map.addLayer(clusterUscite);
 
-// CLICK CLUSTER: mai scegliere automaticamente il punto sbagliato.
-// Se nel cluster c'è una sola vera uscita, apriamo quella. Se ce ne sono più,
-// il cluster si espande così l'utente può scegliere senza perdere il popup.
+// CLICK CLUSTER: semplice zoom, senza contorni, spiderfy o popup automatici.
+// Il cluster serve solo per raggruppare i caselli quando la mappa è lontana.
 clusterUscite.on("clusterclick", function(e) {
   if (!e || !e.layer) return;
-  const children = e.layer.getAllChildMarkers ? e.layer.getAllChildMarkers() : [];
-  const validi = children.filter(function(m) {
-    return m && m._uscita1km && !eAreaDiServizio(m._uscita1km);
-  });
 
-  if (validi.length === 1) {
-    L.DomEvent.stop(e.originalEvent);
-    const marker = validi[0];
-    map.setView(marker.getLatLng(), Math.max(map.getZoom(), 14), { animate: true });
-    setTimeout(function(){ marker.openPopup(); }, 180);
-    return;
-  }
+  L.DomEvent.stop(e.originalEvent);
 
-  if (validi.length > 1 && e.layer.spiderfy) {
-    L.DomEvent.stop(e.originalEvent);
-    e.layer.spiderfy();
+  const bounds = e.layer.getBounds && e.layer.getBounds();
+  if (bounds && bounds.isValid()) {
+    const currentZoom = map.getZoom();
+    const targetZoom = Math.min(
+      map.getMaxZoom() || 19,
+      Math.max(currentZoom + 2, Math.min(14, currentZoom + 2))
+    );
+
+    map.fitBounds(bounds, {
+      padding: [45, 45],
+      maxZoom: targetZoom,
+      animate: true
+    });
+  } else {
+    map.setView(e.layer.getLatLng(), Math.min((map.getMaxZoom() || 19), map.getZoom() + 2), {
+      animate: true
+    });
   }
 });
-
 
 // =====================================================
 // ICONA USCITA
