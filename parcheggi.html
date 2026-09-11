@@ -106,18 +106,18 @@
 <main class="mp-page">
   <section class="mp-hero">
     <div class="mp-eyebrow">1 KM E SI MANGIA</div>
-    <h1>PARCHEGGI<br>MEZZI PESANTI</h1>
-    <p>VERSIONE DEMO — Stiamo testando il servizio per aiutarti a trovare parcheggi e aree di sosta per camion e mezzi pesanti. Scegli un'uscita sulla mappa e scopri i parcheggi nelle vicinanze. Il servizio è in versione demo: verifica sempre sul posto prima di affidarti al risultato.</p>
+    <h1 data-i18n="parkingTitle">PARCHEGGI<br>MEZZI PESANTI</h1>
+    <p data-i18n="parkingDemo">VERSIONE DEMO — Stiamo testando il servizio per aiutarti a trovare parcheggi e aree di sosta per camion e mezzi pesanti. Scegli un'uscita sulla mappa e scopri i parcheggi nelle vicinanze.</p>
     <div class="mp-actions">
-      <button class="mp-btn primary" id="mpLocate">📍 USA LA MIA POSIZIONE</button>
-      <button class="mp-btn" id="mpNearestExit">🛣️ CERCA VICINO ALL'USCITA</button>
-      <button class="mp-btn dark" id="mpRefresh">↻ AGGIORNA RISULTATI</button>
+      <button class="mp-btn primary" id="mpLocate" data-i18n="useMyLocation">📍 USA LA MIA POSIZIONE</button>
+      <button class="mp-btn" id="mpNearestExit" data-i18n="nearExit">🛣️ CERCA VICINO ALL'USCITA</button>
+      <button class="mp-btn dark" id="mpRefresh" data-i18n="refreshResults">↻ AGGIORNA RISULTATI</button>
     </div>
   </section>
 
   <section class="mp-grid">
     <div class="mp-panel">
-      <div class="mp-panel-head"><h2>Parcheggi trovati</h2><span class="mp-status" id="mpStatus">Caricamento mappa e uscite…</span></div>
+      <div class="mp-panel-head"><h2 data-i18n="foundParking">Parcheggi trovati</h2><span class="mp-status" id="mpStatus">Caricamento mappa e uscite…</span></div>
       <div id="mpMap"></div>
       <div class="mp-legend">VERSIONE DEMO — Il servizio è in fase di test e non possiamo ancora garantire la completezza o la correttezza di tutti i risultati. 🚛 I parcheggi vengono cercati in OpenStreetMap entro 2,5 km dall’uscita selezionata.</div>
       <div id="mpList" class="mp-list"><div class="mp-empty">Tocca un’uscita sulla mappa per vedere i parcheggi nelle vicinanze. 📧 Se trovi un risultato errato, un parcheggio mancante o hai dubbi sul funzionamento, segnalacelo a info@1kmesimangia.it. Il tuo aiuto ci serve per migliorare il servizio.</div></div>
