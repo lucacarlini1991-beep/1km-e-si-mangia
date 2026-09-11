@@ -72,12 +72,15 @@
     apply(lang);
   }
 
+  function tr(key, fallback){ const t=translations[getLang()]||translations.it; return t[key]!==undefined?t[key]:fallback; }
+
   function apply(lang) {
     const t = translations[lang] || translations.it;
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
       const key = el.getAttribute("data-i18n");
       if (t[key] !== undefined) el.innerHTML = t[key];
     });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(function(el){ const key=el.getAttribute("data-i18n-placeholder"); if(t[key]!==undefined) el.setAttribute("placeholder",t[key]); });
     document.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
       const key = el.getAttribute("data-i18n-aria");
       if (t[key] !== undefined) el.setAttribute("aria-label", t[key]);
@@ -96,5 +99,5 @@
     });
   });
 
-  window.I18N = { getLang, setLang, apply, translations };
+  window.I18N = { getLang, setLang, apply, translations, tr };
 })();
