@@ -682,6 +682,8 @@
       }
     }
 
+  
+    .language-switcher{display:flex;gap:6px;margin-left:auto;margin-right:12px}.lang-button{border:1px solid #d9e3de;background:#fff;border-radius:10px;width:40px;height:38px;font-size:21px;cursor:pointer;opacity:.55}.lang-button.active{opacity:1;border-color:var(--verde);box-shadow:0 2px 7px rgba(0,77,54,.16)}@media(max-width:750px){.language-switcher{margin-right:6px}.lang-button{width:35px;height:34px;font-size:18px}}
   </style>
 
   <meta name="description" content="Trova ristoranti, trattorie e pizzerie vicino alle uscite autostradali. Esci, mangia e riparti senza perdere tempo con 1 KM E SI MANGIA.">
@@ -730,6 +732,11 @@
       >
     </a>
 
+    <div class="language-switcher" aria-label="Language selector">
+      <button type="button" class="lang-button" data-lang="it" aria-label="Italiano">🇮🇹</button>
+      <button type="button" class="lang-button" data-lang="en" aria-label="English">🇬🇧</button>
+    </div>
+
     <button
       type="button"
       class="menu-button"
@@ -775,31 +782,31 @@
       <nav class="menu-links">
 
         <a href="come-funziona.html">
-          <strong>COME FUNZIONA</strong>
-          <span>Scopri come utilizzare il servizio</span>
+          <strong data-i18n="how">COME FUNZIONA</strong>
+          <span data-i18n="howDesc">Scopri come utilizzare il servizio</span>
         </a>
 
         <a href="index.html">
           <strong>HOME</strong>
-          <span>La nostra idea</span>
+          <span data-i18n="homeDesc">La nostra idea</span>
         </a>
 
-        <a href="uscite.html"><strong>🍝 1 KM E SI MANGIA</strong><span>Trova dove mangiare vicino all'uscita</span></a>
-        <a href="uscita2.html"><strong>🧭 ESPLORA USCITE</strong><span>Scopri cosa c'è intorno alla tua uscita</span></a>
+        <a href="uscite.html"><strong>🍝 1 KM E SI MANGIA</strong><span data-i18n="eatDesc">Trova dove mangiare vicino all'uscita</span></a>
+        <a href="uscita2.html"><strong>🧭 <span data-i18n="explore">ESPLORA USCITE</span></strong><span data-i18n="exploreDesc">Scopri cosa c'è intorno alla tua uscita</span></a>
 
         <a href="parcheggi.html">
-          <strong>🚛 PARCHEGGI MEZZI PESANTI</strong>
-          <span>Trova un parcheggio per il tuo mezzo</span>
+          <strong>🚛 <span data-i18n="parking">PARCHEGGI MEZZI PESANTI</span></strong>
+          <span data-i18n="parkingDesc">Trova un parcheggio per il tuo mezzo</span>
         </a>
 
         <a href="contatti.html">
-          <strong>CONTATTI</strong>
-          <span>Scrivici</span>
+          <strong data-i18n="contacts">CONTATTI</strong>
+          <span data-i18n="contactsDesc">Scrivici</span>
         </a>
 
         <a href="fonti-licenze.html">
-          <strong>FONTI E LICENZE</strong>
-          <span>Dati, fonti e informazioni legali</span>
+          <strong data-i18n="sources">FONTI E LICENZE</strong>
+          <span data-i18n="sourcesDesc">Dati, fonti e informazioni legali</span>
         </a>
 
       </nav>
@@ -822,13 +829,11 @@
         <div class="hero-content">
 
           <h1>
-            ESCI.<br>
-            MANGIA.<br>
-            RIPARTI.
+            <span data-i18n="exit">ESCI.</span><br><span data-i18n="eat">MANGIA.</span><br><span data-i18n="go">RIPARTI.</span>
           </h1>
 
           <div class="description">
-            Sei in autostrada? Trova dove mangiare alla prossima uscita.
+            <span data-i18n="hero">Sei in autostrada? Trova dove mangiare alla prossima uscita.</span>
           </div>
 
           <div class="hero-buttons">
@@ -845,7 +850,7 @@
                   <circle cx="24" cy="19" r="5.5" fill="none" stroke="currentColor" stroke-width="3"/>
                 </svg>
               </span>
-              USA LA MIA POSIZIONE
+              <span data-i18n="myLocation">USA LA MIA POSIZIONE</span>
             </button>
 
             <a
@@ -888,9 +893,9 @@
 
     </section>
     <section class="seo-intro">
-      <h2>Dove mangiare vicino all'autostrada?</h2>
-      <p>1 KM E SI MANGIA nasce per aiutarti a trovare ristoranti, trattorie e pizzerie vicino alle uscite autostradali. L'obiettivo è semplice: uscire dall'autostrada, mangiare e ripartire senza perdere tempo in lunghe deviazioni.</p>
-      <p>Usa la tua posizione oppure scegli un’uscita per trovare ristoranti e locali nelle vicinanze. Per parcheggi, camper e luoghi da scoprire puoi usare Esplora Uscite.</p>
+      <h2 data-i18n="whereEat">Dove mangiare vicino all'autostrada?</h2>
+      <p data-i18n="seo1">1 KM E SI MANGIA nasce per aiutarti a trovare ristoranti, trattorie e pizzerie vicino alle uscite autostradali. L'obiettivo è semplice: uscire dall'autostrada, mangiare e ripartire senza perdere tempo in lunghe deviazioni.</p>
+      <p data-i18n="seo2">Usa la tua posizione oppure scegli un’uscita per trovare ristoranti e locali nelle vicinanze. Per parcheggi, camper e luoghi da scoprire puoi usare Esplora Uscite.</p>
       <div class="seo-links">
         <a href="uscite.html">
           <span class="seo-icon" aria-hidden="true">
@@ -961,9 +966,7 @@
     <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="footer-logo">
 
     <p>
-      Mangia bene.<br>
-      Perdi poco tempo.<br>
-      Riparti.
+      <span data-i18n="footer">Mangia bene.<br>Perdi poco tempo.<br>Riparti.</span>
     </p>
 
   </footer>
@@ -1040,5 +1043,6 @@
   </script>
 
 <script src="assets/menu-icons.js"></script>
+<script src="i18n.js?v=20260911"></script>
 </body>
 </html>
