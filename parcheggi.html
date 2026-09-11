@@ -157,9 +157,9 @@ Come leggiamo i risultati</strong><br><br>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="menu.js"></script>
-<script src="gps-camion.js?v=20260822-gps-camion"></script>
+<script src="gps-camion.js?v=20260911-parkingfix"></script>
 <script src="navigazione.js"></script>
-<script src="parcheggi.js?v=20260822-gps-camion"></script>
+<script src="parcheggi.js?v=20260911-parkingfix"></script>
 <script src="assets/menu-icons.js"></script>
 <script src="i18n.js?v=20260911-unifiedmenu1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=1"></script><script src="auth.js?v=1"></script><script src="parking-reviews.js?v=1"></script><script>(function(){function wire(){const b=document.getElementById('siteAccountButton');if(!b)return;b.onclick=function(){document.querySelector('.auth-fab')?.click()};const f=document.querySelector('.auth-fab');if(f)f.style.display='none';const update=async()=>{if(!window.ReviewsAuth?.client)return;const {data:{user}}=await window.ReviewsAuth.client.auth.getUser();b.innerHTML=user?'👤 <span>'+((user.user_metadata?.display_name||user.email||'Profilo').split('@')[0])+'</span>':'👤 <span>ACCEDI</span>';b.title=user?'Account / Profilo':'Accedi o registrati'};update();window.ReviewsAuth?.client?.auth.onAuthStateChange(update)};document.addEventListener('DOMContentLoaded',()=>setTimeout(wire,350));})();</script></body>
