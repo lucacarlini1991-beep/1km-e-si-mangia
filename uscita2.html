@@ -18,7 +18,7 @@
 <body>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="Torna a 1 KM E SI MANGIA"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA"></a>
-  <div class="title">ESPLORA <b>USCITE</b></div>
+  <div class="title" data-i18n="exploreTitle">ESPLORA USCITE</div>
   <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
 </header>
 <nav class="mobile-menu" id="mobileMenu" aria-hidden="true"><div class="mobile-menu-inner"><button class="menu-close" id="menuClose" type="button" aria-label="Chiudi menu">×</button><div class="mobile-menu-title"><strong>1 KM</strong><span>E SI MANGIA</span></div><div class="menu-links">
@@ -33,24 +33,24 @@
   <div class="hero-inner">
     <p class="eyebrow">1 KM E SI MANGIA PRESENTA</p>
     <h1>Scopri tutto quello che c’è,<br><em>intorno alla tua uscita.</em></h1>
-    <p class="subtitle">Scegli un'uscita e scopri cosa vedere e visitare nei dintorni.</p>
-    <label class="search"><span>🔎</span><input id="exitSearch" autocomplete="off" placeholder="Cerca uscita, città o autostrada"><button id="clearSearch" hidden aria-label="Cancella ricerca">×</button></label>
-    <button class="locate" id="locateMe" type="button"><img src="assets/pin-posizione.png" alt=""><span><b>Trova la mia posizione</b><small>Mostra prima le uscite più vicine</small></span></button>
+    <p class="subtitle" data-i18n="exploreSubtitle">Scegli un'uscita e scopri cosa vedere e visitare nei dintorni.</p>
+    <label class="search"><span>🔎</span><input id="exitSearch" autocomplete="off" data-i18n-placeholder="searchExit" placeholder="Cerca uscita, città o autostrada"><button id="clearSearch" hidden aria-label="Cancella ricerca">×</button></label>
+    <button class="locate" id="locateMe" type="button"><img src="assets/pin-posizione.png" alt=""><span><b data-i18n="findMe">Trova la mia posizione</b><small data-i18n="findMeHint">Mostra prima le uscite più vicine</small></span></button>
     <div id="locationStatus" class="location-status" aria-live="polite"></div>
     <div id="suggestions" class="suggestions" aria-live="polite"></div>
   </div>
 </section>
 <main class="shell">
   <section id="chooser" class="chooser">
-    <div class="section-head"><div><p class="eyebrow">PARTI DA QUI</p><h2 id="chooserTitle">Scegli la tua uscita</h2></div><span id="exitCount"></span></div>
+    <div class="section-head"><div><p class="eyebrow" data-i18n="startHere">PARTI DA QUI</p><h2 id="chooserTitle" data-i18n="chooseYourExit">Scegli la tua uscita</h2></div><span id="exitCount"></span></div>
     <div id="exitList" class="exit-list"></div>
   </section>
   <section id="detail" class="detail hidden" aria-live="polite">
-    <button class="all-exits" id="allExits">← Torna alle uscite</button>
+    <button class="all-exits" id="allExits" data-i18n="backExits">← Torna alle uscite</button>
     <div class="exit-header">
       <div class="road-icon">🛣️</div>
       <div><p class="eyebrow" id="roadName"></p><h2 id="exitName"></h2><p id="exitDescription"></p></div>
-      <a id="mapLink" class="map-link" target="_blank" rel="noopener">🗺️ Vedi sulla mappa →</a>
+      <a id="mapLink" class="map-link" target="_blank" rel="noopener"><span data-i18n="mapSee">🗺️ Vedi sulla mappa →</span></a>
     </div>
     <nav id="tabs" class="tabs" aria-label="Servizi dell’uscita"></nav><div id="tabContent" class="tab-content"></div>
   </section>
