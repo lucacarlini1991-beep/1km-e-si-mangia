@@ -3,6 +3,11 @@
     it: {
       menu: "MENU",
       close: "Chiudi menu",
+      home: "HOME",
+      eatButton: "1 KM E SI MANGIA",
+      howButton: "COME FUNZIONA",
+      adLabel: "PUBBLICITÀ",
+      adPlaceholder: "SPAZIO PUBBLICITARIO",
       how: "COME FUNZIONA",
       howDesc: "Scopri come utilizzare il servizio",
       homeDesc: "La nostra idea",
@@ -33,6 +38,11 @@
     en: {
       menu: "MENU",
       close: "Close menu",
+      home: "HOME",
+      eatButton: "1 KM E SI MANGIA",
+      howButton: "HOW IT WORKS",
+      adLabel: "ADVERTISEMENT",
+      adPlaceholder: "ADVERTISING SPACE",
       how: "HOW IT WORKS",
       howDesc: "Find out how to use the service",
       homeDesc: "Our idea",
