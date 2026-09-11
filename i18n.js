@@ -84,6 +84,7 @@
     localStorage.setItem("1kmesimangia_lang", lang);
     document.documentElement.lang = lang;
     apply(lang);
+    document.dispatchEvent(new CustomEvent("1kmesimangia:language"));
   }
 
   function tr(key, fallback){ const t=translations[getLang()]||translations.it; return t[key]!==undefined?t[key]:fallback; }
@@ -99,6 +100,26 @@
       const key = el.getAttribute("data-i18n-aria");
       if (t[key] !== undefined) el.setAttribute("aria-label", t[key]);
     });
+    // Forza la traduzione anche del menu: alcune pagine lo costruiscono/modificano durante il build.
+    document.querySelectorAll(".menu-links a").forEach(function (link) {
+      const href = (link.getAttribute("href") || "").split("?")[0];
+      const map = {
+        "come-funziona.html": ["how", "howDesc"],
+        "index.html": ["home", "homeDesc"],
+        "uscite.html": ["eatButton", "eatDesc"],
+        "uscita2.html": ["explore", "exploreDesc"],
+        "parcheggi.html": ["parking", "parkingDesc"],
+        "coming-soon.html": ["upcoming", "upcomingDesc"],
+        "contatti.html": ["contacts", "contactsDesc"],
+        "fonti-licenze.html": ["sources", "sourcesDesc"]
+      }[href];
+      if (!map) return;
+      const title = link.querySelector("[data-i18n]");
+      const desc = link.querySelector("[data-i18n] + span, span[data-i18n], span:not([data-i18n])");
+      if (title && t[map[0]] !== undefined) title.innerHTML = t[map[0]];
+      const descEl = link.querySelector(`[data-i18n="${map[1]}"]`) || Array.from(link.querySelectorAll("span")).find(function(s){ return s !== title && s.closest("strong") === null; });
+      if (descEl && t[map[1]] !== undefined) descEl.innerHTML = t[map[1]];
+    });
     document.querySelectorAll("[data-lang]").forEach(function (el) {
       el.classList.toggle("active", el.getAttribute("data-lang") === lang);
     });
@@ -113,5 +134,7 @@
     });
   });
 
+  // Se il menu viene aperto o ricostruito dopo il caricamento, ritraducilo sempre.
+  document.addEventListener("1kmesimangia:language", function(){ apply(getLang()); });
   window.I18N = { getLang, setLang, apply, translations, tr };
 })();
