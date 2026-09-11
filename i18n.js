@@ -58,7 +58,7 @@
       chooseExitText: "Choose a motorway exit on the map and discover where to eat nearby.",
       nearestExit: "📍 FIND THE NEAREST EXIT",
       chooseExit: "Choose an exit",
-      chooseExitHint: "Select from the list or directly on the map"
+      chooseExitHint: "Select from the list or directly on the map", exploreTitle: "EXPLORE EXITS", exploreSubtitle: "Choose an exit and discover what to see and visit nearby.", searchExit: "Search exit, city or motorway", findMe: "Find my location", findMeHint: "Show the nearest exits first", startHere: "START HERE", chooseYourExit: "Choose your exit", backExits: "← Back to exits", mapSee: "🗺️ View on map →"
     }
   };
 
