@@ -118,9 +118,9 @@
 
   function error(e){
     console.error("GPS ERRORE:",e&&e.code,e&&e.message);
-    setLocationButton("USA LA MIA POSIZIONE",false);
+    setLocationButton(window.I18N?.tr("myLocation","USA LA MIA POSIZIONE")||"USA LA MIA POSIZIONE",false);
 
-    let msg="Non siamo riusciti a ottenere la tua posizione.";
+    let msg=(window.I18N?.getLang?.()==="en")?"We were unable to get your location.":"Non siamo riusciti a ottenere la tua posizione.";
 
     if(e&&e.code===1){
       msg="Permesso di posizione negato.\n\nControlla le impostazioni di posizione del dispositivo e abilita la posizione precisa.";
@@ -155,7 +155,7 @@
     getMap();
     stop();
 
-    setLocationButton("RICERCA POSIZIONE...",true);
+    setLocationButton(window.I18N?.getLang?.()==="en"?"SEARCHING FOR LOCATION...":"RICERCA POSIZIONE...",true);
 
     navigator.geolocation.getCurrentPosition(
       function(p){
