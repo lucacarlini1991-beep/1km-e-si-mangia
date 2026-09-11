@@ -2143,3 +2143,76 @@ body.menu-open {
     height:12px;
   }
 }
+
+
+/* =====================================================
+   MENU CHIARO GLOBALE — BIANCO CON BORDO VERDE
+   ===================================================== */
+.site-menu-overlay{
+  background:rgba(3,69,45,.32) !important;
+}
+.site-menu{
+  background:#ffffff !important;
+  color:var(--verde-scuro) !important;
+  border-left:2px solid var(--verde) !important;
+  box-shadow:-10px 0 35px rgba(0,0,0,.22), inset 1px 0 0 rgba(255,255,255,.9) !important;
+}
+.site-menu-header{
+  border-bottom:1px solid rgba(7,92,59,.18) !important;
+}
+.site-menu-brand strong{
+  color:var(--verde-scuro) !important;
+}
+.site-menu-close{
+  border:1px solid rgba(7,92,59,.30) !important;
+  background:linear-gradient(145deg,#ffffff,#edf1ee) !important;
+  color:var(--verde) !important;
+  border-radius:14px !important;
+  box-shadow:4px 4px 10px rgba(7,69,45,.10), inset 1px 1px 0 rgba(255,255,255,.95) !important;
+}
+.site-menu-close:hover{
+  background:#f5f7f6 !important;
+  color:var(--verde-scuro) !important;
+}
+.site-menu-nav .menu-link{
+  border:1px solid rgba(7,92,59,.18) !important;
+  background:linear-gradient(145deg,#ffffff,#f4f7f5) !important;
+  color:var(--verde-scuro) !important;
+  border-radius:14px !important;
+  box-shadow:4px 4px 10px rgba(7,69,45,.07), inset 1px 1px 0 rgba(255,255,255,.95) !important;
+}
+.site-menu-nav .menu-link:hover{
+  background:#f5f7f6 !important;
+  border-color:var(--verde) !important;
+  color:var(--verde-scuro) !important;
+}
+.site-menu-footer{
+  border-top:1px solid rgba(7,92,59,.18) !important;
+  color:var(--verde-scuro) !important;
+}
+.site-menu-footer span{
+  color:#6f8279 !important;
+}
+.mobile-menu{
+  background:#ffffff !important;
+  color:var(--verde-scuro) !important;
+  border-left:2px solid var(--verde) !important;
+}
+.mobile-menu .menu-close{
+  border-color:rgba(7,92,59,.30) !important;
+  background:#ffffff !important;
+  color:var(--verde) !important;
+}
+.mobile-menu-title{
+  border-bottom-color:rgba(7,92,59,.18) !important;
+}
+.mobile-menu-title strong{
+  color:var(--verde-scuro) !important;
+}
+.mobile-menu .menu-link{
+  color:var(--verde-scuro) !important;
+  border-bottom-color:rgba(7,92,59,.14) !important;
+}
+.mobile-menu .menu-link span{
+  color:#6f8279 !important;
+}
