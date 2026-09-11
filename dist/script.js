@@ -1226,104 +1226,61 @@ document.addEventListener("click", function(event) {
 
 function eAreaDiServizio(uscita) {
 
-  if (!uscita) {
+  if (!uscita || typeof uscita !== "object") return true;
 
-    return true;
+  // Controlliamo tutti i campi: nel database alcune aree di servizio
+  // non usano sempre il campo "nome".
+  const valori = [];
+  Object.keys(uscita).forEach(function(key) {
+    const value = uscita[key];
+    if (value == null) return;
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      valori.push(String(value));
+    } else if (typeof value === "object") {
+      try { valori.push(JSON.stringify(value)); } catch (_) {}
+    }
+  });
 
-  }
-
-
-  // ---------------------------------------------
-  // CONTROLLO CAMPO TIPO
-  // ---------------------------------------------
-
-  const tipo = String(
-    uscita.tipo || ""
-  ).toLowerCase();
-
+  const testo = valori.join(" ").toLowerCase();
+  const tipo = String(uscita.tipo || uscita.type || uscita.category || uscita.kind || "").toLowerCase();
 
   if (
-
     tipo.includes("servizio") ||
-
     tipo.includes("autogrill") ||
-
+    tipo.includes("service") ||
     tipo.includes("ristoro") ||
-
     tipo.includes("sosta") ||
+    testo.includes('"highway":"services"') ||
+    testo.includes('"highway": "services"') ||
+    testo.includes('"amenity":"service') ||
+    testo.includes('"amenity": "service')
+  ) return true;
 
-    tipo.includes("service")
-
-  ) {
-
-    return true;
-
-  }
-
-
-  // ---------------------------------------------
-  // CONTROLLO NOME
-  // ---------------------------------------------
-
-  const nome = (
-
-    String(uscita.nome || "") +
-
-    " " +
-
-    String(uscita.nome_autostrada || "") +
-
-    " " +
-
-    String(uscita.autostrada || "")
-
-  ).toLowerCase();
-
+  const nome = String(
+    uscita.nome || uscita.name || uscita.label || uscita.title || ""
+  ).trim().toLowerCase();
 
   const paroleDaEscludere = [
-
     "area di servizio",
-
     "area servizio",
-
     "area di sosta",
-
     "area sosta",
-
     "autogrill",
-
     "area ristoro",
-
-    "ristoro",
-
     "service area",
-
     "service station"
-
   ];
 
-
-  for (
-    let i = 0;
-    i < paroleDaEscludere.length;
-    i++
-  ) {
-
-    if (
-      nome.includes(
-        paroleDaEscludere[i]
-      )
-    ) {
-
-      return true;
-
-    }
-
+  if (paroleDaEscludere.some(function(parola) { return testo.includes(parola); })) {
+    return true;
   }
 
+  // Esempio reale: "Area di Giovi Ovest".
+  if (/^area\s+(di|del|della|dei|degli)\s+/.test(nome)) {
+    return true;
+  }
 
   return false;
-
 }
 
 
