@@ -402,6 +402,18 @@ function coordinateNavigazione(
 
 
 // =====================================================
+// DESTINAZIONE TESTUALE
+// =====================================================
+// Usata per il rientro in autostrada quando il database non contiene
+// ancora il punto GPS esatto della corsia di ingresso del casello.
+function destinazioneNavigazione(ristorante) {
+  const query = String(ristorante?.navigazioneQuery || "").trim();
+  if (query) return query;
+  const coordinate = coordinateNavigazione(ristorante);
+  return coordinate ? coordinate.lat + "," + coordinate.lon : "";
+}
+
+// =====================================================
 // GOOGLE MAPS
 // =====================================================
 //
@@ -412,30 +424,16 @@ function apriGoogleMaps(
   ristorante
 ) {
 
-  const coordinate =
-    coordinateNavigazione(
-      ristorante
-    );
+  const destinazione = destinazioneNavigazione(ristorante);
 
-
-  if (!coordinate) {
-
+  if (!destinazione) {
     return;
-
   }
-
 
   const url =
     "https://www.google.com/maps/dir/?api=1" +
-
     "&destination=" +
-
-    encodeURIComponent(
-      coordinate.lat +
-      "," +
-      coordinate.lon
-    ) +
-
+    encodeURIComponent(destinazione) +
     "&travelmode=driving";
 
 
@@ -464,48 +462,29 @@ function apriGoogleMaps(
 function apriWaze(
   ristorante
 ) {
+  const query = String(ristorante?.navigazioneQuery || "").trim();
+  const coordinate = coordinateNavigazione(ristorante);
 
-  const coordinate =
-    coordinateNavigazione(
-      ristorante
-    );
-
-
-  if (!coordinate) {
-
+  if (query) {
+    const url =
+      "https://waze.com/ul?q=" +
+      encodeURIComponent(query) +
+      "&navigate=yes";
+    window.open(url, "_blank", "noopener,noreferrer");
     return;
-
   }
 
+  if (!coordinate) return;
 
   const url =
     "https://waze.com/ul" +
-
     "?ll=" +
-
-    encodeURIComponent(
-      coordinate.lat +
-      "," +
-      coordinate.lon
-    ) +
-
+    encodeURIComponent(coordinate.lat + "," + coordinate.lon) +
     "&navigate=yes" +
-
     "&zoom=17";
 
-
-  console.log(
-    "NAVIGAZIONE WAZE:",
-    url
-  );
-
-
-  window.open(
-    url,
-    "_blank",
-    "noopener,noreferrer"
-  );
-
+  console.log("NAVIGAZIONE WAZE:", url);
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 
@@ -533,68 +512,17 @@ function apriWaze(
 function apriAppleMaps(
   ristorante
 ) {
-
-  const coordinate =
-    coordinateNavigazione(
-      ristorante
-    );
-
-
-  if (!coordinate) {
-
-    return;
-
-  }
-
-
-  // =================================================
-  // APPLE MAPS
-  // =================================================
-  //
-  // Usiamo il formato Apple Maps classico:
-  //
-  // https://maps.apple.com/?daddr=LAT,LON&dirflg=d
-  //
-  // NON passiamo il nome del ristorante.
-  // In questo modo Apple non deve effettuare
-  // una ricerca testuale che potrebbe portare
-  // a un'attività diversa o all'Outlet.
-  //
-  // La destinazione è esclusivamente il punto
-  // geografico del ristorante.
-  // =================================================
-
-  const destinazione =
-    coordinate.lat +
-    "," +
-    coordinate.lon;
-
+  const destinazione = destinazioneNavigazione(ristorante);
+  if (!destinazione) return;
 
   const url =
     "https://maps.apple.com/" +
     "?daddr=" +
-    encodeURIComponent(
-      destinazione
-    ) +
+    encodeURIComponent(destinazione) +
     "&dirflg=d";
 
-
-  console.log(
-    "NAVIGAZIONE APPLE:",
-    url
-  );
-
-
-  // Su iPhone/iPad/macOS il link maps.apple.com
-  // viene gestito dal sistema e può aprire
-  // direttamente Apple Maps.
-  //
-  // Su altri dispositivi verrà aperta la versione
-  // web di Apple Maps.
-
-  window.location.href =
-    url;
-
+  console.log("NAVIGAZIONE APPLE:", url);
+  window.location.href = url;
 }
 
 
