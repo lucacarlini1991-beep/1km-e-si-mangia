@@ -86,7 +86,7 @@ const clusterUscite = L.markerClusterGroup({
 
   spiderfyOnMaxZoom: true,
 
-  zoomToBoundsOnClick: true,
+  zoomToBoundsOnClick: false,
 
   removeOutsideVisibleBounds: true,
 
@@ -95,6 +95,30 @@ const clusterUscite = L.markerClusterGroup({
 });
 
 map.addLayer(clusterUscite);
+
+// CLICK CLUSTER: mai scegliere automaticamente il punto sbagliato.
+// Se nel cluster c'è una sola vera uscita, apriamo quella. Se ce ne sono più,
+// il cluster si espande così l'utente può scegliere senza perdere il popup.
+clusterUscite.on("clusterclick", function(e) {
+  if (!e || !e.layer) return;
+  const children = e.layer.getAllChildMarkers ? e.layer.getAllChildMarkers() : [];
+  const validi = children.filter(function(m) {
+    return m && m._uscita1km && !eAreaDiServizio(m._uscita1km);
+  });
+
+  if (validi.length === 1) {
+    L.DomEvent.stop(e.originalEvent);
+    const marker = validi[0];
+    map.setView(marker.getLatLng(), Math.max(map.getZoom(), 14), { animate: true });
+    setTimeout(function(){ marker.openPopup(); }, 180);
+    return;
+  }
+
+  if (validi.length > 1 && e.layer.spiderfy) {
+    L.DomEvent.stop(e.originalEvent);
+    e.layer.spiderfy();
+  }
+});
 
 
 // =====================================================
@@ -1513,6 +1537,10 @@ fetch("./uscite.json")
 
       );
 
+      // Dati dell'uscita sul marker: servono per evitare che un cluster
+      // con punti vicini faccia perdere la selezione dell'uscita corretta.
+      marker._uscita1km = uscita;
+
 
       marker.bindPopup(
         creaPopup(uscita)
@@ -1528,22 +1556,8 @@ fetch("./uscite.json")
         "click",
 
         function() {
-
-          map.flyTo(
-
-            [
-              uscita.lat,
-              uscita.lon
-            ],
-
-            14,
-
-            {
-              duration: 1
-            }
-
-          );
-
+          // Il popup Leaflet si apre normalmente. Niente flyTo automatico:
+          // su iPhone il movimento della mappa poteva far richiudere subito la scheda.
         }
 
       );
