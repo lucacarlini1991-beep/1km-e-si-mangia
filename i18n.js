@@ -100,9 +100,9 @@
       const key = el.getAttribute("data-i18n-aria");
       if (t[key] !== undefined) el.setAttribute("aria-label", t[key]);
     });
-    // Forza la traduzione anche del menu: alcune pagine lo costruiscono/modificano durante il build.
+    // Traduzione menu: forzata per href, anche per voci aggiunte dal build.
     document.querySelectorAll(".menu-links a").forEach(function (link) {
-      const href = (link.getAttribute("href") || "").split("?")[0];
+      const href = (link.getAttribute("href") || "").split("?")[0].split("#")[0];
       const map = {
         "come-funziona.html": ["how", "howDesc"],
         "index.html": ["home", "homeDesc"],
@@ -114,11 +114,19 @@
         "fonti-licenze.html": ["sources", "sourcesDesc"]
       }[href];
       if (!map) return;
-      const title = link.querySelector("[data-i18n]");
-      const desc = link.querySelector("[data-i18n] + span, span[data-i18n], span:not([data-i18n])");
-      if (title && t[map[0]] !== undefined) title.innerHTML = t[map[0]];
-      const descEl = link.querySelector(`[data-i18n="${map[1]}"]`) || Array.from(link.querySelectorAll("span")).find(function(s){ return s !== title && s.closest("strong") === null; });
-      if (descEl && t[map[1]] !== undefined) descEl.innerHTML = t[map[1]];
+
+      const strong = link.querySelector("strong");
+      if (strong && t[map[0]] !== undefined) {
+        const icon = href === "uscite.html" ? "🍝 " :
+                     href === "uscita2.html" ? "🧭 " :
+                     href === "parcheggi.html" ? "🚛 " :
+                     href === "coming-soon.html" ? "🚧 " : "";
+        strong.textContent = icon + t[map[0]];
+      }
+
+      const directSpans = Array.from(link.children).filter(function(el){ return el.tagName === "SPAN"; });
+      const desc = directSpans[directSpans.length - 1];
+      if (desc && t[map[1]] !== undefined) desc.textContent = t[map[1]];
     });
     document.querySelectorAll("[data-lang]").forEach(function (el) {
       el.classList.toggle("active", el.getAttribute("data-lang") === lang);
@@ -136,5 +144,11 @@
 
   // Se il menu viene aperto o ricostruito dopo il caricamento, ritraducilo sempre.
   document.addEventListener("1kmesimangia:language", function(){ apply(getLang()); });
+  // Se il build inserisce o modifica il menu dopo il caricamento, ritraduci automaticamente.
+  document.addEventListener("DOMContentLoaded", function(){
+    const observer = new MutationObserver(function(){ apply(getLang()); });
+    const menu = document.querySelector(".menu-links");
+    if (menu) observer.observe(menu, { childList:true, subtree:true });
+  });
   window.I18N = { getLang, setLang, apply, translations, tr };
 })();
