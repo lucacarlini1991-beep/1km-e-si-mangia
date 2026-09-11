@@ -80,7 +80,7 @@ for (const file of htmlFiles) {
   );
 
   if (!html.includes('href="coming-soon.html"')) {
-    const comingSoonLink = '<a href="coming-soon.html" class="menu-link"><strong>🚧 PROSSIME NOVITÀ</strong><span>Scopri cosa stiamo preparando</span></a>\n';
+    const comingSoonLink = '<a href="coming-soon.html" class="menu-link"><strong>🚧 <span data-i18n="upcoming">PROSSIME NOVITÀ</span></strong><span data-i18n="upcomingDesc">Scopri cosa stiamo preparando</span></a>\n';
     html = html.replace(/(<a href="contatti\.html"[^>]*>)/g, comingSoonLink + '$1');
   }
 
