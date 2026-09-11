@@ -22,6 +22,109 @@
 @media(max-width:600px){.menu-inner{width:calc(100% - 24px);margin:12px auto;padding:20px 18px 28px;border-radius:18px}.menu-top{margin-bottom:22px}.menu-links a{padding:17px 12px}.menu-links a strong{font-size:19px}}
 </style>
   <link rel="stylesheet" href="assets/menu-icons.css">
+
+<style id="home-menu-exact-override">
+:root{--verde:#05633f;--verde-scuro:#004d36;}
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 69, 45, .32);
+      z-index: 2000;
+      display: none;
+      overflow-y: auto;
+    }
+
+    .menu-overlay.open {
+      display: block;
+    }
+
+    .menu-inner {
+      width: min(900px, 92%);
+      margin: 18px auto;
+      padding: 24px 28px 38px;
+      background: #ffffff;
+      border: 2px solid var(--verde);
+      border-radius: 22px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.24);
+    }
+
+    .menu-top {
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+    }
+
+    .menu-logo {
+      width: 110px;
+      height: 75px;
+      object-fit: contain;
+    }
+
+    .menu-close {
+      border: 0;
+      background: transparent;
+      color: var(--verde);
+      font-size: 42px;
+      cursor: pointer;
+    }
+
+    .menu-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .menu-links a {
+      display: block;
+      padding: 20px 24px;
+      border: 1px solid rgba(7,92,59,.18);
+      border-left: 0;
+      border-right: 0;
+      color: var(--verde-scuro);
+      text-decoration: none;
+      font-size: 21px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .menu-links a strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 21px;
+      line-height: 1.15;
+    }
+
+    .menu-links a span {
+      display: block;
+      color: #6f8279;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.35;
+    }
+
+    .menu-links a:hover {
+      background: #f5f7f6;
+      color: var(--verde-scuro);
+      border-color: var(--verde);
+    }
+
+
+    @media (max-width: 750px) {
+      .menu-inner {
+        width: 90%;
+        margin: 10px auto;
+        padding: 20px 18px 30px;
+        border-radius: 18px;
+      }
+
+      .menu-links a {
+        font-size: 20px;
+        padding: 17px 20px;
+      }
+    }
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -31,23 +134,66 @@
 </header>
 
 <div class="menu-overlay" id="menuOverlay">
-  <div class="menu-inner">
-    <div class="menu-top">
-      <a href="index.html"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="menu-logo"></a>
-      <button type="button" class="menu-close" id="menuClose" data-i18n-aria="close" aria-label="Chiudi menu">×</button>
+
+    <div class="menu-inner">
+
+      <div class="menu-top">
+
+        <a href="index.html">
+          <img
+            src="assets/logo-definitivo.png"
+            alt="1 KM E SI MANGIA"
+            class="menu-logo"
+          >
+        </a>
+
+        <button
+          type="button"
+          class="menu-close"
+          id="menuClose"
+          data-i18n-aria="close" aria-label="Chiudi menu"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <nav class="menu-links">
+
+        <a href="come-funziona.html">
+          <strong data-i18n="how">COME FUNZIONA</strong>
+          <span data-i18n="howDesc">Scopri come utilizzare il servizio</span>
+        </a>
+
+        <a href="index.html">
+          <strong data-i18n="home">HOME</strong>
+          <span data-i18n="homeDesc">La nostra idea</span>
+        </a>
+
+        <a href="uscite.html"><strong>🍝 <span data-i18n="eatButton">1 KM E SI MANGIA</span></strong><span data-i18n="eatDesc">Trova dove mangiare vicino all'uscita</span></a>
+        <a href="uscita2.html"><strong>🧭 <span data-i18n="explore">ESPLORA USCITE</span></strong><span data-i18n="exploreDesc">Scopri cosa c'è intorno alla tua uscita</span></a>
+
+        <a href="parcheggi.html">
+          <strong>🚛 <span data-i18n="parking">PARCHEGGI MEZZI PESANTI</span></strong>
+          <span data-i18n="parkingDesc">Trova un parcheggio per il tuo mezzo</span>
+        </a>
+
+        <a href="contatti.html">
+          <strong data-i18n="contacts">CONTATTI</strong>
+          <span data-i18n="contactsDesc">Scrivici</span>
+        </a>
+
+        <a href="fonti-licenze.html">
+          <strong data-i18n="sources">FONTI E LICENZE</strong>
+          <span data-i18n="sourcesDesc">Dati, fonti e informazioni legali</span>
+        </a>
+
+      </nav>
+
     </div>
-    <nav class="menu-links">
-      <a href="come-funziona.html"><strong data-i18n="how">COME FUNZIONA</strong><span data-i18n="howDesc">Scopri come utilizzare il servizio</span></a>
-      <a href="index.html"><strong data-i18n="home">HOME</strong><span data-i18n="homeDesc">La nostra idea</span></a>
-      <a href="uscite.html"><strong>🍝 <span data-i18n="eatButton">1 KM E SI MANGIA</span></strong><span data-i18n="eatDesc">Trova dove mangiare vicino all'uscita</span></a>
-      <a href="uscita2.html"><strong>🧭 <span data-i18n="explore">ESPLORA USCITE</span></strong><span data-i18n="exploreDesc">Scopri cosa c'è intorno alla tua uscita</span></a>
-      <a href="parcheggi.html"><strong>🚛 <span data-i18n="parking">PARCHEGGI MEZZI PESANTI</span></strong><span data-i18n="parkingDesc">Trova un parcheggio per il tuo mezzo</span></a>
-      <a href="coming-soon.html"><strong>🚧 <span data-i18n="upcoming">PROSSIME NOVITÀ</span></strong><span data-i18n="upcomingDesc">Scopri cosa stiamo preparando</span></a>
-      <a href="contatti.html"><strong data-i18n="contacts">CONTATTI</strong><span data-i18n="contactsDesc">Scrivici</span></a>
-      <a href="fonti-licenze.html"><strong data-i18n="sources">FONTI E LICENZE</strong><span data-i18n="sourcesDesc">Dati, fonti e informazioni legali</span></a>
-    </nav>
+
   </div>
-</div>
+
 <section class="hero">
   <div class="hero-inner">
     <p class="eyebrow">1 KM E SI MANGIA PRESENTA</p>
