@@ -425,7 +425,7 @@ function creaPopupRistorante(ristorante) {
       ${ristorante.google_address ? `<small>📍 ${escapeHtml(ristorante.google_address)}</small>` : ""}
       ${ristorante.fonte === "Google Places" ? `<small style="color:#075c3b;font-weight:700">Google Places</small>` : ""}
       ${bloccoRistoranteExtra(ristorante)}
-      <button type="button" data-naviga-ristorante="${ristoranteId}" style="display:block;width:100%;margin-top:10px;padding:10px 12px;border:0;border-radius:9px;background:#075c3b;color:#fff;font-size:14px;font-weight:800;cursor:pointer">🧭 NAVIGA</button>
+      <button type="button" data-naviga-ristorante="${ristoranteId}" style="display:block;width:100%;margin-top:10px;padding:10px 12px;border:0;border-radius:9px;background:#075c3b;color:#fff;font-size:14px;font-weight:800;cursor:pointer">${window.I18N?.tr("navigate","🧭 NAVIGA")||"🧭 NAVIGA"}</button>
     </div>
   `;
 }
@@ -494,7 +494,7 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
   if (!ristoranti.length) {
     panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong style="font-size:20px">Nessun ristorante</strong>
+        <strong style="font-size:20px">${window.I18N?.tr("noRestaurant","Nessun ristorante")||"Nessun ristorante"}</strong>
         <button id="chiudiRistorantiMap" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer">×</button>
       </div>
       <p>Non risultano ristoranti associati a questa uscita nel database.</p>
@@ -537,13 +537,13 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
     panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px">
         <div>
-          <strong style="font-size:20px">🍴 Ristoranti</strong>
-          <div style="font-size:13px;color:#555">${escapeHtml(uscita.nome || "Uscita autostradale")} · ${ristoranti.length} trovati</div>
+          <strong style="font-size:20px">${window.I18N?.tr("restaurants","🍴 Ristoranti")||"🍴 Ristoranti"}</strong>
+          <div style="font-size:13px;color:#555">${escapeHtml(uscita.nome || "Uscita autostradale")} · ${ristoranti.length} ${window.I18N?.tr("found","trovati")||"trovati"}</div>
         </div>
         <button id="chiudiRistorantiMap" type="button" style="border:0;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer">×</button>
       </div>
       ${cards}
-      <button id="chiudiRistorantiMapBottom" type="button" style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:700;cursor:pointer">CHIUDI</button>
+      <button id="chiudiRistorantiMapBottom" type="button" style="width:100%;margin-top:14px;border:0;border-radius:12px;background:#075c3b;color:#fff;padding:12px;font-weight:700;cursor:pointer">${window.I18N?.tr("close","CHIUDI")||"CHIUDI"}</button>
     `;
   }
 
@@ -610,7 +610,7 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
         !Number.isFinite(Number(parcheggio?.lat)) ||
         !Number.isFinite(Number(parcheggio?.lon))
       ) {
-        alert("Per questo ristorante non è disponibile un parcheggio entro 600 m.");
+        alert(window.I18N?.tr("parkingUnavailable","Per questo ristorante non è disponibile un parcheggio entro 600 m.")||"Per questo ristorante non è disponibile un parcheggio entro 600 m.");
         return;
       }
 
@@ -690,7 +690,7 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
             chiudiDemo();
             window.apriNavigazione(destinazione);
           } else {
-            alert("Sistema di navigazione non disponibile.");
+            alert(window.I18N?.tr("navUnavailable","Sistema di navigazione non disponibile.")||"Sistema di navigazione non disponibile.");
           }
         });
       });
@@ -1040,8 +1040,8 @@ async function mostraTuttiRistoranti(uscita) {
 
     if (risultatiFinali.length === 0) {
       mostraAvvisoGoogle(
-        "0 ristoranti trovati",
-        "Non ci sono ristoranti trovati nelle vicinanze di questa uscita. Avvicinati all'uscita per vedere se ci sono ristoranti in piu oppure guida ancora qualche km."
+        window.I18N?.tr("noRestaurantsFound","0 ristoranti trovati")||"0 ristoranti trovati",
+        window.I18N?.tr("noRestaurantsText","Non ci sono ristoranti trovati nelle vicinanze di questa uscita.")||"Non ci sono ristoranti trovati nelle vicinanze di questa uscita."
       );
     }
 
@@ -1067,8 +1067,8 @@ async function mostraTuttiRistoranti(uscita) {
 
     if (locali.length === 0) {
       mostraAvvisoGoogle(
-        "0 ristoranti trovati",
-        "Non ci sono ristoranti trovati nelle vicinanze di questa uscita. Avvicinati all'uscita per vedere se ci sono ristoranti in piu oppure guida ancora qualche km."
+        window.I18N?.tr("noRestaurantsFound","0 ristoranti trovati")||"0 ristoranti trovati",
+        window.I18N?.tr("noRestaurantsText","Non ci sono ristoranti trovati nelle vicinanze di questa uscita.")||"Non ci sono ristoranti trovati nelle vicinanze di questa uscita."
       );
     }
   }
@@ -1144,7 +1144,7 @@ document.addEventListener("click", function(event) {
     : [];
   const ristorante = elenco[index];
   if (!ristorante || !Number.isFinite(Number(ristorante.lat)) || !Number.isFinite(Number(ristorante.lon))) {
-    alert("Coordinate del ristorante non disponibili.");
+    alert(window.I18N?.tr("coordinatesUnavailable","Coordinate del ristorante non disponibili.")||"Coordinate del ristorante non disponibili.");
     return;
   }
 
