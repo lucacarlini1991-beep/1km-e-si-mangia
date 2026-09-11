@@ -2023,3 +2023,123 @@ body.menu-open {
 .menu-button:hover{
   color:var(--verde-scuro) !important;
 }
+
+
+/* =====================================================
+   HOME — PULSANTI HERO BIANCHI 3D
+   Stesso stile morbido/neumorfico dei pulsanti inferiori
+   ===================================================== */
+.home .hero-buttons{
+  width:100%;
+  flex-direction:column;
+  gap:16px;
+}
+
+.home .hero-buttons .primary,
+.home .hero-buttons .secondary,
+.home .hero-buttons .how-button{
+  width:100%;
+  min-height:88px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start !important;
+  gap:18px;
+  padding:14px 72px 14px 96px !important;
+  background:linear-gradient(145deg,#ffffff,#edf1ee) !important;
+  color:var(--verde-scuro) !important;
+  border:1px solid rgba(7,92,59,.28) !important;
+  border-radius:16px !important;
+  box-shadow:8px 8px 18px rgba(7,69,45,.12),-5px -5px 14px rgba(255,255,255,.9),inset 1px 1px 0 rgba(255,255,255,.95),inset -2px -2px 6px rgba(7,69,45,.05) !important;
+  font-size:22px !important;
+  letter-spacing:.3px;
+  text-align:left;
+  transition:transform .2s ease,box-shadow .2s ease,background .2s ease;
+}
+
+.home .hero-buttons .primary:hover,
+.home .hero-buttons .secondary:hover,
+.home .hero-buttons .how-button:hover{
+  transform:translateY(-2px);
+  background:linear-gradient(145deg,#ffffff,#e7eee9) !important;
+  color:var(--verde-scuro) !important;
+  box-shadow:10px 10px 20px rgba(7,69,45,.15),-5px -5px 14px rgba(255,255,255,.95),inset 1px 1px 0 #fff,inset -2px -2px 6px rgba(7,69,45,.05) !important;
+}
+
+.home .hero-buttons .primary .btn-icon,
+.home .hero-buttons .secondary .btn-icon,
+.home .hero-buttons .how-button .btn-icon{
+  position:absolute !important;
+  left:20px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  width:58px !important;
+  height:58px !important;
+  flex:0 0 58px !important;
+  margin:0 !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:18px !important;
+  background:linear-gradient(145deg,#ffffff,#dfe8e2) !important;
+  border:1px solid rgba(7,92,59,.20) !important;
+  box-shadow:inset 2px 2px 0 rgba(255,255,255,.9),inset -3px -3px 7px rgba(7,69,45,.10),5px 5px 12px rgba(7,69,45,.12) !important;
+}
+
+.home .hero-buttons .primary .btn-icon::after,
+.home .hero-buttons .secondary .btn-icon::after,
+.home .hero-buttons .how-button .btn-icon::after{
+  inset:6px !important;
+  border-radius:13px !important;
+  border:1px solid rgba(7,92,59,.10) !important;
+}
+
+.home .hero-buttons .primary .btn-icon svg,
+.home .hero-buttons .secondary .btn-icon svg,
+.home .hero-buttons .how-button .btn-icon svg{
+  color:var(--verde-scuro) !important;
+  width:31px !important;
+  height:31px !important;
+}
+
+.home .hero-buttons .secondary::after,
+.home .hero-buttons .how-button::after,
+.home .hero-buttons .primary::after{
+  content:"";
+  position:absolute;
+  right:28px;
+  top:50%;
+  width:14px;
+  height:14px;
+  border-top:3px solid var(--verde-scuro);
+  border-right:3px solid var(--verde-scuro);
+  transform:translateY(-50%) rotate(45deg);
+  border-radius:2px;
+}
+
+@media (max-width:750px){
+  .home .hero-buttons .primary,
+  .home .hero-buttons .secondary,
+  .home .hero-buttons .how-button{
+    min-height:88px;
+    padding:13px 58px 13px 88px !important;
+    font-size:19px !important;
+    border-radius:15px !important;
+  }
+  .home .hero-buttons .primary .btn-icon,
+  .home .hero-buttons .secondary .btn-icon,
+  .home .hero-buttons .how-button .btn-icon{
+    left:18px !important;
+    width:54px !important;
+    height:54px !important;
+    flex-basis:54px !important;
+    border-radius:17px !important;
+  }
+  .home .hero-buttons .secondary::after,
+  .home .hero-buttons .how-button::after,
+  .home .hero-buttons .primary::after{
+    right:22px;
+    width:12px;
+    height:12px;
+  }
+}
