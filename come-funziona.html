@@ -74,29 +74,175 @@
   <meta name="twitter:description" content="Scopri come funziona 1 KM E SI MANGIA: trova ristoranti, trattorie e pizzerie vicino alle uscite autostradali in modo semplice e veloce.">
   <link rel="stylesheet" href="assets/menu-icons.css">
 <style>.footer-logo{display:block;width:min(210px,70vw);height:auto;margin:0 auto 18px;object-fit:contain}</style>
+
+<style id="home-menu-exact-override">
+:root{--verde:#05633f;--verde-scuro:#004d36;}
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 69, 45, .32);
+      z-index: 2000;
+      display: none;
+      overflow-y: auto;
+    }
+
+    .menu-overlay.open {
+      display: block;
+    }
+
+    .menu-inner {
+      width: min(900px, 92%);
+      margin: 18px auto;
+      padding: 24px 28px 38px;
+      background: #ffffff;
+      border: 2px solid var(--verde);
+      border-radius: 22px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.24);
+    }
+
+    .menu-top {
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+    }
+
+    .menu-logo {
+      width: 110px;
+      height: 75px;
+      object-fit: contain;
+    }
+
+    .menu-close {
+      border: 0;
+      background: transparent;
+      color: var(--verde);
+      font-size: 42px;
+      cursor: pointer;
+    }
+
+    .menu-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .menu-links a {
+      display: block;
+      padding: 20px 24px;
+      border: 1px solid rgba(7,92,59,.18);
+      border-left: 0;
+      border-right: 0;
+      color: var(--verde-scuro);
+      text-decoration: none;
+      font-size: 21px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .menu-links a strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 21px;
+      line-height: 1.15;
+    }
+
+    .menu-links a span {
+      display: block;
+      color: #6f8279;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.35;
+    }
+
+    .menu-links a:hover {
+      background: #f5f7f6;
+      color: var(--verde-scuro);
+      border-color: var(--verde);
+    }
+
+
+    @media (max-width: 750px) {
+      .menu-inner {
+        width: 90%;
+        margin: 10px auto;
+        padding: 20px 18px 30px;
+        border-radius: 18px;
+      }
+
+      .menu-links a {
+        font-size: 20px;
+        padding: 17px 20px;
+      }
+    }
+</style>
 </head><body>
   <header class="topbar"><a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA">
   <img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo">
 </a><button class="menu-button" id="menuButton" type="button">☰</button></header>
   
 <div class="menu-overlay" id="menuOverlay">
-  <div class="menu-inner">
-    <div class="menu-top">
-      <a href="index.html"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="menu-logo"></a>
-      <button type="button" class="menu-close" id="menuClose" data-i18n-aria="close" aria-label="Chiudi menu">×</button>
+
+    <div class="menu-inner">
+
+      <div class="menu-top">
+
+        <a href="index.html">
+          <img
+            src="assets/logo-definitivo.png"
+            alt="1 KM E SI MANGIA"
+            class="menu-logo"
+          >
+        </a>
+
+        <button
+          type="button"
+          class="menu-close"
+          id="menuClose"
+          data-i18n-aria="close" aria-label="Chiudi menu"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <nav class="menu-links">
+
+        <a href="come-funziona.html">
+          <strong data-i18n="how">COME FUNZIONA</strong>
+          <span data-i18n="howDesc">Scopri come utilizzare il servizio</span>
+        </a>
+
+        <a href="index.html">
+          <strong data-i18n="home">HOME</strong>
+          <span data-i18n="homeDesc">La nostra idea</span>
+        </a>
+
+        <a href="uscite.html"><strong>🍝 <span data-i18n="eatButton">1 KM E SI MANGIA</span></strong><span data-i18n="eatDesc">Trova dove mangiare vicino all'uscita</span></a>
+        <a href="uscita2.html"><strong>🧭 <span data-i18n="explore">ESPLORA USCITE</span></strong><span data-i18n="exploreDesc">Scopri cosa c'è intorno alla tua uscita</span></a>
+
+        <a href="parcheggi.html">
+          <strong>🚛 <span data-i18n="parking">PARCHEGGI MEZZI PESANTI</span></strong>
+          <span data-i18n="parkingDesc">Trova un parcheggio per il tuo mezzo</span>
+        </a>
+
+        <a href="contatti.html">
+          <strong data-i18n="contacts">CONTATTI</strong>
+          <span data-i18n="contactsDesc">Scrivici</span>
+        </a>
+
+        <a href="fonti-licenze.html">
+          <strong data-i18n="sources">FONTI E LICENZE</strong>
+          <span data-i18n="sourcesDesc">Dati, fonti e informazioni legali</span>
+        </a>
+
+      </nav>
+
     </div>
-    <nav class="menu-links">
-      <a href="come-funziona.html"><strong data-i18n="how">COME FUNZIONA</strong><span data-i18n="howDesc">Scopri come utilizzare il servizio</span></a>
-      <a href="index.html"><strong data-i18n="home">HOME</strong><span data-i18n="homeDesc">La nostra idea</span></a>
-      <a href="uscite.html"><strong>🍝 <span data-i18n="eatButton">1 KM E SI MANGIA</span></strong><span data-i18n="eatDesc">Trova dove mangiare vicino all'uscita</span></a>
-      <a href="uscita2.html"><strong>🧭 <span data-i18n="explore">ESPLORA USCITE</span></strong><span data-i18n="exploreDesc">Scopri cosa c'è intorno alla tua uscita</span></a>
-      <a href="parcheggi.html"><strong>🚛 <span data-i18n="parking">PARCHEGGI MEZZI PESANTI</span></strong><span data-i18n="parkingDesc">Trova un parcheggio per il tuo mezzo</span></a>
-      <a href="coming-soon.html"><strong>🚧 <span data-i18n="upcoming">PROSSIME NOVITÀ</span></strong><span data-i18n="upcomingDesc">Scopri cosa stiamo preparando</span></a>
-      <a href="contatti.html"><strong data-i18n="contacts">CONTATTI</strong><span data-i18n="contactsDesc">Scrivici</span></a>
-      <a href="fonti-licenze.html"><strong data-i18n="sources">FONTI E LICENZE</strong><span data-i18n="sourcesDesc">Dati, fonti e informazioni legali</span></a>
-    </nav>
+
   </div>
-</div>
+
   <main class="page"><section class="intro"><div class="eyebrow">1 KM E SI MANGIA</div><h1 data-i18n="howTitle">COME FUNZIONA?</h1><p data-i18n="howIntro">Esci dall'autostrada. Trova dove mangiare. Riparti.</p></section>
   <section class="steps"><article class="step"><div class="step-number">01</div><div class="step-icon">📍</div><h2 data-i18n="step1">INDICA DOVE SEI</h2><p>Usa la tua posizione per trovare l'uscita autostradale più vicina oppure sceglila direttamente dalla mappa.</p></article><article class="step"><div class="step-number">02</div><div class="step-icon">🛣️</div><h2 data-i18n="step2">CERCA DOVE MANGIARE</h2><p>Partiamo da una ricerca entro 1 km dall'uscita per aiutarti a trovare un posto senza allontanarti troppo dall'autostrada.</p></article><article class="step"><div class="step-number">03</div><div class="step-icon">🍝</div><h2 data-i18n="step3">AMPLIA LA RICERCA SE VUOI</h2><p>Non hai trovato quello che cerchi? Puoi aumentare la distanza e visualizzare altri ristoranti nelle vicinanze.</p></article><article class="step"><div class="step-number">04</div><div class="step-icon">🚗</div><h2 data-i18n="step4">MANGIA E RIPARTI</h2><p>Scegli il locale che preferisci, avvia la navigazione e quando hai finito riprendi facilmente il tuo viaggio.</p></article></section>
   <section class="range"><div class="eyebrow" data-i18n="radius">IL NOSTRO RAGGIO</div><h2 data-i18n="max1">MASSIMO 1 KM</h2><p>Cerchiamo i locali nelle vicinanze dell'uscita. Il nostro servizio non ti porta lontano dal percorso.</p></section><div class="advertising" data-i18n="ad">SPAZIO PUBBLICITARIO</div></main>
