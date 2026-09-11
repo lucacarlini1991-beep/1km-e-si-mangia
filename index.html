@@ -620,6 +620,61 @@
       }
     }
 
+
+    /* =========================
+       ICONE BRAND 3D - TUTTI I TASTI
+    ========================= */
+    .hero-buttons .btn-icon .brand-food-icon,
+    .hero-buttons .btn-icon .brand-map-icon,
+    .seo-links .seo-icon .brand-food-icon,
+    .seo-links .seo-icon .brand-map-icon {
+      width: 38px;
+      height: 38px;
+      filter: drop-shadow(0 3px 3px rgba(0,0,0,.16));
+    }
+
+    .seo-links a {
+      position: relative;
+      padding-right: 72px;
+    }
+
+    .seo-links a::after {
+      content: "";
+      position: absolute;
+      right: 26px;
+      top: 50%;
+      width: 17px;
+      height: 17px;
+      border-top: 4px solid var(--verde-scuro);
+      border-right: 4px solid var(--verde-scuro);
+      transform: translateY(-50%) rotate(45deg);
+      border-radius: 2px;
+      transition: transform .2s ease;
+    }
+
+    .seo-links a:hover::after {
+      transform: translate(3px,-50%) rotate(45deg);
+    }
+
+    @media (max-width: 750px) {
+      .seo-links a {
+        padding-right: 62px;
+      }
+      .seo-links a::after {
+        right: 22px;
+        width: 14px;
+        height: 14px;
+        border-width: 3px;
+      }
+      .hero-buttons .btn-icon .brand-food-icon,
+      .hero-buttons .btn-icon .brand-map-icon,
+      .seo-links .seo-icon .brand-food-icon,
+      .seo-links .seo-icon .brand-map-icon {
+        width: 36px;
+        height: 36px;
+      }
+    }
+
   </style>
 
   <meta name="description" content="Trova ristoranti, trattorie e pizzerie vicino alle uscite autostradali. Esci, mangia e riparti senza perdere tempo con 1 KM E SI MANGIA.">
@@ -840,9 +895,11 @@
         </a>
         <a href="uscita2.html">
           <span class="seo-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path d="M24 5 7 14v20l17 9 17-9V14L24 5Z" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
-              <path d="M7 14l17 9 17-9M24 23v20" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+            <svg class="brand-map-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M10 15 25 9l14 6 15-6v39l-15 7-14-6-15 6V15Z" fill="none" stroke="#075c3b" stroke-width="3.2" stroke-linejoin="round"/>
+              <path d="M25 9v40M39 15v40" fill="none" stroke="#075c3b" stroke-width="3.2" stroke-linejoin="round"/>
+              <path d="M39 17c-6.2 0-11.2 4.9-11.2 11 0 8.5 11.2 19.3 11.2 19.3S50.2 36.5 50.2 28C50.2 21.9 45.2 17 39 17Z" fill="#f5a719" stroke="#ffffff" stroke-width="2"/>
+              <circle cx="39" cy="28" r="3.5" fill="#ffffff"/>
             </svg>
           </span>
           <span>ESPLORA USCITE</span>
