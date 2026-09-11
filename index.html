@@ -983,6 +983,7 @@
     const menuClose = document.getElementById("menuClose");
 
     function openMenu() {
+      if (window.I18N) window.I18N.apply(window.I18N.getLang());
       menuOverlay.classList.add("open");
       menuButton.setAttribute("aria-expanded", "true");
       document.body.style.overflow = "hidden";
@@ -1043,6 +1044,6 @@
   </script>
 
 <script src="assets/menu-icons.js"></script>
-<script src="i18n.js?v=20260911-menufix4"></script>
+<script src="i18n.js?v=20260911-menufix5"></script>
 </body>
 </html>
