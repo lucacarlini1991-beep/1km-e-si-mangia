@@ -1506,6 +1506,30 @@ fetch("./uscite.json")
 
     let usciteEscluse = 0;
 
+    // Evita doppioni dello stesso casello presenti per le due carreggiate
+    // o per nodi OSM molto vicini (es. Isola del Cantone).
+    const usciteMostrate = [];
+
+    function distanzaTraCoordinate(aLat, aLon, bLat, bLon) {
+      const R = 6371000;
+      const toRad = Math.PI / 180;
+      const dLat = (bLat - aLat) * toRad;
+      const dLon = (bLon - aLon) * toRad;
+      const x = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(aLat * toRad) * Math.cos(bLat * toRad) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+    }
+
+    function chiaveNomeUscita(uscita) {
+      return String(uscita && uscita.nome || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    }
+
 
     // ---------------------------------------------
     // CREA MARKER
@@ -1522,6 +1546,30 @@ fetch("./uscite.json")
         return;
 
       }
+
+      // Lo stesso casello può comparire due volte nel database, uno per
+      // ciascun nodo/carreggiata. Sulla mappa ne mostriamo uno solo.
+      const nomeChiave = chiaveNomeUscita(uscita);
+      const doppione = usciteMostrate.some(function(esistente) {
+        return esistente.nome === nomeChiave &&
+          distanzaTraCoordinate(
+            esistente.lat,
+            esistente.lon,
+            Number(uscita.lat),
+            Number(uscita.lon)
+          ) < 1000;
+      });
+
+      if (doppione) {
+        usciteEscluse++;
+        return;
+      }
+
+      usciteMostrate.push({
+        nome: nomeChiave,
+        lat: Number(uscita.lat),
+        lon: Number(uscita.lon)
+      });
 
 
       const marker = L.marker(
