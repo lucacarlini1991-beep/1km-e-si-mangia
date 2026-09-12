@@ -20,7 +20,7 @@ fs.mkdirSync(out, { recursive: true });
 for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
   if (skip.has(entry.name)) continue;
   if (entry.isDirectory()) {
-    if (entry.name === 'assets') {
+    if (entry.name === 'assets' || entry.name === 'data') {
       fs.cpSync(path.join(root, entry.name), path.join(out, entry.name), { recursive: true });
     }
     continue;
