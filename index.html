@@ -714,10 +714,11 @@
   </script>
   <link rel="stylesheet" href="assets/menu-icons.css">
 <style>.footer-logo{display:block;width:min(210px,70vw);height:auto;margin:0 auto 18px;object-fit:contain}</style>
-<style id="site-account-style">.site-account{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:42px;padding:0 13px;border:1px solid rgba(7,92,59,.18);border-radius:12px;background:#fff;color:#075c3b;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);white-space:nowrap}.site-account:hover{transform:translateY(-1px)}@media(max-width:600px){.site-account{min-width:42px;height:42px;padding:0 10px;font-size:0}.site-account::first-letter{font-size:20px}}</style><style id="account-home-fix">
-@media (max-width:750px){
-  .site-account{display:none!important}
-}
+<style id="site-account-style">
+.site-account{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:42px;padding:0 13px;border:1px solid rgba(7,92,59,.18);border-radius:12px;background:#fff;color:#075c3b;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);white-space:nowrap;position:relative;z-index:3001;pointer-events:auto}
+.site-account:hover{transform:translateY(-1px)}
+.site-account img{width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px}
+@media(max-width:750px){.site-account{display:inline-flex!important;min-width:42px;height:42px;padding:0 10px}.site-account span{font-size:0}.site-account span:empty{display:none}}
 </style></head>
 
 <body>
@@ -1049,5 +1050,41 @@
 
 <script src="assets/menu-icons.js"></script>
 <script src="i18n.js?v=20260911-unifiedmenu1"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=1"></script><script src="auth.js?v=20260912-profile-avatar1"></script><script>(function(){function wire(){const b=document.getElementById('siteAccountButton');if(!b)return;const f=document.querySelector('.auth-fab');if(f)f.style.display='none';b.onclick=function(e){e.preventDefault();window.ReviewsAuth?.openMenu?.(b)||window.ReviewsAuth?.open?.()};const update=async()=>{if(!window.ReviewsAuth?.client)return;const {data:{user}}=await window.ReviewsAuth.client.auth.getUser();let p=null;if(user)p=await window.ReviewsAuth.getProfile?.(user);const name=p?.display_name||user?.user_metadata?.display_name||user?.email?.split('@')[0]||'ACCEDI';const av=p?.avatar_url?'<img src="'+p.avatar_url+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px" alt="">':'👤 ';b.innerHTML=user?av+'<span>'+name+'</span>':'👤 <span>ACCEDI</span>';b.title=user?'Apri menu profilo':'Accedi o registrati'};update();document.addEventListener('profile-changed',update);window.ReviewsAuth?.client?.auth.onAuthStateChange(update)};document.addEventListener('DOMContentLoaded',()=>setTimeout(function(){wire()},350));})();</script></body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=1"></script><script src="auth.js?v=20260912-profile-avatar1"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=1"></script><script src="auth.js?v=20260912-account-click-fix1"></script>
+<script>
+(function(){
+  function bindAccount(){
+    const b=document.getElementById('siteAccountButton');
+    if(!b)return;
+    const f=document.querySelector('.auth-fab');
+    if(f)f.style.display='none';
+
+    b.addEventListener('click',async function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(!window.ReviewsAuth){ setTimeout(bindAccount,300); return; }
+      const user=await window.ReviewsAuth.getUser?.();
+      await window.ReviewsAuth.open?.(user?'account':'login');
+    },true);
+
+    const update=async()=>{
+      try{
+        if(!window.ReviewsAuth?.client)return;
+        const {data:{user}}=await window.ReviewsAuth.client.auth.getUser();
+        let p=null;
+        if(user) p=await window.ReviewsAuth.getProfile?.(user);
+        const name=p?.display_name||user?.user_metadata?.display_name||user?.email?.split('@')[0]||'ACCEDI';
+        const av=p?.avatar_url?'<img src="'+p.avatar_url+'" alt="">':'👤 ';
+        b.innerHTML=user?av+'<span>'+name+'</span>':'👤 <span>ACCEDI</span>';
+        b.title=user?'Apri il mio profilo':'Accedi o registrati';
+      }catch(err){ console.warn('Account header:',err); }
+    };
+    update();
+    document.addEventListener('profile-changed',update);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bindAccount);
+  else bindAccount();
+  setTimeout(bindAccount,600);
+})();
+</script></body>
 </html>
