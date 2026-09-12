@@ -53,11 +53,11 @@
 <script src="fix-google-route-1km.js?v=20260828-google4"></script>
 <script src="script.js?v=20260827-filter3"></script>
 <script src="offline-ristoranti.js?v=20260827-offline1"></script>
-<script src="dist/script.js?v=20260911-cluster-simple-zoom"></script>
+<script src="dist/script.js?v=20260912-review-detail-fix"></script>
 <script src="gps.js?v=20260820-final"></script>
 <script src="collega-gps.js?v=20260820-final"></script>
 <script src="navigazione.js?v=20260911-ingresso"></script><script src="collega_navigazione.js"></script><script src="rientro-autostrada.js?v=20260911-ingresso"></script>
 <script src="assets/menu-icons.js"></script>
 <script src="i18n.js?v=20260911-unifiedmenu1"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=1"></script><script src="auth.js?v=1"></script><script src="restaurant-reviews.js?v=3"></script><script>(function(){function wire(){const b=document.getElementById('siteAccountButton');if(!b)return;b.onclick=function(){document.querySelector('.auth-fab')?.click()};const f=document.querySelector('.auth-fab');if(f)f.style.display='none';const update=async()=>{if(!window.ReviewsAuth?.client)return;const {data:{user}}=await window.ReviewsAuth.client.auth.getUser();b.innerHTML=user?'👤 <span>'+((user.user_metadata?.display_name||user.email||'Profilo').split('@')[0])+'</span>':'👤 <span>ACCEDI</span>';b.title=user?'Account / Profilo':'Accedi o registrati'};update();window.ReviewsAuth?.client?.auth.onAuthStateChange(update)};document.addEventListener('DOMContentLoaded',()=>setTimeout(wire,350));})();</script></body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260912-review-detail-fix"></script><script src="auth.js?v=20260912-review-detail-fix"></script><script src="restaurant-reviews.js?v=20260912-review-detail-fix"></script><script>(function(){function wire(){const b=document.getElementById('siteAccountButton');if(!b)return;b.onclick=function(){document.querySelector('.auth-fab')?.click()};const f=document.querySelector('.auth-fab');if(f)f.style.display='none';const update=async()=>{if(!window.ReviewsAuth?.client)return;const {data:{user}}=await window.ReviewsAuth.client.auth.getUser();b.innerHTML=user?'👤 <span>'+((user.user_metadata?.display_name||user.email||'Profilo').split('@')[0])+'</span>':'👤 <span>ACCEDI</span>';b.title=user?'Account / Profilo':'Accedi o registrati'};update();window.ReviewsAuth?.client?.auth.onAuthStateChange(update)};document.addEventListener('DOMContentLoaded',()=>setTimeout(wire,350));})();</script></body>
 </html>
