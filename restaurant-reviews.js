@@ -89,12 +89,26 @@
     return list.find(x=>pid(x)===String(id));
   }
 
+  // Fallback robusto: la lista dei ristoranti può essere gestita dallo script principale
+  // in uno scope non globale. In quel caso ricaviamo ID e nome direttamente dalla scheda.
+  function restaurantFromElement(el){
+    const card=el?.closest?.('.rr-card-clickable') ||
+      el?.closest?.('[data-recensione-id]')?.parentElement ||
+      el?.closest?.('[data-restaurant-id]') || el;
+    const reviewEl=card?.matches?.('[data-recensione-id]') ? card : card?.querySelector?.('[data-recensione-id]');
+    const id=String(card?.dataset?.restaurantId || el?.dataset?.restaurantId || reviewEl?.dataset?.recensioneId || '');
+    if(!id) return null;
+    const nameEl=card?.querySelector?.('strong,h3,h2');
+    const nome=(nameEl?.textContent||'Ristorante').trim().replace(/^\\d+\\.\\s*/,'');
+    return {id,nome};
+  }
+
   document.addEventListener('click',function(e){
     const review=e.target.closest('[data-recensione-id]');
     if(review){
       e.preventDefault();e.stopImmediatePropagation();
-      const r=findRestaurant(review.dataset.recensioneId);
-      if(r) openForm(r,null);
+      const r=findRestaurant(review.dataset.recensioneId) || restaurantFromElement(review);
+      if(r) openDetail(r);
       return;
     }
     const card=e.target.closest('.rr-card-clickable');
@@ -104,7 +118,7 @@
       const interactive=e.target.closest('button,a,input,textarea,select,[data-recensione-id],[data-naviga-ristorante],[data-ristorante-index]');
       if(!interactive){
         e.preventDefault();e.stopImmediatePropagation();
-        const r=findRestaurant(card.dataset.restaurantId);
+        const r=findRestaurant(card.dataset.restaurantId) || restaurantFromElement(card);
         if(r) openDetail(r);
         return;
       }
@@ -112,7 +126,7 @@
     const name=e.target.closest('.rr-name-link');
     if(name){
       e.preventDefault();e.stopImmediatePropagation();
-      const r=findRestaurant(name.dataset.restaurantId);
+      const r=findRestaurant(name.dataset.restaurantId) || restaurantFromElement(name);
       if(r) openDetail(r);
     }
   },true);
@@ -126,7 +140,7 @@
     // (database/Google). Usiamo quindi il pulsante recensione come ancora certa.
     const reviewButtons=[...panel.querySelectorAll('[data-recensione-id]')];
     for(const rb of reviewButtons){
-      const r=list.find(x=>pid(x)===String(rb.dataset.recensioneId));
+      const r=list.find(x=>pid(x)===String(rb.dataset.recensioneId)) || restaurantFromElement(rb);
       if(!r) continue;
 
       let card=rb.parentElement;
@@ -169,7 +183,7 @@
       // Il pulsante resta utile, ma comunica chiaramente che apre anche le esperienze.
       if(!rb.dataset.rrDecorated){
         rb.dataset.rrDecorated='1';
-        rb.textContent='⭐ RECENSISCI / LEGGI ESPERIENZE';
+        rb.textContent='⭐ RECENSISCI / LEGGI RECENSIONI';
       }
     }
   }
@@ -180,7 +194,7 @@
 
   const st=document.createElement('style');
   st.textContent=`
-    .rr-card-clickable{cursor:pointer}.rr-card-clickable:hover{box-shadow:0 4px 14px rgba(20,61,44,.14)}
+    .rr-card-clickable{cursor:pointer;position:relative}.rr-card-clickable:hover{box-shadow:0 4px 14px rgba(20,61,44,.14);transform:translateY(-1px)}
     .rr-name-link{cursor:pointer;color:#143d2c}.rr-name-link:hover{text-decoration:underline}
     .rr-preview{font-size:12px;margin-top:4px;color:#65736e}.rr-gold{color:#f5a719;letter-spacing:1px}.rr-muted{color:#9aa7a2}
     .rr-overlay,.urr-bg{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:30000}
