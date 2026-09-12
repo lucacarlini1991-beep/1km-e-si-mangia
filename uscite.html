@@ -34,6 +34,26 @@
   <meta name="twitter:description" content="Trova ristoranti, trattorie e pizzerie vicino alla tua uscita autostradale. Mangia e riparti senza perdere tempo.">
   <link rel="stylesheet" href="assets/menu-icons.css">
 <style>.footer-logo{display:block;width:min(210px,70vw);height:auto;margin:0 auto 18px;object-fit:contain}</style>
+<style id="site-account-mobile-fix">
+@media(max-width:750px){
+  .topbar{display:flex!important;align-items:center!important;gap:10px!important}
+  #siteAccountButton.site-account,.site-account{
+    display:inline-flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+    position:relative!important;
+    z-index:3000!important;
+    min-width:78px!important;
+    height:42px!important;
+    padding:0 10px!important;
+    font-size:13px!important;
+    flex:0 0 auto!important;
+    margin-left:auto!important;
+  }
+  .site-account span{display:inline!important;font-size:13px!important}
+  .menu-button{flex:0 0 42px!important;margin-left:0!important}
+}
+</style>
 <style id="site-account-style">.site-account{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:42px;padding:0 13px;border:1px solid rgba(7,92,59,.18);border-radius:12px;background:#fff;color:#075c3b;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);white-space:nowrap}.site-account:hover{transform:translateY(-1px)}@media(max-width:600px){.site-account{min-width:42px;height:42px;padding:0 10px;font-size:0}.site-account::first-letter{font-size:20px}}</style></head>
 <body>
 <header class="topbar"><a href="index.html" class="logo-link" aria-label="1 KM E SI MANGIA"><img src="assets/logo-definitivo.png?v=20260819" alt="1 KM E SI MANGIA" class="site-logo"></a><button type="button" class="site-account" id="siteAccountButton" aria-label="Accedi">👤 <span>ACCEDI</span></button><button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button></header>
