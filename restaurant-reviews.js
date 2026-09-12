@@ -115,32 +115,56 @@
     if(name){e.preventDefault();e.stopImmediatePropagation();const r=findRestaurant(name.dataset.restaurantId)||restaurantFromElement(name);if(r)openDetail(r);}
   },true);
 
+  let decorating=false;
   async function decorate(){
+    if(decorating) return;
     const panel=document.getElementById('ristorantiMapPanel');if(!panel)return;
-    const list=window._ristorantiVisualizzati||window._ristorantiCorrenti||[];
-    for(const rb of [...panel.querySelectorAll('[data-recensione-id]')]){
-      const rawId=String(rb.dataset.recensioneId||rb.dataset.restaurantId||'');
-      let r=list.find(x=>pid(x)===rawId)||restaurantFromElement(rb);
-      let card=rb.parentElement;
-      while(card&&card!==panel){
-        if(card.querySelectorAll('[data-recensione-id]').length===1&&card.querySelector('strong')&&(card.querySelector('[data-ristorante-index],[data-naviga-ristorante]')||card.parentElement===panel))break;
-        card=card.parentElement;
+    decorating=true;
+    try{
+      const list=window._ristorantiVisualizzati||window._ristorantiCorrenti||[];
+      for(const rb of [...panel.querySelectorAll('[data-recensione-id]')]){
+        /* IMPORTANTE: il MutationObserver richiama decorate anche per le nostre modifiche.
+           Una scheda già preparata NON deve rilanciare altre richieste a Supabase. */
+        if(rb.dataset.rrReady==='1') continue;
+        rb.dataset.rrReady='1';
+
+        const rawId=String(rb.dataset.recensioneId||rb.dataset.restaurantId||'');
+        let r=list.find(x=>pid(x)===rawId)||restaurantFromElement(rb);
+        let card=rb.parentElement;
+        while(card&&card!==panel){
+          if(card.querySelectorAll('[data-recensione-id]').length===1&&card.querySelector('strong')&&(card.querySelector('[data-ristorante-index],[data-naviga-ristorante]')||card.parentElement===panel))break;
+          card=card.parentElement;
+        }
+        if(!card||card===panel)card=rb.parentElement;
+        const title=[...card.querySelectorAll('strong,h3,h2')][0];
+        if(!r)r={id:rawId||('card-'+Math.random().toString(36).slice(2)),nome:(title?.textContent||'Ristorante').trim().replace(/^\d+\.\s*/,'')};
+        card.classList.add('rr-card-clickable');card.dataset.restaurantId=pid(r);card.title='Apri il ristorante e leggi le recensioni';
+        if(title){title.classList.add('rr-name-link');title.dataset.restaurantId=pid(r);}
+
+        let p=card.querySelector('.rr-preview[data-review-place="'+CSS.escape(pid(r))+'"]');
+        if(!p){p=document.createElement('div');p.className='rr-preview';p.dataset.reviewPlace=pid(r);(title||rb).insertAdjacentElement('afterend',p);}
+        p.textContent='Caricamento valutazione...';
+
+        load(r).then(result=>{
+          const sum=summary(result.rows);
+          if(result.error){
+            console.warn('Recensioni non disponibili per',pid(r),result.error);
+            p.innerHTML='<span class="rr-error">⚠ Recensioni non disponibili</span>';
+            return;
+          }
+          p.innerHTML=sum.count
+            ? '<span class="rr-gold">'+stars(sum.avg)+'</span> <span><b>'+sum.avg.toFixed(1)+'/5</b> · '+sum.count+' recension'+(sum.count===1?'e':'i')+'</span>'
+            : '<span class="rr-muted">☆☆☆☆☆ · Ancora nessuna recensione</span>';
+        });
+
+        if(!rb.dataset.rrDecorated){rb.dataset.rrDecorated='1';rb.textContent='⭐ RECENSISCI QUESTO RISTORANTE';}
+        let db=card.querySelector('[data-restaurant-detail-id="'+CSS.escape(pid(r))+'"]');
+        if(!db){db=document.createElement('button');db.type='button';db.className='rr-detail-open-btn';db.dataset.restaurantDetailId=pid(r);db.innerHTML='📋 SCHEDA RISTORANTE <span>›</span>';rb.insertAdjacentElement('afterend',db);}
       }
-      if(!card||card===panel)card=rb.parentElement;
-      const title=[...card.querySelectorAll('strong,h3,h2')][0];
-      if(!r)r={id:rawId||('card-'+Math.random().toString(36).slice(2)),nome:(title?.textContent||'Ristorante').trim().replace(/^\d+\.\s*/,'')};
-      card.classList.add('rr-card-clickable');card.dataset.restaurantId=pid(r);card.title='Apri il ristorante e leggi le recensioni';
-      if(title){title.classList.add('rr-name-link');title.dataset.restaurantId=pid(r);}
-      let p=card.querySelector('.rr-preview[data-review-place="'+CSS.escape(pid(r))+'"]');
-      if(!p){p=document.createElement('div');p.className='rr-preview';p.dataset.reviewPlace=pid(r);(title||rb).insertAdjacentElement('afterend',p);}
-      p.textContent='Caricamento valutazione...';
-      load(r).then(result=>{const s=summary(result.rows);p.innerHTML=result.error?'<span class="rr-error">⚠ Recensioni non disponibili</span>':s.count?'<span class="rr-gold">'+stars(s.avg)+'</span> <span><b>'+s.avg.toFixed(1)+'/5</b> · '+s.count+' recension'+(s.count===1?'e':'i')+'</span>':'<span class="rr-muted">☆☆☆☆☆ · Ancora nessuna recensione</span>';});
-      if(!rb.dataset.rrDecorated){rb.dataset.rrDecorated='1';rb.textContent='⭐ RECENSISCI QUESTO RISTORANTE';}
-      let db=card.querySelector('[data-restaurant-detail-id="'+CSS.escape(pid(r))+'"]');
-      if(!db){db=document.createElement('button');db.type='button';db.className='rr-detail-open-btn';db.dataset.restaurantDetailId=pid(r);db.innerHTML='📋 SCHEDA RISTORANTE <span>›</span>';rb.insertAdjacentElement('afterend',db);}
+    } finally {
+      decorating=false;
     }
   }
-
   const observer=new MutationObserver(()=>setTimeout(decorate,0));observer.observe(document.documentElement,{childList:true,subtree:true});
   document.addEventListener('DOMContentLoaded',()=>setTimeout(decorate,400));
   document.addEventListener('reviews-auth-changed',()=>{setTimeout(decorate,50);});
