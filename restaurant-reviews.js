@@ -148,8 +148,10 @@
     // (database/Google). Usiamo quindi il pulsante recensione come ancora certa.
     const reviewButtons=[...panel.querySelectorAll('[data-recensione-id]')];
     for(const rb of reviewButtons){
-      const r=list.find(x=>pid(x)===String(rb.dataset.recensioneId)) || restaurantFromElement(rb);
-      if(!r) continue;
+      // La lista può essere rigenerata da dist/script.js senza esporre gli oggetti
+      // nel window globale. NON blocchiamo più la decorazione se non troviamo subito r.
+      const rawId=String(rb.dataset.recensioneId || rb.dataset.restaurantId || '');
+      let r=list.find(x=>pid(x)===rawId) || restaurantFromElement(rb);
 
       let card=rb.parentElement;
       while(card && card!==panel){
@@ -161,24 +163,34 @@
       }
       if(!card || card===panel) card=rb.parentElement;
 
-      const candidates=[...card.querySelectorAll('strong')];
-      const name=candidates.find(x=>x.textContent.toLowerCase().includes(String(r.nome||'').toLowerCase()))||candidates[0];
-      if(!name) continue;
+      // Ricostruzione universale dell'oggetto ristorante direttamente dalla scheda.
+      // Serve soprattutto alla lista generata dinamicamente da dist/script.js.
+      const candidates=[...card.querySelectorAll('strong,h3,h2')];
+      const titleEl=candidates[0];
+      if(!r){
+        r={
+          id: rawId || ('card-'+Math.random().toString(36).slice(2)),
+          nome:(titleEl?.textContent||'Ristorante').trim().replace(/^\\d+\\.\\s*/,'')
+        };
+      }
+      const name=candidates.find(x=>x.textContent.toLowerCase().includes(String(r.nome||'').toLowerCase()))||titleEl;
 
       // Rende cliccabile tutta la scheda del ristorante, non solo il nome.
       card.classList.add('rr-card-clickable');
       card.dataset.restaurantId=pid(r);
       card.title='Apri il ristorante e leggi le recensioni';
-      name.classList.add('rr-name-link');
-      name.dataset.restaurantId=pid(r);
-      name.title='Apri scheda e leggi le recensioni';
+      if(name){
+        name.classList.add('rr-name-link');
+        name.dataset.restaurantId=pid(r);
+        name.title='Apri scheda e leggi le recensioni';
+      }
 
       let p=card.querySelector('.rr-preview[data-review-place="'+CSS.escape(pid(r))+'"]');
       if(!p){
         p=document.createElement('div');
         p.className='rr-preview';
         p.dataset.reviewPlace=pid(r);
-        name.insertAdjacentElement('afterend',p);
+        (name || rb).insertAdjacentElement('afterend',p);
       }
       p.textContent='Caricamento valutazione...';
       load(r).then(rows=>{
