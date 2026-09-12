@@ -1,6 +1,10 @@
 (function(){
-  const cfg=window.SUPABASE_CONFIG;if(!cfg||!window.supabase)return;
-  const s=window.supabase.createClient(cfg.url,cfg.key);
+  const cfg=window.SUPABASE_CONFIG;
+  if(!cfg||!window.supabase)return;
+
+  const s=window.supabase.createClient(cfg.url,cfg.key,{
+    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+  });
   const redirectUrl=window.location.origin+window.location.pathname;
 
   const style=document.createElement('style');
@@ -16,7 +20,10 @@
   document.head.appendChild(style);
 
   const fab=document.createElement('button');
-  fab.className='auth-fab';fab.type='button';document.body.appendChild(fab);
+  fab.className='auth-fab';
+  fab.type='button';
+  fab.setAttribute('aria-label','Accedi o apri il tuo account');
+  document.body.appendChild(fab);
 
   const modal=document.createElement('div');
   modal.className='auth-modal';
@@ -36,10 +43,16 @@
   const msg=t=>q('#authMsg').textContent=t||'';
   const fields=()=>q('#authFields');
   const esc=v=>String(v||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function input(id,type,placeholder,value=''){
+    return `<input id="${id}" type="${type}" placeholder="${placeholder}" value="${esc(value)}" autocomplete="${type==='password'?'new-password':'on'}">`;
+  }
 
-  function input(id,type,placeholder,value=''){return `<input id="${id}" type="${type}" placeholder="${placeholder}" value="${esc(value)}" autocomplete="${type==='password'?'new-password':'on'}">`}
-
-  async function currentUser(){const {data:{user}}=await s.auth.getUser();return user}
+  async function currentUser(){
+    const {data:{session}}=await s.auth.getSession();
+    if(session&&session.user)return session.user;
+    const {data:{user}}=await s.auth.getUser();
+    return user||null;
+  }
 
   async function refresh(){
     const user=await currentUser();
@@ -52,46 +65,53 @@
     msg('');
     const user=await currentUser();
     const title=q('#authTitle'),text=q('#authText'),submit=q('#authSubmit'),sw=q('#authSwitch'),forgot=q('#authForgot');
+
     if(mode==='account'&&user){
       title.textContent='Il mio account';
-      text.textContent='Gestisci il tuo profilo e le tue recensioni.';
+      text.textContent='Sei già autenticato. Qui puoi gestire il tuo profilo.';
       fields().innerHTML=input('authName','text','Nome visualizzato',user.user_metadata?.display_name||'');
       submit.textContent='SALVA NOME';submit.style.display='block';
       sw.textContent='CAMBIA PASSWORD';sw.style.display='block';
       forgot.style.display='none';
+      logout.style.display='block';
       return;
     }
     if(mode==='register'){
       title.textContent='Registrati';
       text.textContent='Crea il tuo account per lasciare recensioni.';
       fields().innerHTML=input('authName','text','Nome visualizzato')+input('authEmail','email','Email')+input('authPassword','password','Password (min. 6 caratteri)');
-      submit.textContent='REGISTRATI';sw.textContent='HO GIÀ UN ACCOUNT';submit.style.display=sw.style.display='block';forgot.style.display='none';return;
+      submit.textContent='REGISTRATI';sw.textContent='HO GIÀ UN ACCOUNT';
+      submit.style.display=sw.style.display='block';forgot.style.display='none';logout.style.display='none';return;
     }
     if(mode==='forgot'){
       title.textContent='Recupera password';
       text.textContent='Inserisci la tua email: ti invieremo un link per scegliere una nuova password.';
       fields().innerHTML=input('authEmail','email','Email');
-      submit.textContent='INVIA EMAIL';sw.textContent='TORNA ALL’ACCESSO';submit.style.display=sw.style.display='block';forgot.style.display='none';return;
+      submit.textContent='INVIA EMAIL';sw.textContent='TORNA ALL’ACCESSO';
+      submit.style.display=sw.style.display='block';forgot.style.display='none';logout.style.display='none';return;
     }
     if(mode==='reset'){
       title.textContent='Nuova password';
       text.textContent='Scegli una nuova password per il tuo account.';
       fields().innerHTML=input('authPassword','password','Nuova password (min. 6 caratteri)');
-      submit.textContent='SALVA NUOVA PASSWORD';sw.style.display='none';forgot.style.display='none';return;
+      submit.textContent='SALVA NUOVA PASSWORD';sw.style.display='none';forgot.style.display='none';logout.style.display='none';return;
     }
     title.textContent='Accedi';text.textContent='Accedi per lasciare recensioni.';
     fields().innerHTML=input('authEmail','email','Email')+input('authPassword','password','Password');
-    submit.textContent='ACCEDI';sw.textContent='REGISTRATI';submit.style.display=sw.style.display=forgot.style.display='block';
+    submit.textContent='ACCEDI';sw.textContent='REGISTRATI';
+    submit.style.display=sw.style.display=forgot.style.display='block';logout.style.display='none';
   }
 
   async function open(){
+    msg('');
     const user=await currentUser();
     mode=user?'account':'login';
-    modal.classList.add('open');await render();
+    modal.classList.add('open');
+    await render();
   }
   function close(){modal.classList.remove('open');msg('')}
 
-  fab.onclick=open;
+  fab.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await open()});
   q('.auth-close').onclick=close;
   modal.addEventListener('click',e=>{if(e.target===modal)close()});
 
@@ -138,7 +158,7 @@
       }
       if(mode==='account'){
         if(name.length<2){msg('Inserisci un nome valido.');return}
-        let r=await s.auth.updateUser({data:{display_name:name}});
+        const r=await s.auth.updateUser({data:{display_name:name}});
         if(r.error)throw r.error;
         const user=await currentUser();
         if(user)await s.from('profiles').upsert({id:user.id,display_name:name});
@@ -150,19 +170,22 @@
   const logout=document.createElement('button');
   logout.type='button';logout.className='danger';logout.id='authLogout';logout.textContent='ESCI DALL’ACCOUNT';
   q('.auth-box').appendChild(logout);
-  logout.onclick=async()=>{await s.auth.signOut();msg('Sei uscito dal tuo account.');mode='login';await refresh();await render()};
-  const oldRender=render;
-  render=async function(){await oldRender();logout.style.display=mode==='account'?'block':'none'};
+  logout.onclick=async()=>{await s.auth.signOut();mode='login';await refresh();await render();msg('Sei uscito dal tuo account.')};
 
-  s.auth.onAuthStateChange(async(event)=>{
+  s.auth.onAuthStateChange(async(event,session)=>{
     await refresh();
-    if(event==='PASSWORD_RECOVERY'){mode='reset';modal.classList.add('open');await render()}
+    if(event==='PASSWORD_RECOVERY'){
+      mode='reset';modal.classList.add('open');await render();
+    }
+    if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session?.user&&modal.classList.contains('open')){
+      mode='account';await render();
+    }
   });
-  refresh();
 
+  refresh();
   if(new URLSearchParams(window.location.search).get('resetPassword')==='1'){
     mode='reset';modal.classList.add('open');render();
   }
 
-  window.ReviewsAuth={client:s,open,refresh};
+  window.ReviewsAuth={client:s,open,refresh,getUser:currentUser};
 })();
