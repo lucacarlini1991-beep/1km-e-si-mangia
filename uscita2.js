@@ -2,7 +2,7 @@
 const exits=window.USCITE2||[];
 const list=document.querySelector('#exitList'),chooser=document.querySelector('#chooser'),detail=document.querySelector('#detail'),input=document.querySelector('#exitSearch'),suggestions=document.querySelector('#suggestions'),clear=document.querySelector('#clearSearch'),locate=document.querySelector('#locateMe'),locationStatus=document.querySelector('#locationStatus'),chooserTitle=document.querySelector('#chooserTitle'),tabsEl=document.querySelector('#tabs'),roadName=document.querySelector('#roadName'),exitName=document.querySelector('#exitName'),exitDescription=document.querySelector('#exitDescription'),mapLink=document.querySelector('#mapLink');
 let current=null,shownExits=[],distanceLimit=5;
-const tabs={parking:{icon:'🅿️',title:'Parcheggi'},camper:{icon:'🚐',title:'Camper'},places:{icon:'✨',title:'Cosa offre l’uscita'}};
+const tabs={places:{icon:'✨',title:'Cosa offre l’uscita'},parking:{icon:'🅿️',title:'Parcheggi'},camper:{icon:'🚐',title:'Camper'}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const km=(a,b,c,d)=>{const R=6371,q=x=>x*Math.PI/180,h=Math.sin(q(c-a)/2)**2+Math.cos(q(a))*Math.cos(q(c))*Math.sin(q(d-b)/2)**2;return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))};
 
@@ -16,9 +16,9 @@ function openExit(id){
   suggestions.innerHTML='';input.value='';clear.hidden=true;
   chooser.classList.add('hidden');detail.classList.remove('hidden');
   roadName.textContent=current.road;exitName.textContent=current.name;
-  exitDescription.textContent='Scopri servizi, parcheggi, aree camper e cosa offre questa uscita nei dintorni.';
+  exitDescription.textContent='Scopri prima cosa vedere e visitare, poi parcheggi e aree camper nei dintorni dell’uscita.';
   mapLink.href='https://www.google.com/maps/search/?api=1&query='+current.lat+','+current.lng;
-  renderTabs('parking');window.scrollTo({top:0,behavior:'smooth'});
+  renderTabs('places');window.scrollTo({top:0,behavior:'smooth'});
 }
 function renderDistance(){
   let b=document.querySelector('#distanceFilter');
