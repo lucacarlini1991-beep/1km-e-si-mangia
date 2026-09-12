@@ -104,6 +104,14 @@
   }
 
   document.addEventListener('click',function(e){
+    // Pulsante esplicito: apre SEMPRE la scheda del ristorante.
+    const detail=e.target.closest('[data-restaurant-detail-id]');
+    if(detail){
+      e.preventDefault();e.stopImmediatePropagation();
+      const r=findRestaurant(detail.dataset.restaurantDetailId) || restaurantFromElement(detail);
+      if(r) openDetail(r);
+      return;
+    }
     const review=e.target.closest('[data-recensione-id]');
     if(review){
       e.preventDefault();e.stopImmediatePropagation();
@@ -180,10 +188,22 @@
           : '<span class="rr-muted">☆☆☆☆☆ · Ancora nessuna recensione</span>';
       });
 
-      // Il pulsante resta utile, ma comunica chiaramente che apre anche le esperienze.
+      // Pulsante recensioni originale.
       if(!rb.dataset.rrDecorated){
         rb.dataset.rrDecorated='1';
-        rb.textContent='⭐ RECENSISCI / LEGGI RECENSIONI';
+        rb.textContent='⭐ RECENSISCI QUESTO RISTORANTE';
+      }
+
+      // Quarto pulsante esplicito: non dipende dal click sulla scheda.
+      // Così da mobile c'è sempre un'azione chiara per aprire e leggere le recensioni.
+      let detailBtn=card.querySelector('[data-restaurant-detail-id="'+CSS.escape(pid(r))+'"]');
+      if(!detailBtn){
+        detailBtn=document.createElement('button');
+        detailBtn.type='button';
+        detailBtn.className='rr-detail-open-btn';
+        detailBtn.dataset.restaurantDetailId=pid(r);
+        detailBtn.innerHTML='📋 SCHEDA RISTORANTE <span>›</span>';
+        rb.insertAdjacentElement('afterend',detailBtn);
       }
     }
   }
@@ -197,6 +217,9 @@
     .rr-card-clickable{cursor:pointer;position:relative}.rr-card-clickable:hover{box-shadow:0 4px 14px rgba(20,61,44,.14);transform:translateY(-1px)}
     .rr-name-link{cursor:pointer;color:#143d2c}.rr-name-link:hover{text-decoration:underline}
     .rr-preview{font-size:12px;margin-top:4px;color:#65736e}.rr-gold{color:#f5a719;letter-spacing:1px}.rr-muted{color:#9aa7a2}
+    .rr-detail-open-btn{width:100%;min-height:42px;margin-top:8px;border:1px solid #1d6048;background:#fff;color:#174b39;border-radius:14px;font-weight:900;font-size:14px;letter-spacing:.4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+    .rr-detail-open-btn span{font-size:24px;line-height:1}
+    .rr-detail-open-btn:active{transform:scale(.99);background:#f3f8f5}
     .rr-overlay,.urr-bg{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:30000}
     .rr-detail,.urr-box{position:fixed;z-index:30001;left:50%;top:50%;transform:translate(-50%,-50%);width:min(540px,92vw);max-height:86vh;overflow:auto;background:#fff;padding:24px;border-radius:20px;color:#143d2c;box-shadow:0 20px 70px rgba(0,0,0,.35)}
     .rr-close,.urr-x{position:absolute;right:16px;top:16px;border:0;background:#eef1ef;border-radius:50%;width:38px;height:38px;font-size:24px;cursor:pointer}
