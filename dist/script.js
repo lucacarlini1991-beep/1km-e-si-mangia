@@ -510,7 +510,7 @@ function mostraRistorantiDatabase(uscita, ristorantiOverride) {
         : "🅿️ Parcheggio da verificare";
 
       return `
-        <div style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px">
+        <div class="rr-card-clickable" data-restaurant-id="${escapeHtml(ristorante.id || ristorante.osm_id || ristorante.place_id || ristorante.nome)}" title="Apri il ristorante e leggi le recensioni" style="border:1px solid #e5e5e5;border-radius:14px;padding:12px;margin-top:10px;cursor:pointer">
           <div style="display:flex;justify-content:space-between;gap:10px">
             <div>
               <strong>${index + 1}. ${nome}</strong>
