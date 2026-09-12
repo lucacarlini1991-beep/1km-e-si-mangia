@@ -159,7 +159,31 @@
 
         if(!rb.dataset.rrDecorated){rb.dataset.rrDecorated='1';rb.textContent='⭐ RECENSISCI QUESTO RISTORANTE';}
         let db=card.querySelector('[data-restaurant-detail-id="'+CSS.escape(pid(r))+'"]');
-        if(!db){db=document.createElement('button');db.type='button';db.className='rr-detail-open-btn';db.dataset.restaurantDetailId=pid(r);db.innerHTML='📋 SCHEDA RISTORANTE <span>›</span>';rb.insertAdjacentElement('afterend',db);}
+        if(!db){
+          db=document.createElement('button');
+          db.type='button';
+          db.className='rr-detail-open-btn';
+          db.dataset.restaurantDetailId=pid(r);
+          db.innerHTML='📋 SCHEDA RISTORANTE <span>›</span>';
+          rb.insertAdjacentElement('afterend',db);
+        }
+        /* Collego direttamente il pulsante: non dipendiamo più dalla delega click
+           della pagina, che può essere intercettata dal pannello ristoranti. */
+        if(db.dataset.rrBound!=='1'){
+          db.dataset.rrBound='1';
+          db.addEventListener('click',function(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+            ev.stopImmediatePropagation();
+            const rr=list.find(x=>pid(x)===db.dataset.restaurantDetailId)||r||restaurantFromElement(db);
+            if(rr) openDetail(rr).catch(err=>console.error('Errore apertura scheda ristorante',err));
+          },true);
+          db.addEventListener('touchend',function(ev){
+            ev.preventDefault();
+            const rr=list.find(x=>pid(x)===db.dataset.restaurantDetailId)||r||restaurantFromElement(db);
+            if(rr) openDetail(rr).catch(err=>console.error('Errore apertura scheda ristorante',err));
+          },{passive:false});
+        }
       }
     } finally {
       decorating=false;
