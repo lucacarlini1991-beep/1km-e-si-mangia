@@ -717,20 +717,6 @@
 <style id="site-account-style">.site-account{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:42px;padding:0 13px;border:1px solid rgba(7,92,59,.18);border-radius:12px;background:#fff;color:#075c3b;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);white-space:nowrap}.site-account:hover{transform:translateY(-1px)}@media(max-width:600px){.site-account{min-width:42px;height:42px;padding:0 10px;font-size:0}.site-account::first-letter{font-size:20px}}</style><style id="account-home-fix">
 @media (max-width:750px){
   .site-account{display:none!important}
-  .seo-links a[href="come-funziona.html"]{position:relative;padding-right:150px}
-  .auth-fab{
-    position:absolute!important;
-    right:16px!important;
-    top:50%!important;
-    bottom:auto!important;
-    transform:translateY(-50%)!important;
-    z-index:20!important;
-    padding:10px 15px!important;
-    min-height:48px!important;
-    font-size:15px!important;
-    border-radius:15px!important;
-    box-shadow:0 6px 16px rgba(0,0,0,.18)!important;
-  }
 }
 </style></head>
 
@@ -1063,5 +1049,5 @@
 
 <script src="assets/menu-icons.js"></script>
 <script src="i18n.js?v=20260911-unifiedmenu1"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=1"></script><script src="auth.js?v=20260911-account1"></script><script>(function(){function wire(){const b=document.getElementById('siteAccountButton');if(!b)return;b.onclick=function(){document.querySelector('.auth-fab')?.click()};const f=document.querySelector('.auth-fab');if(f)f.style.display='none';const update=async()=>{if(!window.ReviewsAuth?.client)return;const {data:{user}}=await window.ReviewsAuth.client.auth.getUser();b.innerHTML=user?'👤 <span>'+((user.user_metadata?.display_name||user.email||'Profilo').split('@')[0])+'</span>':'👤 <span>ACCEDI</span>';b.title=user?'Account / Profilo':'Accedi o registrati'};update();window.ReviewsAuth?.client?.auth.onAuthStateChange(update)};document.addEventListener('DOMContentLoaded',()=>setTimeout(function(){wire();const fab=document.querySelector('.auth-fab');const card=document.querySelector('.seo-links a[href="come-funziona.html"]');if(fab&&card&&!card.contains(fab)){card.appendChild(fab);fab.addEventListener('click',function(e){e.preventDefault();e.stopPropagation()})}},350));})();</script></body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=1"></script><script src="auth.js?v=20260911-account1"></script><script>(function(){function wire(){const b=document.getElementById('siteAccountButton');if(!b)return;b.onclick=function(e){e.preventDefault();window.ReviewsAuth?.open?.()};const f=document.querySelector('.auth-fab');if(f)f.style.display='none';const update=async()=>{if(!window.ReviewsAuth?.client)return;const {data:{user}}=await window.ReviewsAuth.client.auth.getUser();b.innerHTML=user?'👤 <span>'+((user.user_metadata?.display_name||user.email||'Profilo').split('@')[0])+'</span>':'👤 <span>ACCEDI</span>';b.title=user?'Account / Profilo':'Accedi o registrati'};update();window.ReviewsAuth?.client?.auth.onAuthStateChange(update)};document.addEventListener('DOMContentLoaded',()=>setTimeout(function(){wire()},350));})();</script></body>
 </html>
