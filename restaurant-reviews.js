@@ -97,6 +97,18 @@
       if(r) openForm(r,null);
       return;
     }
+    const card=e.target.closest('.rr-card-clickable');
+    if(card){
+      // I pulsanti interni mantengono la loro funzione: cliccando il resto della scheda
+      // si apre direttamente la pagina del ristorante con tutte le recensioni.
+      const interactive=e.target.closest('button,a,input,textarea,select,[data-recensione-id],[data-naviga-ristorante],[data-ristorante-index]');
+      if(!interactive){
+        e.preventDefault();e.stopImmediatePropagation();
+        const r=findRestaurant(card.dataset.restaurantId);
+        if(r) openDetail(r);
+        return;
+      }
+    }
     const name=e.target.closest('.rr-name-link');
     if(name){
       e.preventDefault();e.stopImmediatePropagation();
@@ -131,6 +143,10 @@
       const name=candidates.find(x=>x.textContent.toLowerCase().includes(String(r.nome||'').toLowerCase()))||candidates[0];
       if(!name) continue;
 
+      // Rende cliccabile tutta la scheda del ristorante, non solo il nome.
+      card.classList.add('rr-card-clickable');
+      card.dataset.restaurantId=pid(r);
+      card.title='Apri il ristorante e leggi le recensioni';
       name.classList.add('rr-name-link');
       name.dataset.restaurantId=pid(r);
       name.title='Apri scheda e leggi le recensioni';
@@ -164,6 +180,7 @@
 
   const st=document.createElement('style');
   st.textContent=`
+    .rr-card-clickable{cursor:pointer}.rr-card-clickable:hover{box-shadow:0 4px 14px rgba(20,61,44,.14)}
     .rr-name-link{cursor:pointer;color:#143d2c}.rr-name-link:hover{text-decoration:underline}
     .rr-preview{font-size:12px;margin-top:4px;color:#65736e}.rr-gold{color:#f5a719;letter-spacing:1px}.rr-muted{color:#9aa7a2}
     .rr-overlay,.urr-bg{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:30000}
