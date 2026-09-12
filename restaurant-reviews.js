@@ -27,13 +27,21 @@
       const {data,error}=await withTimeout(q,8000);
       if(error) throw error;
       const rows=Array.isArray(data)?data:[];
+      /* Recuperiamo prima l'utente attualmente autenticato.
+         Se una recensione è sua, il nome mostrato DEVE essere quello del suo
+         account corrente (non un vecchio valore rimasto in profiles). */
+      const me=await viewer();
       const ids=[...new Set(rows.map(x=>x.user_id).filter(Boolean))];
       const names={};
       if(ids.length){
         const {data:profiles,error:pe}=await withTimeout(s.from('profiles').select('id,display_name').in('id',ids),5000);
-        if(!pe) (profiles||[]).forEach(p=>names[p.id]=p.display_name);
+        if(!pe) (profiles||[]).forEach(p=>{if(p.display_name) names[p.id]=p.display_name;});
       }
-      return {rows:rows.map(x=>({...x,display_name:names[x.user_id]||'Utente'})),error:null};
+      if(me?.id&&me?.name) names[me.id]=me.name;
+      return {rows:rows.map(x=>({
+        ...x,
+        display_name:(me?.id===x.user_id&&me?.name)||names[x.user_id]||'Utente'
+      })),error:null};
     }catch(e){
       console.warn('Recensioni:',e.message||e);
       return {rows:[],error:e.message||'Impossibile caricare le recensioni'};
