@@ -75,7 +75,7 @@
   async function open(which){msg('');const user=await currentUser();mode=which||(user?'account':'login');modal.classList.add('open');await render()}
   function close(){modal.classList.remove('open');msg('')}
   function closeMenu(){menu.classList.remove('open')}
-  async function toggleMenu(){const user=await currentUser();if(!user){await open('login');return}const r=fab.getBoundingClientRect();menu.style.top=(r.bottom+8)+'px';menu.style.right=Math.max(12,window.innerWidth-r.right)+'px';menu.classList.toggle('open')}
+  async function toggleMenu(anchor=fab){const user=await currentUser();if(!user){await open('login');return}const r=anchor.getBoundingClientRect();menu.style.top=(r.bottom+8)+'px';menu.style.right=Math.max(12,window.innerWidth-r.right)+'px';menu.classList.toggle('open')}
 
   fab.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await toggleMenu()});q('.auth-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!fab.contains(e.target))closeMenu()});
   menu.addEventListener('click',async e=>{const a=e.target.closest('[data-action]');if(!a)return;closeMenu();const act=a.dataset.action;if(act==='logout'){await s.auth.signOut();mode='login';await refresh();return}if(act==='reviews')return open('myreviews');if(act==='name'||act==='profile')return open('account')});
@@ -90,5 +90,5 @@
   const logout=document.createElement('button');logout.type='button';logout.className='danger';logout.id='authLogout';logout.textContent='ESCI DALL’ACCOUNT';q('.auth-box').appendChild(logout);logout.onclick=async()=>{await s.auth.signOut();mode='login';await refresh();await render();msg('Sei uscito dal tuo account.')};
   s.auth.onAuthStateChange(async(event,session)=>{profileCache=null;await refresh();if(event==='PASSWORD_RECOVERY'){mode='reset';modal.classList.add('open');await render()}if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session?.user&&modal.classList.contains('open')){mode='account';await render()}});
   refresh();if(new URLSearchParams(window.location.search).get('resetPassword')==='1'){mode='reset';modal.classList.add('open');render()}
-  window.ReviewsAuth={client:s,open,refresh,getUser:currentUser,getProfile};
+  window.ReviewsAuth={client:s,open,refresh,getUser:currentUser,getProfile,openMenu:toggleMenu};
 })();
