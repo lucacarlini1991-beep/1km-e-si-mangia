@@ -108,25 +108,53 @@
   async function decorate(){
     const panel=document.getElementById('ristorantiMapPanel');
     if(!panel) return;
-    const buttons=[...panel.querySelectorAll('[data-ristorante-index]')];
-    for(const b of buttons){
-      const r=(window._ristorantiVisualizzati||[])[Number(b.dataset.ristoranteIndex)];
+    const list=window._ristorantiVisualizzati||window._ristorantiCorrenti||[];
+
+    // Le schede del progetto hanno strutture diverse a seconda della sorgente
+    // (database/Google). Usiamo quindi il pulsante recensione come ancora certa.
+    const reviewButtons=[...panel.querySelectorAll('[data-recensione-id]')];
+    for(const rb of reviewButtons){
+      const r=list.find(x=>pid(x)===String(rb.dataset.recensioneId));
       if(!r) continue;
-      const card=b.closest('div[style*="border:1px solid"]');
-      if(!card) continue;
-      const name=card.querySelector('strong');
+
+      let card=rb.parentElement;
+      while(card && card!==panel){
+        const ownReview=card.querySelectorAll('[data-recensione-id]').length;
+        const hasTitle=!!card.querySelector('strong');
+        const hasAction=!!card.querySelector('[data-ristorante-index],[data-naviga-ristorante]');
+        if(ownReview===1 && hasTitle && (hasAction || card.parentElement===panel)) break;
+        card=card.parentElement;
+      }
+      if(!card || card===panel) card=rb.parentElement;
+
+      const candidates=[...card.querySelectorAll('strong')];
+      const name=candidates.find(x=>x.textContent.toLowerCase().includes(String(r.nome||'').toLowerCase()))||candidates[0];
       if(!name) continue;
+
       name.classList.add('rr-name-link');
       name.dataset.restaurantId=pid(r);
-      if(card.querySelector('.rr-preview')) continue;
-      const p=document.createElement('div');
-      p.className='rr-preview';
+      name.title='Apri scheda e leggi le recensioni';
+
+      let p=card.querySelector('.rr-preview[data-review-place="'+CSS.escape(pid(r))+'"]');
+      if(!p){
+        p=document.createElement('div');
+        p.className='rr-preview';
+        p.dataset.reviewPlace=pid(r);
+        name.insertAdjacentElement('afterend',p);
+      }
       p.textContent='Caricamento valutazione...';
-      name.insertAdjacentElement('afterend',p);
       load(r).then(rows=>{
         const s=summary(rows);
-        p.innerHTML=s.count ? '<span class="rr-gold">'+stars(s.avg)+'</span> <span>'+s.avg.toFixed(1)+' · '+s.count+' recension'+(s.count===1?'e':'i')+'</span>' : '<span class="rr-muted">☆☆☆☆☆ · Nessuna recensione</span>';
+        p.innerHTML=s.count
+          ? '<span class="rr-gold">'+stars(s.avg)+'</span> <span><b>'+s.avg.toFixed(1)+'/5</b> · '+s.count+' recension'+(s.count===1?'e':'i')+'</span>'
+          : '<span class="rr-muted">☆☆☆☆☆ · Ancora nessuna recensione</span>';
       });
+
+      // Il pulsante resta utile, ma comunica chiaramente che apre anche le esperienze.
+      if(!rb.dataset.rrDecorated){
+        rb.dataset.rrDecorated='1';
+        rb.textContent='⭐ RECENSISCI / LEGGI ESPERIENZE';
+      }
     }
   }
 
