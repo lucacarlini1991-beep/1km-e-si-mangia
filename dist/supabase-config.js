@@ -1,0 +1,1 @@
+window.SUPABASE_CONFIG={url:"https://pyiheodneyvtcotuonpt.supabase.co",key:"sb_publishable_6FGQBm1zXfwY8zVSuNmTlA_DRW5DMfQ"};
