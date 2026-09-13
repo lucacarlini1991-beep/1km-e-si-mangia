@@ -115,7 +115,7 @@ async function render(e,m,limit){
    ? Object.entries(groups).map(([k,v])=>'<div class="poi-group"><h4>'+esc(k)+' <span>'+v.length+'</span></h4><div class="place-list">'+v.map(card).join('')+'</div></div>').join('')
    : '<div class="empty-poi">🔎 Nessun POI nel raggio selezionato.<br><small>Prova ad aumentare la distanza.</small></div>';
 
-  const scope=limit==='all'?'Database nazionale disponibile':'Luoghi da visitare, panorami e punti utili vicino all’uscita.';
+  const scope=limit==='all'?'Ricerca estesa nei luoghi disponibili vicino all’uscita.':'Luoghi da visitare, panorami e punti utili vicino all’uscita.';
   m.innerHTML='<section class="panel places-panel"><div class="panel-head"><div><h3>✨ Cosa offre l’uscita</h3><p>'+scope+'</p></div><b>'+a.length+' risultati</b></div>'+html+'</section>';
   m.querySelectorAll('.place-card').forEach(el=>el.onclick=()=>{
    const x=a.find(z=>String(z.id)===String(el.dataset.poi));
