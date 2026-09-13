@@ -1,7 +1,6 @@
 window.Uscita2Luoghi=(()=>{
-const D=(a,b,c,d)=>{const R=6371,q=x=>x*Math.PI/180,h=Math.sin(q(c-a)/2)**2+Math.cos(q(a))*Math.cos(q(c))*Math.sin(q(d-b)/2)**2;return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let poiPromise=null;
+const cache=new Map();
 
 const META={
  'Attrazione':['✨','Attrazioni'],
@@ -23,40 +22,57 @@ const META={
 
 function cat(x){return META[x.category]||['📍',x.category||'Da scoprire']}
 
-async function loadPois(){
- if(poiPromise)return poiPromise;
- poiPromise=fetch('data/liguria_esplora_uscite_finale.geojson?v=20260912-liguria1')
-  .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
-  .then(d=>{
-   if(!Array.isArray(d.features))throw new Error('GeoJSON non valido');
-   return d.features
-    .filter(f=>f?.geometry?.type==='Point'&&Array.isArray(f.geometry.coordinates))
-    .map(f=>{
-      const p=f.properties||{},c=f.geometry.coordinates;
-      return {
-       id:p.osm_id||p.id||p.name,
-       name:p.name||'Luogo senza nome',
-       lat:Number(c[1]),lng:Number(c[0]),
-       category:p.category||'Da scoprire',
-       group:p.group||'Da visitare',
-       subtype:p.subtype||'',
-       priority:Number(p.priority||0),
-       tags:p.tags||{}
-      };
-    })
-    .filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lng));
-  });
- return poiPromise;
+function client(){
+ const c=window.ReviewsAuth?.client;
+ if(c)return c;
+ if(window.supabase&&window.SUPABASE_CONFIG){
+   return window.supabase.createClient(window.SUPABASE_CONFIG.url,window.SUPABASE_CONFIG.key);
+ }
+ throw new Error('Supabase non inizializzato');
+}
+
+async function loadPois(e,limit){
+ const radius=limit==='all'?100:Number(limit);
+ const key=[e.lat,e.lng,radius].join('|');
+ if(cache.has(key))return cache.get(key);
+
+ const promise=client().rpc('get_nearby_poi',{
+   p_lat:Number(e.lat),
+   p_lon:Number(e.lng),
+   p_radius_km:radius,
+   p_limit:1000
+ }).then(({data,error})=>{
+   if(error)throw error;
+   return (data||[]).map(p=>({
+     id:p.id||p.osm_id||p.nome,
+     name:p.nome||'Luogo senza nome',
+     lat:Number(p.lat),
+     lng:Number(p.lon),
+     category:p.categoria||'Da scoprire',
+     subtype:p.sottocategoria||'',
+     description:p.descrizione||'',
+     address:p.indirizzo||'',
+     city:p.comune||'',
+     province:p.provincia||'',
+     region:p.regione||'',
+     website:p.sito_web||'',
+     phone:p.telefono||'',
+     tags:p.tags||{},
+     distance:Number(p.distanza_km||0)
+   })).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lng));
+ }).catch(err=>{cache.delete(key);throw err});
+
+ cache.set(key,promise);
+ return promise;
 }
 
 function detailText(x){
  const t=x.tags||{};
- return t.description||t.wikipedia||t.wikidata||x.category||'Luogo interessante da scoprire nei dintorni dell’uscita.';
+ return x.description||t.description||t.wikipedia||t.wikidata||x.category||'Luogo interessante da scoprire nei dintorni dell’uscita.';
 }
 
 function routeText(e,x){
- const start=e.name||'l’uscita selezionata';
- return 'Dall’uscita '+start+' la destinazione dista circa '+x.distance.toFixed(1)+' km in linea d’aria. Apri la navigazione per il percorso stradale aggiornato.';
+ return 'Dall’uscita '+(e.name||'selezionata')+' la destinazione dista circa '+x.distance.toFixed(1)+' km in linea d’aria. Apri la navigazione per il percorso stradale aggiornato.';
 }
 
 function mapUrl(a,b){return 'https://www.google.com/maps/search/?api=1&query='+a+','+b}
@@ -72,13 +88,14 @@ function card(x){
 
 function openDetail(e,x,m){
  const t=x.tags||{};
- const website=t.website||t['contact:website']||'';
- const address=[t['addr:street'],t['addr:housenumber'],t['addr:city']].filter(Boolean).join(', ');
+ const website=x.website||t.website||t['contact:website']||'';
+ const address=x.address||[t['addr:street'],t['addr:housenumber'],x.city,t['addr:city']].filter(Boolean).join(', ');
  m.innerHTML='<section class="panel poi-detail">'+
   '<button class="poi-back" type="button">← Torna ai luoghi</button>'+
   '<div class="poi-hero"><div class="poi-big-icon">'+cat(x)[0]+'</div><div><p class="eyebrow">COSA OFFRE L’USCITA</p><h3>'+esc(x.name)+'</h3><p>'+esc(cat(x)[1])+' · 📍 '+x.distance.toFixed(1)+' km dall’uscita</p></div></div>'+
   '<div class="poi-section"><h4>✨ Informazioni</h4><p>'+esc(detailText(x))+'</p>'+
   (address?'<p style="margin-top:10px"><b>📍 '+esc(address)+'</b></p>':'')+
+  (x.region?'<p style="margin-top:8px">📌 '+esc(x.region)+'</p>':'')+
   '</div>'+
   '<div class="poi-section route-story"><h4>🚗 Come raggiungerlo</h4><p>'+esc(routeText(e,x))+'</p></div>'+
   '<div class="poi-map"><div class="map-preview"><div>🗺️</div><b>Destinazione</b><span>'+esc(x.name)+' · '+x.lat.toFixed(5)+', '+x.lng.toFixed(5)+'</span></div>'+
@@ -89,27 +106,24 @@ function openDetail(e,x,m){
 }
 
 async function render(e,m,limit){
- m.innerHTML='<section class="panel"><h3>✨ Cosa offre l’uscita</h3><p>Carico il database POI della Liguria…</p></section>';
+ m.innerHTML='<section class="panel"><h3>✨ Cosa offre l’uscita</h3><p>Carico i luoghi da Supabase…</p></section>';
  try{
-  const d=await loadPois();
-  const a=d.map(x=>({...x,distance:D(e.lat,e.lng,x.lat,x.lng)}))
-   .filter(x=>limit==='all'||x.distance<=Number(limit))
-   .sort((a,b)=>b.priority-a.priority||a.distance-b.distance||a.name.localeCompare(b.name,'it'));
-
+  const a=await loadPois(e,limit);
   const groups={};
   a.forEach(x=>{const k=cat(x)[1];(groups[k]||(groups[k]=[])).push(x)});
   const html=a.length
    ? Object.entries(groups).map(([k,v])=>'<div class="poi-group"><h4>'+esc(k)+' <span>'+v.length+'</span></h4><div class="place-list">'+v.map(card).join('')+'</div></div>').join('')
    : '<div class="empty-poi">🔎 Nessun POI nel raggio selezionato.<br><small>Prova ad aumentare la distanza.</small></div>';
 
-  m.innerHTML='<section class="panel places-panel"><div class="panel-head"><div><h3>✨ Cosa offre l’uscita</h3><p>Luoghi da visitare, panorami e punti utili del database locale Liguria.</p></div><b>'+a.length+' risultati</b></div>'+html+'</section>';
+  const scope=limit==='all'?'Database nazionale disponibile':'Luoghi da visitare, panorami e punti utili vicino all’uscita.';
+  m.innerHTML='<section class="panel places-panel"><div class="panel-head"><div><h3>✨ Cosa offre l’uscita</h3><p>'+scope+'</p></div><b>'+a.length+' risultati</b></div>'+html+'</section>';
   m.querySelectorAll('.place-card').forEach(el=>el.onclick=()=>{
    const x=a.find(z=>String(z.id)===String(el.dataset.poi));
    if(x)openDetail(e,x,m);
   });
  }catch(err){
-  console.error('Errore POI Liguria',err);
-  m.innerHTML='<section class="panel"><h3>✨ Cosa offre l’uscita</h3><p>Impossibile caricare il database POI della Liguria. Riprova tra poco.</p></section>';
+  console.error('Errore POI Supabase',err);
+  m.innerHTML='<section class="panel"><h3>✨ Cosa offre l’uscita</h3><p>Impossibile caricare i POI. Riprova tra poco.</p></section>';
  }
 }
 
