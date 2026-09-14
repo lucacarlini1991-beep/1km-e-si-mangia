@@ -6,49 +6,8 @@
 <link rel="stylesheet" href="assets/home-menu-unified.css?v=20260911-2210">
 <link rel="stylesheet" href="carburanti.css">
 </head><body>
-<header class="topbar">
-  <a href="index.html" class="logo-link"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo"></a>
-  <div class="fuel-head">⛽ CARBURANTI</div>
-  <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
-</header>
-
-<div class="menu-overlay" id="menuOverlay">
-  <div class="menu-inner">
-    <div class="menu-top">
-      <a href="index.html"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="menu-logo"></a>
-      <button type="button" class="menu-close" id="menuClose" aria-label="Chiudi menu">×</button>
-    </div>
-    <nav class="menu-links">
-      <a href="come-funziona.html"><strong>COME FUNZIONA</strong><span>Scopri come utilizzare il servizio</span></a>
-      <a href="index.html"><strong>HOME</strong><span>La nostra idea</span></a>
-      <a href="uscite.html"><strong>🍝 1 KM E SI MANGIA</strong><span>Trova dove mangiare vicino all'uscita</span></a>
-      <a href="uscita2.html"><strong>🧭 ESPLORA USCITE</strong><span>Scopri cosa c'è intorno alla tua uscita</span></a>
-      <a href="carburanti.html"><strong>⛽ CARBURANTI</strong><span>Trova distributori e prezzi vicino a te</span></a>
-      <a href="parcheggi.html"><strong>🚛 PARCHEGGI MEZZI PESANTI</strong><span>Trova un parcheggio per il tuo mezzo</span></a>
-      <a href="contatti.html"><strong>CONTATTI</strong><span>Scrivici</span></a>
-      <a href="fonti-licenze.html"><strong>FONTI E LICENZE</strong><span>Dati, fonti e informazioni legali</span></a>
-    </nav>
-  </div>
-</div>
-
-<main class="fuel-page">
-<section class="fuel-intro"><div><p class="eyebrow">PREZZI UFFICIALI</p><h1>Trova il carburante<br><em>vicino a te.</em></h1><p>Distributori sulla mappa con Benzina, Gasolio e GPL in anteprima.</p></div><button id="locateBtn" class="locate-big">📍 Trova la mia posizione</button></section>
-<section class="fuel-toolbar"><div class="radius-wrap"><span>Raggio</span><button data-radius="3">3 km</button><button data-radius="5">5 km</button><button data-radius="10" class="active">10 km</button><button data-radius="20">20 km</button></div><div id="status">Premi “Trova la mia posizione” per iniziare.</div></section>
-<section class="map-card"><div id="fuelMap"></div><button id="recenter" title="Ritorna alla mia posizione">◎</button></section>
-<section class="fuel-list"><div class="list-title"><div><p class="eyebrow">VICINO A TE</p><h2>Distributori trovati</h2></div><strong id="count">0</strong></div><div id="stations"></div></section>
-<section class="source-note">Dati carburanti: Ministero delle Imprese e del Made in Italy · aggiornamento quotidiano · <a href="fonti-licenze.html">fonti e licenze</a></section>
-</main>
-<script>
-(function(){
- const menuButton=document.getElementById("menuButton"), menuOverlay=document.getElementById("menuOverlay"), menuClose=document.getElementById("menuClose");
- if(!menuButton||!menuOverlay||!menuClose)return;
- function openMenu(){menuOverlay.classList.add("open");menuButton.setAttribute("aria-expanded","true");document.body.style.overflow="hidden";}
- function closeMenu(){menuOverlay.classList.remove("open");menuButton.setAttribute("aria-expanded","false");document.body.style.overflow="";}
- menuButton.addEventListener("click",openMenu);menuClose.addEventListener("click",closeMenu);
- menuOverlay.addEventListener("click",e=>{if(e.target===menuOverlay)closeMenu()});
- document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu()});
- document.querySelectorAll("#menuOverlay .menu-links a").forEach(a=>a.addEventListener("click",closeMenu));
-})();
-</script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="carburanti.js"></script>
+<header class="topbar"><a href="index.html" class="logo-link"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo"></a><div class="fuel-head">⛽ CARBURANTI</div><button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button></header>
+<div class="menu-overlay" id="menuOverlay"><div class="menu-inner"><div class="menu-top"><a href="index.html"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="menu-logo"></a><button type="button" class="menu-close" id="menuClose" aria-label="Chiudi menu">×</button></div><nav class="menu-links"><a href="come-funziona.html"><strong>COME FUNZIONA</strong><span>Scopri come utilizzare il servizio</span></a><a href="index.html"><strong>HOME</strong><span>La nostra idea</span></a><a href="uscite.html"><strong>🍝 1 KM E SI MANGIA</strong><span>Trova dove mangiare vicino all'uscita</span></a><a href="uscita2.html"><strong>🧭 ESPLORA USCITE</strong><span>Scopri cosa c'è intorno alla tua uscita</span></a><a href="carburanti.html"><strong>⛽ CARBURANTI</strong><span>Trova distributori e prezzi vicino a te</span></a><a href="parcheggi.html"><strong>🚛 PARCHEGGI MEZZI PESANTI</strong><span>Trova un parcheggio per il tuo mezzo</span></a><a href="contatti.html"><strong>CONTATTI</strong><span>Scrivici</span></a><a href="fonti-licenze.html"><strong>FONTI E LICENZE</strong><span>Dati, fonti e informazioni legali</span></a></nav></div></div>
+<main class="fuel-page"><section class="fuel-intro"><div><p class="eyebrow">PREZZI UFFICIALI</p><h1>Trova il carburante<br><em>vicino a te.</em></h1><p>Distributori sulla mappa con Benzina, Gasolio e GPL in anteprima.</p></div><button id="locateBtn" class="locate-big">📍 Trova la mia posizione</button></section><section class="fuel-toolbar"><div class="radius-wrap"><span>Raggio</span><button data-radius="3">3 km</button><button data-radius="5">5 km</button><button data-radius="10" class="active">10 km</button><button data-radius="20">20 km</button></div><div id="status">Premi “Trova la mia posizione” per iniziare.</div></section><section class="map-card"><div id="fuelMap"></div><button id="recenter" title="Vai alla mia posizione" aria-label="Vai alla mia posizione">⌖</button></section><section class="fuel-list"><div class="list-title"><div><p class="eyebrow">VICINO A TE</p><h2>Distributori trovati</h2></div><strong id="count">0</strong></div><div id="stations"></div></section><section class="source-note">Dati carburanti: Ministero delle Imprese e del Made in Italy · aggiornamento quotidiano · <a href="fonti-licenze.html">fonti e licenze</a></section></main>
+<script>(function(){const b=document.getElementById("menuButton"),o=document.getElementById("menuOverlay"),c=document.getElementById("menuClose");function x(){o.classList.remove("open");b.setAttribute("aria-expanded","false");document.body.style.overflow=""}b.onclick=()=>{o.classList.add("open");b.setAttribute("aria-expanded","true");document.body.style.overflow="hidden"};c.onclick=x;o.onclick=e=>{if(e.target===o)x()};document.addEventListener("keydown",e=>{if(e.key==="Escape")x()});document.querySelectorAll("#menuOverlay a").forEach(a=>a.onclick=x)})();</script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="carburanti.js"></script>
 </body></html>
