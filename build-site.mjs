@@ -64,6 +64,7 @@ for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
 }
 
 const analyticsSnippet = `\n<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>\n<script defer src="/_vercel/insights/script.js"></script>\n`;
+const globalUiSnippet = '\n<script src="fix-ui-1km.js?v=20260914-global"></script>\n';
 
 const htmlFiles = fs.readdirSync(out).filter(name => name.toLowerCase().endsWith('.html'));
 
@@ -107,6 +108,12 @@ for (const file of htmlFiles) {
     html = html.replaceAll('src="script.js?v=20260827-filter3"', 'src="script.js?v=20260827-filter4"');
   }
 
+  // Un solo stile UI per tutte le pagine: menu, schede e modali.
+  // fix-ui-1km.js è protetto internamente contro il doppio caricamento.
+  if (!html.includes('fix-ui-1km.js')) {
+    html = html.replace(/<\/body>/i, `${globalUiSnippet}</body>`);
+  }
+
   if (!html.includes('/_vercel/insights/script.js')) {
     html = html.replace(/<\/body>/i, `${analyticsSnippet}</body>`);
   }
@@ -118,4 +125,5 @@ console.log('Sito sincronizzato in dist/.');
 console.log('Pagine:', fs.readdirSync(out).filter(x => x.endsWith('.html')).join(', '));
 console.log('Analytics Vercel: snippet inserito nelle pagine HTML.');
 console.log('Google Places in zona: ricerca aggiuntiva attiva su uscite.html.');
+console.log('UI globale: menu e schede uniformati con fix-ui-1km.js.');
 console.log('gps.js e gps-camion.js:', fs.existsSync(path.join(out,'gps.js')), fs.existsSync(path.join(out,'gps-camion.js')));
