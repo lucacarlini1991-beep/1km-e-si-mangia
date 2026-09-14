@@ -156,7 +156,9 @@
           <a href="index.html"><strong data-i18n="home">HOME</strong><span data-i18n="homeDesc">La nostra idea</span></a>
           <a href="uscite.html"><strong>🍝 <span data-i18n="eatButton">1 KM E SI MANGIA</span></strong><span data-i18n="eatDesc">Trova dove mangiare vicino all'uscita</span></a>
           <a href="uscita2.html"><strong>🧭 <span data-i18n="explore">ESPLORA USCITE</span></strong><span data-i18n="exploreDesc">Scopri cosa c'è intorno alla tua uscita</span></a>
+          <a href="carburanti.html"><strong>⛽ CARBURANTI</strong><span>Trova distributori e prezzi vicino a te</span></a>
           <a href="parcheggi.html"><strong>🚛 <span data-i18n="parking">PARCHEGGI MEZZI PESANTI</span></strong><span data-i18n="parkingDesc">Trova un parcheggio per il tuo mezzo</span></a>
+          <a href="faq.html"><strong>❓ FAQ</strong><span>Le domande più frequenti</span></a>
           <a href="coming-soon.html"><strong>🚧 <span data-i18n="upcoming">PROSSIME NOVITÀ</span></strong><span data-i18n="upcomingDesc">Scopri cosa stiamo preparando</span></a>
           <a href="contatti.html"><strong data-i18n="contacts">CONTATTI</strong><span data-i18n="contactsDesc">Scrivici</span></a>
           <a href="fonti-licenze.html"><strong data-i18n="sources">FONTI E LICENZE</strong><span data-i18n="sourcesDesc">Dati, fonti e informazioni legali</span></a>
