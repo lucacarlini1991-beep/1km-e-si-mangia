@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carburanti | Esplora Uscite</title>
+<link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="carburanti.css">
+</head><body>
+<header class="topbar"><a href="index.html" class="logo-link"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo"></a><div class="fuel-head">⛽ CARBURANTI</div><a class="back-explore" href="uscita2.html">🧭 Esplora Uscite</a></header>
+<main class="fuel-page">
+<section class="fuel-intro"><div><p class="eyebrow">PREZZI UFFICIALI</p><h1>Trova il carburante<br><em>vicino a te.</em></h1><p>Distributori sulla mappa con Benzina, Gasolio e GPL in anteprima.</p></div><button id="locateBtn" class="locate-big">📍 Trova la mia posizione</button></section>
+<section class="fuel-toolbar"><div class="radius-wrap"><span>Raggio</span><button data-radius="3">3 km</button><button data-radius="5">5 km</button><button data-radius="10" class="active">10 km</button><button data-radius="20">20 km</button></div><div id="status">Premi “Trova la mia posizione” per iniziare.</div></section>
+<section class="map-card"><div id="fuelMap"></div><button id="recenter" title="Ritorna alla mia posizione">◎</button></section>
+<section class="fuel-list"><div class="list-title"><div><p class="eyebrow">VICINO A TE</p><h2>Distributori trovati</h2></div><strong id="count">0</strong></div><div id="stations"></div></section>
+<section class="source-note">Dati carburanti: Ministero delle Imprese e del Made in Italy · aggiornamento quotidiano · <a href="fonti-licenze.html">fonti e licenze</a></section>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="carburanti.js"></script>
+</body></html>
