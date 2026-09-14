@@ -5,5 +5,9 @@
 @media(max-width:700px){.menu-inner{width:calc(100% - 24px);margin:12px auto;padding:20px 18px 28px;border-radius:18px}.menu-top{margin-bottom:22px}.menu-links a{padding:17px 12px}.menu-links a strong{font-size:19px}.fuel-intro{align-items:stretch;flex-direction:column}.locate-big{width:100%}.fuel-toolbar{align-items:flex-start;flex-direction:column}#fuelMap{height:470px}.station-card{grid-template-columns:1fr}.nav-btn{justify-self:start}.fuel-head{font-size:clamp(16px,5vw,20px);letter-spacing:.4px}.topbar .menu-button{font-size:32px}}
 .mobile-menu-logo{display:block;width:150px;height:90px;object-fit:contain;margin:0}.mobile-menu-title{display:flex;align-items:center}.mobile-menu{z-index:3000}.topbar .menu-button{margin-left:auto}
 
-/* Carburanti: quando il menu standard è aperto, copri completamente la mappa sotto */
-.mobile-menu.active{box-shadow:0 0 0 100vmax rgba(255,255,255,.98),-8px 0 30px rgba(0,0,0,.18)!important}
+
+/* Menu carburanti: stesso menu bianco, ma a schermo intero per non lasciare intravedere la mappa */
+@media(max-width:700px){
+  .mobile-menu{width:100vw !important;max-width:none !important;border-left:0 !important;background:#fff !important;box-shadow:none !important}
+  .mobile-menu.active{box-shadow:none !important}
+}
