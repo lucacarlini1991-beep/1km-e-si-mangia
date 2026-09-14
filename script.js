@@ -8,7 +8,7 @@
     const s = document.createElement("script");
     s.src = "fix-ui-1km.js?v=20260914-final-ui";
     s.async = false;
-    s.dataset["1kmUiFix"] = "1";
+    s.setAttribute("data-1km-ui-fix", "1");
     document.head.appendChild(s);
   }
 })();
