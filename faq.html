@@ -38,9 +38,13 @@
     .intro{background:#fff;border-radius:20px;padding:32px 36px;margin-bottom:24px;border:1px solid #e0e8e4}.intro h2{margin:0 0 10px;font-size:30px;color:var(--verde-scuro)}.intro p{font-size:18px;line-height:1.55;margin:0;color:#587066}
     .section-title{font-size:28px;color:var(--verde-scuro);margin:38px 0 14px}
     .faq{display:grid;gap:12px}.faq details{background:#fff;border:1px solid #dce7e1;border-radius:16px;padding:0 22px;box-shadow:0 5px 14px rgba(0,77,54,.04)}.faq summary{cursor:pointer;list-style:none;padding:22px 36px 22px 0;font-size:21px;font-weight:800;color:var(--verde-scuro);position:relative}.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:"+";position:absolute;right:0;font-size:30px;font-weight:400;top:15px}.faq details[open] summary:after{content:"−"}.faq .answer{padding:0 0 22px;font-size:18px;line-height:1.55;color:#526a60}
-    .cta{margin-top:34px;background:#fff7e8;border:1px solid #f0d49c;border-radius:20px;padding:30px;text-align:center}.cta h2{margin:0 0 10px;color:var(--verde-scuro);font-size:30px}.cta p{margin:0 0 20px;font-size:18px}.cta a{display:inline-flex;background:var(--verde);color:#fff;text-decoration:none;font-weight:800;padding:15px 25px;border-radius:12px}
-    footer{background:#fff;text-align:center;padding:38px 20px;color:var(--verde-scuro)}.footer-logo{width:min(190px,70vw);height:auto;margin-bottom:12px}
-    @media(max-width:750px){.topbar{height:82px;padding:0 18px}.site-logo{width:82px;height:65px}.hero{padding:32px 24px;border-radius:18px}.hero p{font-size:19px}main{padding:28px 14px 50px}.intro{padding:25px 22px}.faq details{padding:0 18px}.faq summary{font-size:19px}.menu-inner{width:90%;margin:10px auto;padding:20px 18px 30px}.menu-links a{padding:16px 18px}.menu-links strong{font-size:20px}}
+    .cta{margin-top:42px;background:linear-gradient(135deg,#fffdf8,#fff7e8);border:1px solid #efd49c;border-radius:24px;padding:34px 28px;text-align:center;box-shadow:0 10px 28px rgba(0,77,54,.07)}
+    .cta h2{margin:0 0 12px;color:var(--verde-scuro);font-size:clamp(30px,5vw,40px);line-height:1.05}.cta p{margin:0 auto 24px;font-size:19px;line-height:1.5;max-width:620px;color:#526a60}
+    .cta-actions{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}.cta a{min-height:54px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--verde);color:#fff;text-decoration:none;font-weight:800;font-size:18px;padding:14px 24px;border-radius:14px;border:2px solid var(--verde);transition:transform .15s ease,background .15s ease}.cta a:hover{background:var(--verde-scuro);transform:translateY(-1px)}.cta a.secondary{background:#fff;color:var(--verde-scuro);border-color:#bfd0c8}
+    a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--arancio);outline-offset:3px}
+    footer{background:#fff;border-top:1px solid #e0e8e4;text-align:center;padding:42px 20px 34px;color:var(--verde-scuro)}.footer-logo{width:min(190px,70vw);height:auto;margin-bottom:14px}.footer-tagline{font-size:19px;margin-bottom:22px}.footer-nav{display:flex;justify-content:center;gap:10px 18px;flex-wrap:wrap}.footer-nav a{color:var(--verde-scuro);font-weight:700;text-decoration:none;padding:8px 4px}.footer-nav a:hover{text-decoration:underline}
+    @media(max-width:750px){.topbar{height:82px;padding:0 18px}.site-logo{width:82px;height:65px}.hero{padding:32px 24px;border-radius:18px}.hero p{font-size:19px}main{padding:28px 14px 50px}.intro{padding:25px 22px}.faq details{padding:0 18px}.faq summary{font-size:19px}.menu-inner{width:90%;margin:10px auto;padding:20px 18px 30px}.menu-links a{padding:16px 18px}.menu-links strong{font-size:20px}
+    .cta{padding:30px 20px;border-radius:20px}.cta-actions{flex-direction:column}.cta a{width:100%;min-height:58px}.footer-nav{flex-direction:column;gap:2px}.footer-nav a{padding:10px}.footer-tagline{font-size:18px}}
   </style>
 </head>
 <body>
@@ -89,9 +93,26 @@
     <details><summary>Da dove arrivano i dati mostrati?</summary><div class="answer">1 KM E SI MANGIA utilizza diverse fonti e banche dati in base al servizio. Le informazioni sulle fonti e sulle licenze sono disponibili nella pagina dedicata del sito.</div></details>
     <details><summary>Posso segnalare un problema o un'informazione errata?</summary><div class="answer">Sì. Puoi utilizzare la pagina Contatti per inviare una segnalazione. Il contributo degli utenti è utile per migliorare continuamente il servizio.</div></details>
   </div>
-  <section class="cta"><h2>Non hai trovato la risposta?</h2><p>Scrivici: ci aiuterai anche a migliorare le prossime FAQ.</p><a href="contatti.html">CONTATTACI</a></section>
+  <section class="cta" aria-labelledby="cta-title">
+    <h2 id="cta-title">Non hai trovato la risposta?</h2>
+    <p>Scrivici e aiutaci a migliorare le prossime FAQ. Oppure torna alla pagina principale per continuare la ricerca.</p>
+    <div class="cta-actions">
+      <a href="contatti.html" aria-label="Apri la pagina Contatti">✉️ CONTATTACI</a>
+      <a href="index.html" class="secondary" aria-label="Torna alla Home">⌂ TORNA ALLA HOME</a>
+    </div>
+  </section>
 </div></main>
-<footer><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="footer-logo"><div>Mangia bene. Perdi poco tempo. Riparti.</div></footer>
+<footer>
+  <a href="index.html" aria-label="Torna alla Home"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="footer-logo"></a>
+  <div class="footer-tagline">Mangia bene. Perdi poco tempo. Riparti.</div>
+  <nav class="footer-nav" aria-label="Link nel footer">
+    <a href="index.html">Home</a>
+    <a href="come-funziona.html">Come funziona</a>
+    <a href="faq.html" aria-current="page">FAQ</a>
+    <a href="contatti.html">Contatti</a>
+    <a href="fonti-licenze.html">Fonti e licenze</a>
+  </nav>
+</footer>
 <script>
 const b=document.getElementById('menuButton'),m=document.getElementById('menuOverlay'),c=document.getElementById('menuClose');
 function openMenu(){m.classList.add('open');m.setAttribute('aria-hidden','false');b.setAttribute('aria-expanded','true');document.body.style.overflow='hidden'}
