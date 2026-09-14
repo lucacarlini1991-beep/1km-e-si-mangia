@@ -684,9 +684,59 @@
 
   
     .language-switcher{display:flex;gap:6px;margin-left:auto;margin-right:12px}.lang-button{border:1px solid #d9e3de;background:#fff;border-radius:10px;width:40px;height:38px;font-size:21px;cursor:pointer;opacity:.55}.lang-button.active{opacity:1;border-color:var(--verde);box-shadow:0 2px 7px rgba(0,77,54,.16)}@media(max-width:750px){.language-switcher{margin-right:6px}.lang-button{width:35px;height:34px;font-size:18px}}
+  
+    /* =========================
+       HOME PRESENTAZIONE
+    ========================= */
+    .hero-home{min-height:620px;background:linear-gradient(120deg,rgba(0,77,54,.15),rgba(0,77,54,.02)),radial-gradient(circle at 85% 20%,rgba(245,167,25,.22),transparent 23%);position:relative}
+    .small-title,.eyebrow{color:var(--arancio);font-weight:800;letter-spacing:3px;font-size:14px;text-transform:uppercase}
+    .hero-home h1{max-width:980px;font-size:clamp(54px,7.4vw,98px);line-height:.91;margin:22px 0 28px}
+    .description{max-width:820px;font-size:24px}
+    .hero-cta{display:inline-flex;align-items:center;gap:14px;min-height:58px;padding:0 28px;background:var(--arancio);color:var(--verde-scuro);font-weight:800;text-decoration:none;border-radius:2px;font-size:17px}
+    .hero-cta span{font-size:25px}
+    .content-wrap{width:min(1100px,calc(100% - 48px));margin:0 auto}
+    .project-intro{background:#fff;padding:88px 0 92px}
+    .project-intro h2,.why-section h2,.services-section h2{margin:16px 0 22px;color:var(--verde-scuro);font-size:clamp(42px,5vw,68px);line-height:.95}
+    .lead{max-width:850px;color:#526a61;font-size:22px;line-height:1.55;margin:0 0 48px}
+    .journey-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+    .journey-card{min-height:310px;padding:30px;background:#f5f7f6;border:1px solid #dce6e1;position:relative}
+    .journey-number{font-size:13px;letter-spacing:2px;color:#8aa097;font-weight:800}
+    .journey-icon{font-size:42px;margin:34px 0 20px}
+    .journey-card h3{margin:0 0 14px;color:var(--verde-scuro);font-size:25px}
+    .journey-card p{margin:0;color:#5b7067;font-size:18px;line-height:1.5}
+    .why-section{background:var(--verde);padding:90px 0;color:#fff}
+    .why-section .eyebrow{color:#f7c55a}
+    .why-section h2{color:#fff}
+    .why-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:70px}
+    .why-copy p{font-size:21px;line-height:1.6;margin:0 0 22px;color:#edf5f1}
+    .why-copy strong{color:#fff}
+    .services-section{background:#eef2ef;padding:90px 0 100px}
+    .services-lead{color:#5c7068;font-size:21px;margin:-6px 0 38px}
+    .service-links{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .service-link{min-height:220px;padding:28px;background:#fff;border:1px solid #d9e3de;color:var(--verde-scuro);text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;transition:.2s;position:relative}
+    .service-link:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(0,77,54,.12);border-color:var(--verde)}
+    .service-icon{font-size:42px}
+    .service-link strong{display:block;font-size:25px;margin-bottom:10px}
+    .service-link small{display:block;font-size:18px;color:#667a72;line-height:1.35}
+    .service-link b{font-size:30px;color:var(--arancio);align-self:flex-end}
+    @media(max-width:750px){
+      .hero-home{min-height:auto;padding:58px 24px 62px}
+      .hero-home h1{font-size:51px;line-height:.94}
+      .description{font-size:20px}
+      .content-wrap{width:min(100% - 32px,650px)}
+      .project-intro,.why-section,.services-section{padding:60px 0}
+      .project-intro h2,.why-section h2,.services-section h2{font-size:46px}
+      .lead{font-size:20px}
+      .journey-grid,.why-grid,.service-links{grid-template-columns:1fr}
+      .journey-card{min-height:auto;padding:28px}
+      .journey-icon{margin:22px 0 14px}
+      .why-grid{gap:24px}
+      .why-copy p{font-size:19px}
+      .service-link{min-height:170px}
+    }
   </style>
 
-  <meta name="description" content="Trova ristoranti, trattorie e pizzerie vicino alle uscite autostradali. Esci, mangia e riparti senza perdere tempo con 1 KM E SI MANGIA.">
+  <meta name="description" content="Un servizio pensato per chi viaggia: trova dove mangiare vicino alle uscite, esplora cosa c’è intorno a te e trova servizi utili lungo il percorso.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://1kmesimangia.it/">
   <meta property="og:type" content="website">
@@ -709,7 +759,7 @@
     "name":"1 KM E SI MANGIA",
     "url":"https://1kmesimangia.it/",
     "inLanguage":"it-IT",
-    "description":"Servizio per trovare ristoranti, trattorie e pizzerie vicino alle uscite autostradali."
+    "description":"Servizio pensato per chi viaggia e per trovare rapidamente ristoranti, servizi e informazioni utili lungo il percorso."
   }
   </script>
   <link rel="stylesheet" href="assets/menu-icons.css">
@@ -833,118 +883,86 @@
   <main>
 
     <section class="home">
-
       <div class="hero-home">
-
         <div class="hero-content">
-
-          <h1>
-            <span data-i18n="exit">ESCI.</span><br><span data-i18n="eat">MANGIA.</span><br><span data-i18n="go">RIPARTI.</span>
-          </h1>
-
+          <div class="small-title">IL TUO VIAGGIO, PIÙ SEMPLICE</div>
+          <h1>QUANDO SEI IN VIAGGIO,<br>OGNI MINUTO CONTA.</h1>
           <div class="description">
-            <span data-i18n="hero">Sei in autostrada? Trova dove mangiare alla prossima uscita.</span>
+            1 KM E SI MANGIA nasce per aiutarti a trovare rapidamente quello che ti serve durante il viaggio, senza perdere tempo in ricerche inutili e lunghe deviazioni.
           </div>
-
-          <div class="hero-buttons">
-
-            <button
-              class="primary"
-              id="homeLocationButton"
-              type="button"
-              aria-label="Usa la mia posizione"
-            >
-              <span class="btn-icon" aria-hidden="true">
-                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 4c-8.3 0-15 6.6-15 14.8C9 29.6 24 43 24 43s15-13.4 15-24.2C39 10.6 32.3 4 24 4Z" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
-                  <circle cx="24" cy="19" r="5.5" fill="none" stroke="currentColor" stroke-width="3"/>
-                </svg>
-              </span>
-              <span data-i18n="myLocation">USA LA MIA POSIZIONE</span>
-            </button>
-
-            <a
-              class="secondary"
-              href="uscite.html"
-            >
-              <span class="btn-icon" aria-hidden="true">
-                <svg class="brand-food-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M30 5C18.7 5 10 13.4 10 24c0 14.5 20 31 20 31s20-16.5 20-31C50 13.4 41.3 5 30 5Z" fill="#f5a719"/>
-                  <circle cx="30" cy="23" r="10.5" fill="#ffffff"/>
-                  <path d="M25 17v9m3-9v9m3-9v9m-6 0c0 2.2 1.5 3.8 3 3.8s3-1.6 3-3.8" fill="none" stroke="#075c3b" stroke-width="2.6" stroke-linecap="round"/>
-                  <path d="M35 17v14" fill="none" stroke="#075c3b" stroke-width="2.6" stroke-linecap="round"/>
-                  <path d="M8 55c8-7 18-8 28-4l16 8H8Z" fill="#075c3b"/>
-                  <path d="M16 54c4-2 8-2 12-1" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="4 3"/>
-                  <path d="M38 52l11 6" fill="none" stroke="#f5a719" stroke-width="2.4" stroke-linecap="round"/>
-                </svg>
-              </span>
-              <span data-i18n="eatButton">1 KM E SI MANGIA</span>
-            </a>
-
-            <a
-              class="secondary how-button"
-              href="come-funziona.html"
-            >
-              <span class="btn-icon" aria-hidden="true">
-                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="3.5"/>
-                  <path d="M19 19c.8-3.7 3.5-5.6 6.7-5.6 4.4 0 7.3 2.7 7.3 6.6 0 4.4-3.3 5.7-6.1 7.6-1.8 1.2-2.3 2.6-2.3 4.7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
-                  <circle cx="24" cy="36" r="1.8" fill="currentColor"/>
-                </svg>
-              </span>
-              <span data-i18n="howButton">COME FUNZIONA</span>
-            </a>
-
-          </div>
-
+          <a class="hero-cta" href="#come-ti-aiutiamo">SCOPRI COME TI AIUTIAMO <span aria-hidden="true">↓</span></a>
         </div>
-
-      </div>
-
-    </section>
-    <section class="seo-intro">
-      <h2 data-i18n="whereEat">Dove mangiare vicino all'autostrada?</h2>
-      <p data-i18n="seo1">1 KM E SI MANGIA nasce per aiutarti a trovare ristoranti, trattorie e pizzerie vicino alle uscite autostradali. L'obiettivo è semplice: uscire dall'autostrada, mangiare e ripartire senza perdere tempo in lunghe deviazioni.</p>
-      <p data-i18n="seo2">Usa la tua posizione oppure scegli un’uscita per trovare ristoranti e locali nelle vicinanze. Per parcheggi, camper e luoghi da scoprire puoi usare Esplora Uscite.</p>
-      <div class="seo-links">
-        <a href="uscite.html">
-          <span class="seo-icon" aria-hidden="true">
-            <svg class="brand-food-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M30 5C18.7 5 10 13.4 10 24c0 14.5 20 31 20 31s20-16.5 20-31C50 13.4 41.3 5 30 5Z" fill="#f5a719"/>
-                  <circle cx="30" cy="23" r="10.5" fill="#ffffff"/>
-                  <path d="M25 17v9m3-9v9m3-9v9m-6 0c0 2.2 1.5 3.8 3 3.8s3-1.6 3-3.8" fill="none" stroke="#075c3b" stroke-width="2.6" stroke-linecap="round"/>
-                  <path d="M35 17v14" fill="none" stroke="#075c3b" stroke-width="2.6" stroke-linecap="round"/>
-                  <path d="M8 55c8-7 18-8 28-4l16 8H8Z" fill="#075c3b"/>
-                  <path d="M16 54c4-2 8-2 12-1" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="4 3"/>
-                  <path d="M38 52l11 6" fill="none" stroke="#f5a719" stroke-width="2.4" stroke-linecap="round"/>
-                </svg>
-          </span>
-          <span data-i18n="eatButton">1 KM E SI MANGIA</span>
-        </a>
-        <a href="uscita2.html">
-          <span class="seo-icon" aria-hidden="true">
-            <svg class="brand-map-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M10 15 25 9l14 6 15-6v39l-15 7-14-6-15 6V15Z" fill="none" stroke="#075c3b" stroke-width="3.2" stroke-linejoin="round"/>
-              <path d="M25 9v40M39 15v40" fill="none" stroke="#075c3b" stroke-width="3.2" stroke-linejoin="round"/>
-              <path d="M39 17c-6.2 0-11.2 4.9-11.2 11 0 8.5 11.2 19.3 11.2 19.3S50.2 36.5 50.2 28C50.2 21.9 45.2 17 39 17Z" fill="#f5a719" stroke="#ffffff" stroke-width="2"/>
-              <circle cx="39" cy="28" r="3.5" fill="#ffffff"/>
-            </svg>
-          </span>
-          <span data-i18n="explore">ESPLORA USCITE</span>
-        </a>
-        <a href="come-funziona.html">
-          <span class="seo-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="3.5"/>
-              <path d="M19 19c.8-3.7 3.5-5.6 6.7-5.6 4.4 0 7.3 2.7 7.3 6.6 0 4.4-3.3 5.7-6.1 7.6-1.8 1.2-2.3 2.6-2.3 4.7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
-              <circle cx="24" cy="36" r="1.8" fill="currentColor"/>
-            </svg>
-          </span>
-          <span data-i18n="howButton">COME FUNZIONA</span>
-        </a>
       </div>
     </section>
 
+    <section class="project-intro" id="come-ti-aiutiamo">
+      <div class="content-wrap">
+        <div class="eyebrow">NON È UNA SEMPLICE RICERCA</div>
+        <h2>Un aiuto concreto quando sei in movimento.</h2>
+        <p class="lead">Che tu sia in autostrada, in viaggio per lavoro o semplicemente lontano da casa, trovare un posto dove fermarsi o un servizio utile dovrebbe essere semplice. È da qui che parte 1 KM E SI MANGIA.</p>
+
+        <div class="journey-grid">
+          <article class="journey-card">
+            <div class="journey-number">01</div>
+            <div class="journey-icon">🍝</div>
+            <h3>FERMATI BENE</h3>
+            <p>Trova ristoranti, trattorie e locali vicino alle uscite, per scegliere una sosta senza trasformarla in una lunga deviazione.</p>
+          </article>
+          <article class="journey-card">
+            <div class="journey-number">02</div>
+            <div class="journey-icon">🧭</div>
+            <h3>ORIENTATI MEGLIO</h3>
+            <p>Scopri cosa c'è intorno alla tua uscita e individua rapidamente i luoghi e le informazioni utili lungo il tuo percorso.</p>
+          </article>
+          <article class="journey-card">
+            <div class="journey-number">03</div>
+            <div class="journey-icon">⛽</div>
+            <h3>RIPARTI SENZA PERDERE TEMPO</h3>
+            <p>Trova distributori e servizi pratici vicino a te. Il progetto cresce per diventare un punto di riferimento per chi viaggia.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="why-section">
+      <div class="content-wrap why-grid">
+        <div>
+          <div class="eyebrow">PERCHÉ NASCE 1 KM E SI MANGIA</div>
+          <h2>Meno ricerche. Più viaggio.</h2>
+        </div>
+        <div class="why-copy">
+          <p>Durante un viaggio spesso hai poco tempo: devi capire dove uscire, dove mangiare, cosa c'è nelle vicinanze o dove fare rifornimento. Le informazioni esistono, ma sono spesso sparse tra mappe, siti e applicazioni diverse.</p>
+          <p><strong>1 KM E SI MANGIA vuole riunire in un unico posto servizi utili, semplici da consultare e pensati soprattutto per chi è già in movimento.</strong></p>
+          <p>Non vogliamo essere l'ennesima guida generica: vogliamo aiutarti nel momento in cui hai davvero bisogno di trovare qualcosa e ripartire.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="services-section" aria-labelledby="services-title">
+      <div class="content-wrap">
+        <div class="eyebrow">SCEGLI COSA TI SERVE</div>
+        <h2 id="services-title">Parti da qui.</h2>
+        <p class="services-lead">Tre strumenti principali, pensati per essere utilizzati velocemente anche da smartphone.</p>
+
+        <div class="service-links">
+          <a href="uscite.html" class="service-link">
+            <span class="service-icon">🍝</span>
+            <span><strong>1 KM E SI MANGIA</strong><small>Trova dove mangiare vicino all'uscita</small></span>
+            <b aria-hidden="true">→</b>
+          </a>
+          <a href="uscita2.html" class="service-link">
+            <span class="service-icon">🧭</span>
+            <span><strong>ESPLORA USCITE</strong><small>Scopri cosa c'è intorno alla tua uscita</small></span>
+            <b aria-hidden="true">→</b>
+          </a>
+          <a href="carburanti.html" class="service-link">
+            <span class="service-icon">⛽</span>
+            <span><strong>CARBURANTI</strong><small>Trova distributori e informazioni vicino a te</small></span>
+            <b aria-hidden="true">→</b>
+          </a>
+        </div>
+      </div>
+    </section>
 
     <!-- PUBBLICITÀ -->
 
