@@ -154,7 +154,7 @@
     let tentativi = 0;
     const timer = setInterval(() => {
       tentativi++;
-      const pronta = sistemaClusterMappa();
+      const pronta = typeof sistemaClusterMappa === "function" ? sistemaClusterMappa() : true;
       sistemaSchedaRistoranti();
       if (pronta && tentativi >= 40) clearInterval(timer);
       if (tentativi >= 80) clearInterval(timer);
