@@ -42,46 +42,14 @@
     document.head.appendChild(style);
   }
 
+  // Il comportamento del menu NON viene gestito qui: ogni pagina mantiene il
+  // proprio handler/unified menu. Qui uniformiamo solo lo stile e lo scroll.
   function sistemaMenu() {
-    const button = document.getElementById("menuButton") || document.querySelector(".menu-button");
     const panel = document.getElementById("mobileMenu") || document.querySelector(".mobile-menu") || document.getElementById("menuOverlay") || document.querySelector(".menu-overlay");
-    const close = document.getElementById("menuClose") || document.querySelector(".menu-close");
-    if (!button || !panel || button.dataset.menuFix === "global-1") return;
-    button.dataset.menuFix = "global-1";
-
-    function chiudi() {
-      panel.classList.remove("open", "active");
-      panel.setAttribute("aria-hidden", "true");
-      panel.style.visibility = "hidden";
-      panel.style.opacity = "0";
-      panel.style.pointerEvents = "none";
-      panel.style.zIndex = "3000";
-      unlockScroll();
-      button.setAttribute("aria-expanded", "false");
-    }
-    function apri() {
-      panel.classList.add("open", "active");
-      panel.setAttribute("aria-hidden", "false");
-      panel.style.visibility = "visible";
-      panel.style.opacity = "1";
-      panel.style.pointerEvents = "auto";
-      panel.style.zIndex = "99999";
-      panel.style.overflowY = "auto";
-      panel.style.overscrollBehavior = "contain";
-      panel.style.webkitOverflowScrolling = "touch";
-      unlockScroll();
-      lockScroll();
-      button.setAttribute("aria-expanded", "true");
-    }
-    chiudi();
-    button.addEventListener("click", e => {
-      e.preventDefault(); e.stopPropagation();
-      (panel.classList.contains("open") || panel.classList.contains("active")) ? chiudi() : apri();
-    });
-    close?.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); chiudi(); });
-    panel.addEventListener("click", e => { if (e.target === panel) chiudi(); });
-    panel.querySelectorAll("a").forEach(a => a.addEventListener("click", chiudi));
-    document.addEventListener("keydown", e => { if (e.key === "Escape") chiudi(); });
+    if (!panel) return;
+    panel.style.overscrollBehavior = "contain";
+    panel.style.webkitOverflowScrolling = "touch";
+    panel.style.touchAction = "pan-y";
   }
 
   function normalizza(testo) {
@@ -146,7 +114,7 @@
     const candidati = document.querySelectorAll('[role="dialog"], [class*="modal"], [class*="overlay"]');
     let trovato = false;
     candidati.forEach(el => {
-      if (el.classList.contains("auth-modal") || el.classList.contains("mobile-menu") || el.classList.contains("menu-overlay")) return;
+      if (el.classList.contains("auth-modal") || el.classList.contains("mobile-menu") || el.classList.contains("menu-overlay") || el.classList.contains("unified-menu-overlay")) return;
       const st = window.getComputedStyle(el);
       if (st.display === "none" || st.visibility === "hidden" || st.opacity === "0") return;
       const rect = el.getBoundingClientRect();
