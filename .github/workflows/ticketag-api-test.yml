@@ -2,6 +2,9 @@ name: Ticketag API test
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - ticketag-monitor
 
 jobs:
   test:
