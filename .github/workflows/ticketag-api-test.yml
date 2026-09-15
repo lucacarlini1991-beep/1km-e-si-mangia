@@ -1,0 +1,18 @@
+name: Ticketag API test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test endpoint TicketOne
+        env:
+          TICKETONE_EVENT_ID: '47392'
+          TICKETONE_SUB_EVENT_ID: '90600130'
+        run: node ticketag-monitor/check.mjs
