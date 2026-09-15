@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Ticketag Sampdoria — controllo</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:#10245b;background:#f5f7fb}
+*{box-sizing:border-box}body{margin:0;padding:24px 16px 40px}.wrap{max-width:620px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.brand{font-weight:900;letter-spacing:.5px;font-size:18px}.lock{font-size:13px;background:#e9eef9;border-radius:999px;padding:7px 11px}.card{background:white;border-radius:24px;padding:24px;box-shadow:0 8px 30px rgba(16,36,91,.08);margin-bottom:16px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;opacity:.6;margin-bottom:8px}.match{font-size:28px;font-weight:900;line-height:1.1;margin:0 0 8px}.meta{color:#66758f;line-height:1.5}.status{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:16px;background:#fff7df;margin-top:18px}.dot{width:12px;height:12px;border-radius:50%;background:#e6a700;margin-top:5px;flex:none}.status strong{display:block;margin-bottom:4px}.small{font-size:13px;color:#71809a;line-height:1.5}.btn{display:block;text-align:center;text-decoration:none;background:#173f9e;color:#fff;font-weight:800;padding:16px;border-radius:16px;margin-top:18px}.btn.secondary{background:#edf2fb;color:#173f9e}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all;background:#f3f5f8;padding:12px;border-radius:12px;margin-top:12px}.ok{background:#eaf8ef}.ok .dot{background:#20a45a}h2{font-size:20px;margin:0 0 10px}.note{font-size:14px;line-height:1.55;color:#5e6d86;margin:0}.footer{text-align:center;color:#8995a9;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand">1 KM E SI MANGIA</div><div class="lock">🔒 pagina privata</div></div>
+  <section class="card">
+    <div class="eyebrow">Ticketag Sampdoria</div>
+    <h1 class="match">Sampdoria vs Catanzaro</h1>
+    <div class="meta">Luigi Ferraris · sabato 19 settembre 2026 · ore 17:15</div>
+    <a class="btn" href="https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1" target="_blank" rel="noopener">🎟️ Apri Ticketag</a>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">Ultimo test tecnico</div>
+    <div class="status">
+      <div class="dot"></div>
+      <div><strong>API TicketOne: accesso negato (HTTP 403)</strong><div class="small">Il test singolo eseguito oggi dal server GitHub è arrivato al servizio TicketOne, ma Akamai ha bloccato la richiesta automatica. Questo NON significa che la Gradinata Sud sia esaurita: la pagina Ticketag continua a mostrare che le disponibilità possono comparire e sparire.</div></div>
+    </div>
+    <div class="mono">GET /api/event/getpricesoptimized/47392/90600130 → 403 Access Denied</div>
+  </section>
+
+  <section class="card">
+    <h2>Come lo useremo</h2>
+    <p class="note">Questa è la pagina di controllo dedicata. Qui terremo il pannello del Ticketag senza inserirlo nel menu pubblico del sito. Per ora non faccio polling automatico di TicketOne: i termini del servizio vietano strumenti automatizzati per accedere al sito o aggirare i limiti. Prima cerchiamo un metodo ufficiale/autorizzato che permetta di rilevare le disponibilità.</p>
+    <a class="btn secondary" href="https://github.com/lucacarlini1991-beep/1km-e-si-mangia/actions/workflows/ticketag-api-test.yml" target="_blank" rel="noopener">Stato test tecnico su GitHub</a>
+  </section>
+  <div class="footer">Pagina non indicizzata e non collegata al menu pubblico.</div>
+</div>
+</body>
+</html>
