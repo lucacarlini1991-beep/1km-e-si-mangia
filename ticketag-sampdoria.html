@@ -7,34 +7,50 @@
 <title>Ticketag Sampdoria — controllo</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:#10245b;background:#f5f7fb}
-*{box-sizing:border-box}body{margin:0;padding:24px 16px 40px}.wrap{max-width:620px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.brand{font-weight:900;letter-spacing:.5px;font-size:18px}.lock{font-size:13px;background:#e9eef9;border-radius:999px;padding:7px 11px}.card{background:white;border-radius:24px;padding:24px;box-shadow:0 8px 30px rgba(16,36,91,.08);margin-bottom:16px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;opacity:.6;margin-bottom:8px}.match{font-size:28px;font-weight:900;line-height:1.1;margin:0 0 8px}.meta{color:#66758f;line-height:1.5}.status{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:16px;background:#fff7df;margin-top:18px}.dot{width:12px;height:12px;border-radius:50%;background:#e6a700;margin-top:5px;flex:none}.status strong{display:block;margin-bottom:4px}.small{font-size:13px;color:#71809a;line-height:1.5}.btn{display:block;text-align:center;text-decoration:none;background:#173f9e;color:#fff;font-weight:800;padding:16px;border-radius:16px;margin-top:18px}.btn.secondary{background:#edf2fb;color:#173f9e}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all;background:#f3f5f8;padding:12px;border-radius:12px;margin-top:12px}.ok{background:#eaf8ef}.ok .dot{background:#20a45a}h2{font-size:20px;margin:0 0 10px}.note{font-size:14px;line-height:1.55;color:#5e6d86;margin:0}.footer{text-align:center;color:#8995a9;font-size:12px;margin-top:24px}
+*{box-sizing:border-box}body{margin:0;padding:24px 16px 40px}.wrap{max-width:620px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.brand{font-weight:900;letter-spacing:.5px;font-size:18px}.lock{font-size:13px;background:#e9eef9;border-radius:999px;padding:7px 11px}.card{background:white;border-radius:24px;padding:24px;box-shadow:0 8px 30px rgba(16,36,91,.08);margin-bottom:16px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;opacity:.6;margin-bottom:8px}.match{font-size:28px;font-weight:900;line-height:1.1;margin:0 0 8px}.meta{color:#66758f;line-height:1.5}.status{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:16px;background:#fff7df;margin-top:18px}.dot{width:12px;height:12px;border-radius:50%;background:#e6a700;margin-top:5px;flex:none}.status strong{display:block;margin-bottom:4px}.small{font-size:13px;color:#71809a;line-height:1.5}.btn{display:block;text-align:center;text-decoration:none;background:#173f9e;color:#fff;font-weight:800;padding:16px;border-radius:16px;margin-top:18px;border:0;width:100%;font-size:16px;cursor:pointer}.btn.secondary{background:#edf2fb;color:#173f9e}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all;background:#f3f5f8;padding:12px;border-radius:12px;margin-top:12px}.ok{background:#eaf8ef}.ok .dot{background:#20a45a}h2{font-size:20px;margin:0 0 10px}.note{font-size:14px;line-height:1.55;color:#5e6d86;margin:0}.footer{text-align:center;color:#8995a9;font-size:12px;margin-top:24px}.consent{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:13px;color:#5e6d86;line-height:1.45}.consent input{width:20px;height:20px;flex:none}.timer{font-size:38px;font-weight:900;text-align:center;margin:10px 0}.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#eaf8ef;color:#16733e;font-size:12px;font-weight:800}.hidden{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top"><div class="brand">1 KM E SI MANGIA</div><div class="lock">🔒 pagina privata</div></div>
+
   <section class="card">
     <div class="eyebrow">Ticketag Sampdoria</div>
     <h1 class="match">Sampdoria vs Catanzaro</h1>
     <div class="meta">Luigi Ferraris · sabato 19 settembre 2026 · ore 17:15</div>
-    <a class="btn" href="https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1" target="_blank" rel="noopener">🎟️ Apri Ticketag</a>
+    <div class="status ok"><div class="dot"></div><div><strong>Controllo assistito</strong><div class="small">Premi il pulsante solo quando vuoi controllare. La pagina non effettua richieste automatiche a TicketOne.</div></div></div>
+    <label class="consent"><input id="consent" type="checkbox"><span>Autorizzo <b>questo singolo controllo</b> e voglio aprire Ticketag nella mia sessione del browser.</span></label>
+    <button id="start" class="btn" disabled>🎟️ AVVIA CONTROLLO</button>
+    <div id="active" class="hidden" style="text-align:center;margin-top:16px"><span class="pill">CONTROLLO AUTORIZZATO</span><div class="timer" id="timer">30:00</div><div class="small">Quando il timer termina, il controllo assistito si chiude. Se vuoi ricontrollare, autorizza nuovamente.</div></div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">Istruzioni rapide</div>
+    <p class="note">1. Autorizza il singolo controllo. 2. Si apre Ticketag. 3. Controlla Gradinata Sud nella tua sessione. 4. Se compare disponibilità, procedi tu all'acquisto. Il sito non effettua login, acquisti, bypass o richieste nascoste.</p>
+    <a class="btn secondary" href="https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1" target="_blank" rel="noopener">Apri Ticketag direttamente</a>
   </section>
 
   <section class="card">
     <div class="eyebrow">Ultimo test tecnico</div>
-    <div class="status">
-      <div class="dot"></div>
-      <div><strong>API TicketOne: accesso negato (HTTP 403)</strong><div class="small">Il test singolo eseguito oggi dal server GitHub è arrivato al servizio TicketOne, ma Akamai ha bloccato la richiesta automatica. Questo NON significa che la Gradinata Sud sia esaurita: la pagina Ticketag continua a mostrare che le disponibilità possono comparire e sparire.</div></div>
-    </div>
+    <div class="status"><div class="dot"></div><div><strong>API TicketOne: HTTP 403</strong><div class="small">Il server GitHub è stato bloccato da Akamai. Questo non indica che la Gradinata Sud sia esaurita.</div></div></div>
     <div class="mono">GET /api/event/getpricesoptimized/47392/90600130 → 403 Access Denied</div>
   </section>
 
   <section class="card">
-    <h2>Come lo useremo</h2>
-    <p class="note">Questa è la pagina di controllo dedicata. Qui terremo il pannello del Ticketag senza inserirlo nel menu pubblico del sito. Per ora non faccio polling automatico di TicketOne: i termini del servizio vietano strumenti automatizzati per accedere al sito o aggirare i limiti. Prima cerchiamo un metodo ufficiale/autorizzato che permetta di rilevare le disponibilità.</p>
-    <a class="btn secondary" href="https://github.com/lucacarlini1991-beep/1km-e-si-mangia/actions/workflows/ticketag-api-test.yml" target="_blank" rel="noopener">Stato test tecnico su GitHub</a>
+    <h2>Perché funziona così</h2>
+    <p class="note">Le condizioni TicketOne attuali vietano strumenti automatizzati per accedere al sito o aggirare i limiti. Per questo questa console registra il tuo consenso per un controllo manuale/assistito, ma non esegue polling in background e non cerca di eludere le protezioni.</p>
   </section>
   <div class="footer">Pagina non indicizzata e non collegata al menu pubblico.</div>
 </div>
+<script>
+const consent=document.getElementById('consent'),start=document.getElementById('start'),active=document.getElementById('active'),timer=document.getElementById('timer');
+consent.addEventListener('change',()=>start.disabled=!consent.checked);
+start.addEventListener('click',()=>{
+  if(!consent.checked)return;
+  active.classList.remove('hidden'); start.disabled=true; consent.disabled=true;
+  window.open('https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1','_blank','noopener');
+  let left=1800; const tick=()=>{const m=String(Math.floor(left/60)).padStart(2,'0'),s=String(left%60).padStart(2,'0');timer.textContent=m+':'+s;if(left<=0){clearInterval(id);active.innerHTML='<span class="pill">CONTROLLO TERMINATO</span><div class="small" style="margin-top:10px">Per un nuovo controllo devi dare nuovamente il consenso.</div>';consent.disabled=false;consent.checked=false;start.disabled=true;return}left--}; tick(); const id=setInterval(tick,1000);
+});
+</script>
 </body>
 </html>
