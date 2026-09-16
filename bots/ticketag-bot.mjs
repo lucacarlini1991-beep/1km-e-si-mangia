@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 const URL = process.env.TICKETAG_URL || 'https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1';
 const TARGETS = ['gradinata sud', 'gradinata sud inferiore', 'gradinata sud superiore'];
-const PURCHASE = /(acquista|compra|seleziona|procedi all'acquisto|aggiungi al carrello)/i;
+const PURCHASE = /(acquista|compra|seleziona|procedi all'acquisto|aggiungi al carrello|continua|scegli|disponibil)/i;
 const SOLD = /(venduto|esaurit|sold out|non disponibile|terminat)/i;
 
 const browser = await chromium.launch({ headless: true });
@@ -21,46 +21,40 @@ try {
   const lower = body.toLowerCase();
   const target = TARGETS.find(t => lower.includes(t));
 
-  if (target) {
+  if (!target) {
+    details = 'Gradinata Sud non trovata nella pagina renderizzata.';
+  } else {
     const idx = lower.indexOf(target);
-    const snippet = body.slice(Math.max(0, idx - 250), idx + 900).trim();
-    details = snippet;
+    details = body.slice(Math.max(0, idx - 250), idx + 900).trim();
 
-    // Do not treat the "Ultimi biglietti venduti" history as availability.
-    // Look for an actual purchase control in an element containing the target
-    // sector, and reject containers explicitly marked as sold/unavailable.
-    const candidates = await page.locator('body *').evaluateAll((els, targets) => {
-      const out = [];
-      for (const el of els) {
-        const text = (el.innerText || '').replace(/\s+/g, ' ').trim();
-        if (!text) continue;
-        const low = text.toLowerCase();
-        if (!targets.some(t => low.includes(t))) continue;
-        if (text.length > 2500) continue;
-
+    // Important: Ticketag also shows a history of recently SOLD tickets.
+    // Never use that history as proof of availability. Instead inspect actual
+    // interactive purchase controls and their nearby sector container.
+    const controls = await page.locator('button, a, [role="button"], input[type="submit"]')
+      .evaluateAll((els, targets) => els.map(el => {
         let node = el;
-        for (let level = 0; level < 6 && node; level++, node = node.parentElement) {
-          const t = (node.innerText || '').replace(/\s+/g, ' ').trim();
-          const html = (node.outerHTML || '').toLowerCase();
-          if (t.length > 1800) continue;
-          out.push({ text: t, html: html.slice(0, 5000) });
+        const parents = [];
+        for (let i = 0; i < 7 && node; i++, node = node.parentElement) {
+          parents.push((node.innerText || '').replace(/\s+/g, ' ').trim());
         }
-      }
-      return out;
-    }, TARGETS);
+        const text = parents.find(t => t && t.length <= 1800 && targets.some(x => t.toLowerCase().includes(x))) || '';
+        return {
+          control: (el.innerText || el.getAttribute('aria-label') || el.getAttribute('value') || '').replace(/\s+/g, ' ').trim(),
+          container: text
+        };
+      }), TARGETS);
 
-    const valid = candidates.find(c => {
-      const t = c.text;
-      const h = c.html;
-      const hasPurchase = PURCHASE.test(t) || /\b(button|btn|acquista|compra|seleziona)\b/.test(h);
-      const hasSold = SOLD.test(t);
-      return hasPurchase && !hasSold;
+    const valid = controls.find(c => {
+      const combined = `${c.control} ${c.container}`;
+      if (!c.container) return false;
+      if (SOLD.test(combined)) return false;
+      return PURCHASE.test(combined);
     });
 
-    available = !!valid;
-    if (available) details = valid.text;
-  } else {
-    details = 'Gradinata Sud non trovata nella pagina renderizzata.';
+    if (valid) {
+      available = true;
+      details = valid.container;
+    }
   }
 
   if (process.env.SAVE_SCREENSHOT === '1') {
