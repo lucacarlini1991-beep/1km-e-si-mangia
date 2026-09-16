@@ -3,7 +3,9 @@ name: Ticketag Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    # Offset di 2 minuti: evita il picco allo scoccare dell'ora.
+    # Ogni run esegue 5 controlli, uno circa ogni minuto.
+    - cron: '2-57/5 * * * *'
 
 permissions:
   contents: write
