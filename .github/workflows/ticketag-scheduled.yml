@@ -1,6 +1,9 @@
 name: Ticketag Scheduled Watch
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     # Un controllo ogni 5 minuti, spostato fuori dal minuto 0 per ridurre i ritardi.
     - cron: '4-59/5 * * * *'
