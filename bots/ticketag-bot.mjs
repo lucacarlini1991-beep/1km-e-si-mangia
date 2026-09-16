@@ -3,7 +3,11 @@ import fs from 'node:fs';
 
 const URL = process.env.TICKETAG_URL || 'https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1';
 const TARGETS = ['gradinata sud', 'gradinata sud inferiore', 'gradinata sud superiore'];
-const PURCHASE = /(acquista|compra|seleziona|procedi all'acquisto|aggiungi al carrello|continua|scegli|disponibil)/i;
+// Only treat an explicit purchase/select action as availability.
+// Generic words such as "continua" or page text mentioning "disponibilità"
+// are intentionally excluded because Ticketag displays them even when all
+// currently listed tickets are already sold.
+const PURCHASE = /(acquista|compra|seleziona posto|scegli posto|aggiungi al carrello|procedi all'acquisto)/i;
 const SOLD = /(venduto|esaurit|sold out|non disponibile|terminat)/i;
 
 const browser = await chromium.launch({ headless: true });
@@ -27,33 +31,38 @@ try {
     const idx = lower.indexOf(target);
     details = body.slice(Math.max(0, idx - 250), idx + 900).trim();
 
-    // Important: Ticketag also shows a history of recently SOLD tickets.
-    // Never use that history as proof of availability. Instead inspect actual
-    // interactive purchase controls and their nearby sector container.
+    // Inspect only visible, enabled interactive controls. The control itself
+    // must contain an explicit purchase/select action, and its nearby sector
+    // container must mention Gradinata Sud without sold/unavailable markers.
     const controls = await page.locator('button, a, [role="button"], input[type="submit"]')
       .evaluateAll((els, targets) => els.map(el => {
+        const style = window.getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        const visible = style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+        const disabled = el.disabled || el.getAttribute('aria-disabled') === 'true';
         let node = el;
         const parents = [];
-        for (let i = 0; i < 7 && node; i++, node = node.parentElement) {
+        for (let i = 0; i < 8 && node; i++, node = node.parentElement) {
           parents.push((node.innerText || '').replace(/\s+/g, ' ').trim());
         }
-        const text = parents.find(t => t && t.length <= 1800 && targets.some(x => t.toLowerCase().includes(x))) || '';
-        return {
-          control: (el.innerText || el.getAttribute('aria-label') || el.getAttribute('value') || '').replace(/\s+/g, ' ').trim(),
-          container: text
-        };
+        const container = parents.find(t => t && t.length <= 2500 && targets.some(x => t.toLowerCase().includes(x))) || '';
+        const control = (el.innerText || el.getAttribute('aria-label') || el.getAttribute('value') || '').replace(/\s+/g, ' ').trim();
+        return { control, container, visible, disabled };
       }), TARGETS);
 
     const valid = controls.find(c => {
+      if (!c.visible || c.disabled || !c.container) return false;
+      if (!PURCHASE.test(c.control)) return false;
       const combined = `${c.control} ${c.container}`;
-      if (!c.container) return false;
       if (SOLD.test(combined)) return false;
-      return PURCHASE.test(combined);
+      return true;
     });
 
     if (valid) {
       available = true;
       details = valid.container;
+    } else {
+      details = 'Gradinata Sud presente, ma nessun controllo di acquisto/selezione attivo rilevato.';
     }
   }
 
