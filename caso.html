@@ -11,48 +11,22 @@
   <style>
     :root{--ink:#171a1d;--paper:#eee6d5;--paper2:#f8f3e8;--wine:#762d32;--gold:#b6975a;--muted:#8e877b;--line:rgba(238,230,213,.16)}
     *{box-sizing:border-box} body{margin:0;background:#101214;color:var(--paper);font-family:'Roboto Condensed',Arial,sans-serif;min-height:100vh}
-    .page{width:min(1180px,100%);margin:auto;padding:30px 22px 70px}
-    .top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 0 22px;gap:20px}
-    .eyebrow{font-size:12px;letter-spacing:4px;text-transform:uppercase;color:var(--gold)}
-    .case-no{font-size:12px;letter-spacing:2px;color:#aaa39a;text-transform:uppercase}
-    .hero{padding:72px 0 48px;display:grid;grid-template-columns:1.3fr .7fr;gap:55px;align-items:end}
-    h1{font-family:'Cormorant Garamond',serif;font-size:clamp(64px,9vw,116px);line-height:.78;margin:0 0 28px;font-weight:700;letter-spacing:-3px}
-    h1 span{color:var(--wine)}
-    .subtitle{font-family:'Cormorant Garamond',serif;font-size:25px;line-height:1.25;color:#d5cdbc;max-width:650px}
-    .quote{border-left:2px solid var(--wine);padding-left:22px;font-family:'Cormorant Garamond',serif;font-size:25px;line-height:1.3;color:#ddd5c6}
-    .quote small{display:block;margin-top:15px;font-family:'Roboto Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
-    .brief{background:var(--paper);color:var(--ink);padding:34px 36px;margin:15px 0 42px;position:relative;box-shadow:10px 12px 0 rgba(118,45,50,.28)}
-    .brief:before{content:'RISERVATO';position:absolute;right:24px;top:20px;border:2px solid var(--wine);color:var(--wine);padding:6px 10px;font-weight:700;letter-spacing:2px;transform:rotate(3deg);font-size:11px}
-    .brief h2{font-family:'Cormorant Garamond',serif;font-size:35px;margin:0 0 12px}.brief p{font-size:18px;line-height:1.55;max-width:850px;margin:8px 0}.brief strong{color:var(--wine)}
-    .section-title{font-family:'Cormorant Garamond',serif;font-size:38px;margin:52px 0 18px}.section-note{color:#9e988d;margin:-8px 0 20px}
-    .envelopes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-    .env{background:linear-gradient(145deg,#25282b,#1b1d20);border:1px solid #3b3e40;padding:25px;min-height:185px;position:relative;overflow:hidden;transition:.2s}
-    .env:after{content:'✦';position:absolute;right:-10px;bottom:-30px;font-family:serif;font-size:130px;color:rgba(182,151,90,.06)}
-    .env:hover{border-color:#6b6254;transform:translateY(-2px)}
-    .env .num{font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}.env h3{font-family:'Cormorant Garamond',serif;font-size:29px;margin:13px 0 8px}.env p{color:#aaa49b;line-height:1.35;margin:0 0 18px}
-    .env button{border:1px solid #625a4d;background:transparent;color:#d8cfbf;padding:10px 14px;font:700 12px 'Roboto Condensed';letter-spacing:1px;text-transform:uppercase;cursor:pointer}.env button:hover{border-color:var(--gold);color:#fff}
-    .locked{opacity:.66}.locked button{cursor:not-allowed}
-    .board{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{border:1px solid #36393b;padding:24px;background:#17191b}.panel h3{font-family:'Cormorant Garamond',serif;font-size:27px;margin:0 0 8px}.panel p{color:#a8a198;line-height:1.45;margin:0}.names{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.tag{border:1px solid #4a4742;padding:8px 12px;color:#d4cbbd;font-size:13px}
-    footer{border-top:1px solid var(--line);margin-top:58px;padding-top:20px;color:#77736d;font-size:12px;letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;gap:20px}
+    .page{width:min(1180px,100%);margin:auto;padding:30px 22px 70px}.top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 0 22px;gap:20px}.eyebrow{font-size:12px;letter-spacing:4px;text-transform:uppercase;color:var(--gold)}.case-no{font-size:12px;letter-spacing:2px;color:#aaa39a;text-transform:uppercase}
+    .hero{padding:72px 0 48px;display:grid;grid-template-columns:1.3fr .7fr;gap:55px;align-items:end}h1{font-family:'Cormorant Garamond',serif;font-size:clamp(64px,9vw,116px);line-height:.78;margin:0 0 28px;font-weight:700;letter-spacing:-3px}h1 span{color:var(--wine)}.subtitle{font-family:'Cormorant Garamond',serif;font-size:25px;line-height:1.25;color:#d5cdbc;max-width:650px}.quote{border-left:2px solid var(--wine);padding-left:22px;font-family:'Cormorant Garamond',serif;font-size:25px;line-height:1.3;color:#ddd5c6}.quote small{display:block;margin-top:15px;font-family:'Roboto Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+    .brief{background:var(--paper);color:var(--ink);padding:34px 36px;margin:15px 0 42px;position:relative;box-shadow:10px 12px 0 rgba(118,45,50,.28)}.brief:before{content:'RISERVATO';position:absolute;right:24px;top:20px;border:2px solid var(--wine);color:var(--wine);padding:6px 10px;font-weight:700;letter-spacing:2px;transform:rotate(3deg);font-size:11px}.brief h2{font-family:'Cormorant Garamond',serif;font-size:35px;margin:0 0 12px}.brief p{font-size:18px;line-height:1.55;max-width:850px;margin:8px 0}.brief strong{color:var(--wine)}
+    .section-title{font-family:'Cormorant Garamond',serif;font-size:38px;margin:52px 0 18px}.section-note{color:#9e988d;margin:-8px 0 20px}.envelopes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.env{background:linear-gradient(145deg,#25282b,#1b1d20);border:1px solid #3b3e40;padding:25px;min-height:185px;position:relative;overflow:hidden;transition:.2s}.env:after{content:'✦';position:absolute;right:-10px;bottom:-30px;font-family:serif;font-size:130px;color:rgba(182,151,90,.06)}.env:hover{border-color:#6b6254;transform:translateY(-2px)}.env .num{font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}.env h3{font-family:'Cormorant Garamond',serif;font-size:29px;margin:13px 0 8px}.env p{color:#aaa49b;line-height:1.35;margin:0 0 18px}.env button,.help-btn{border:1px solid #625a4d;background:transparent;color:#d8cfbf;padding:10px 14px;font:700 12px 'Roboto Condensed';letter-spacing:1px;text-transform:uppercase;cursor:pointer}.env button:hover,.help-btn:hover{border-color:var(--gold);color:#fff}.locked{opacity:.66}.locked button{cursor:not-allowed}
+    .help{margin-top:42px;border:1px solid #4b4039;background:linear-gradient(135deg,#211a1b,#17191b);padding:28px;display:grid;grid-template-columns:1fr auto;gap:25px;align-items:center}.help h2{font-family:'Cormorant Garamond',serif;font-size:34px;margin:0 0 7px}.help p{color:#b8b0a4;line-height:1.45;margin:0;max-width:760px}.help strong{color:#d8cfbf}.help-btn{background:var(--wine);border-color:var(--wine);padding:13px 18px}.help-btn:hover{background:#8b383e;border-color:#8b383e}.levels{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.level{font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:6px 9px;border:1px solid #49433d;color:#aaa49b}.level:nth-child(2){border-color:#655a48}.level:nth-child(3){border-color:#704247;color:#c6a5a5}
+    .board{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{border:1px solid #36393b;padding:24px;background:#17191b}.panel h3{font-family:'Cormorant Garamond',serif;font-size:27px;margin:0 0 8px}.panel p{color:#a8a198;line-height:1.45;margin:0}.names{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.tag{border:1px solid #4a4742;padding:8px 12px;color:#d4cbbd;font-size:13px}footer{border-top:1px solid var(--line);margin-top:58px;padding-top:20px;color:#77736d;font-size:12px;letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;gap:20px}
     .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:10;padding:24px;align-items:center;justify-content:center}.modal.open{display:flex}.modal-card{max-width:720px;width:100%;background:var(--paper2);color:var(--ink);padding:38px;box-shadow:0 25px 70px #000}.modal-card .stamp{color:var(--wine);font-weight:700;letter-spacing:2px;font-size:11px}.modal-card h2{font-family:'Cormorant Garamond',serif;font-size:40px;margin:8px 0 16px}.modal-card p{font-size:18px;line-height:1.55}.close{margin-top:20px;background:var(--wine);color:#fff;border:0;padding:13px 20px;font:700 13px 'Roboto Condensed';letter-spacing:1px;cursor:pointer}
-    @media(max-width:760px){.page{padding:20px 15px 55px}.hero{grid-template-columns:1fr;gap:28px;padding-top:52px}h1{font-size:70px}.subtitle{font-size:22px}.envelopes{grid-template-columns:1fr}.board{grid-template-columns:1fr}.brief{padding:27px 22px}.brief:before{position:static;display:inline-block;margin-bottom:15px}.top{align-items:flex-start;flex-direction:column}}
+    @media(max-width:760px){.page{padding:20px 15px 55px}.hero{grid-template-columns:1fr;gap:28px;padding-top:52px}h1{font-size:70px}.subtitle{font-size:22px}.envelopes{grid-template-columns:1fr}.board{grid-template-columns:1fr}.brief{padding:27px 22px}.brief:before{position:static;display:inline-block;margin-bottom:15px}.top{align-items:flex-start;flex-direction:column}.help{grid-template-columns:1fr;padding:23px}.help-btn{width:100%}}
   </style>
 </head>
 <body>
 <main class="page">
   <header class="top"><div class="eyebrow">Fascicolo investigativo</div><div class="case-no">CASE FILE · UL-01 · 2026</div></header>
-  <section class="hero">
-    <div><div class="eyebrow">Londra 2026 · Budapest 1984</div><h1>L'Ultima<br><span>Lettera</span></h1><div class="subtitle">Due città. Un passato nascosto. Una sola verità.</div></div>
-    <div class="quote">«Alcune storie non finiscono quando smettiamo di raccontarle.»<small>— appunto anonimo, fascicolo UL-01</small></div>
-  </section>
-  <section class="brief">
-    <div class="stamp">ACCESSO RISERVATO · INVESTIGATORI</div>
-    <h2>Benvenuti nell'indagine, Luca e Sara.</h2>
-    <p>Da questo momento questa pagina è il vostro <strong>fascicolo digitale</strong>. Le prove arriveranno nel corso dell'indagine: documenti, messaggi, fotografie, lettere, ritagli di giornale e testimonianze.</p>
-    <p><strong>Non cercate subito il colpevole.</strong> Ricostruite prima i fatti. Alcuni dettagli sembreranno irrilevanti. Altri potrebbero essere falsi. Il passato di Budapest non vi verrà spiegato tutto insieme.</p>
-  </section>
-  <h2 class="section-title">Le buste del caso</h2>
-  <p class="section-note">Le buste verranno aperte progressivamente durante la partita.</p>
+  <section class="hero"><div><div class="eyebrow">Londra 2026 · Budapest 1984</div><h1>L'Ultima<br><span>Lettera</span></h1><div class="subtitle">Due città. Un passato nascosto. Una sola verità.</div></div><div class="quote">«Alcune storie non finiscono quando smettiamo di raccontarle.»<small>— appunto anonimo, fascicolo UL-01</small></div></section>
+  <section class="brief"><div class="stamp">ACCESSO RISERVATO · INVESTIGATORI</div><h2>Benvenuti nell'indagine, Luca e Sara.</h2><p>Da questo momento questa pagina è il vostro <strong>fascicolo digitale</strong>. Le prove arriveranno nel corso dell'indagine: documenti, messaggi, fotografie, lettere, ritagli di giornale e testimonianze.</p><p><strong>Non cercate subito il colpevole.</strong> Ricostruite prima i fatti. Alcuni dettagli sembreranno irrilevanti. Altri potrebbero essere falsi. Il passato di Budapest non vi verrà spiegato tutto insieme.</p></section>
+  <h2 class="section-title">Le buste del caso</h2><p class="section-note">Le buste verranno aperte progressivamente durante la partita.</p>
   <section class="envelopes">
     <article class="env"><div class="num">Busta 01</div><h3>Il primo rapporto</h3><p>La scena iniziale e le informazioni che la polizia ha raccolto.</p><button type="button" data-open="briefing">Apri fascicolo</button></article>
     <article class="env locked"><div class="num">Busta 02</div><h3>I sospettati</h3><p>Volti, relazioni, alibi e ciò che ciascuno preferirebbe nascondere.</p><button type="button" disabled>Sigillata</button></article>
@@ -61,16 +35,19 @@
     <article class="env locked"><div class="num">Busta 05</div><h3>Il collegamento</h3><p>Quando i dettagli iniziano finalmente a combaciare.</p><button type="button" disabled>Sigillata</button></article>
     <article class="env locked"><div class="num">Busta 06</div><h3>La verità</h3><p>La fase finale. Solo dopo aver formulato la vostra teoria.</p><button type="button" disabled>Sigillata</button></article>
   </section>
-  <h2 class="section-title">Bacheca investigativa</h2>
-  <section class="board">
-    <div class="panel"><h3>Investigatori</h3><p>La squadra incaricata di ricostruire il caso.</p><div class="names"><span class="tag">Luca</span><span class="tag">Sara</span></div></div>
-    <div class="panel"><h3>Regola fondamentale</h3><p>Potete chiedere di riesaminare qualsiasi indizio già acquisito. Le vostre ipotesi non modificano i fatti: saranno gli indizi a portarvi alla soluzione.</p></div>
-  </section>
+  <section class="help"><div><div class="eyebrow">Protocollo anti-blocco</div><h2>Serve un aiuto?</h2><p>Essendo la vostra prima indagine, potete chiedere assistenza senza uscire dal gioco. <strong>Gli aiuti non rivelano mai direttamente il colpevole o la soluzione.</strong> Vi aiutano a notare ciò che avete già davanti.</p><div class="levels"><span class="level">Livello 1 · Direzione</span><span class="level">Livello 2 · Dettaglio</span><span class="level">Livello 3 · Svolta</span></div></div><button class="help-btn" type="button" data-open="help">Chiedi un aiuto</button></section>
+  <h2 class="section-title">Bacheca investigativa</h2><section class="board"><div class="panel"><h3>Investigatori</h3><p>La squadra incaricata di ricostruire il caso.</p><div class="names"><span class="tag">Luca</span><span class="tag">Sara</span></div></div><div class="panel"><h3>Regola fondamentale</h3><p>Potete chiedere di riesaminare qualsiasi indizio già acquisito. Le vostre ipotesi non modificano i fatti: saranno gli indizi a portarvi alla soluzione.</p></div></section>
   <footer><span>Documento riservato</span><span>L'Ultima Lettera · UL-01</span></footer>
 </main>
 <div class="modal" id="briefing" aria-hidden="true"><div class="modal-card"><div class="stamp">BUSTA 01 · APERTA</div><h2>Il primo rapporto</h2><p>Questa sera l'indagine comincerà qui. Non ci sono ancora abbastanza elementi per formulare un'accusa. Tornate al vostro fascicolo principale e attendete le istruzioni dell'investigatore capo.</p><p><strong>Quando sarete pronti, scrivete in chat: “Luca e Sara sono pronti”.</strong></p><button class="close" type="button">Chiudi fascicolo</button></div></div>
+<div class="modal" id="help" aria-hidden="true"><div class="modal-card"><div class="stamp">ASSISTENZA INVESTIGATIVA</div><h2>Non siete bloccati. Ancora.</h2><p>Quando vi serve aiuto, tornate qui e scrivetemi semplicemente: <strong>“Aiuto livello 1”</strong>. Se non basta, potrete chiedere il livello 2 e infine il livello 3.</p><p>Io controllerò prima ciò che avete già scoperto e vi darò <strong>solo l'aiuto compatibile con il punto dell'indagine in cui siete arrivati.</strong></p><p><strong>Regola d'oro:</strong> nessun aiuto vi dirà direttamente la soluzione.</p><button class="close" type="button">Chiudi</button></div></div>
 <script>
-(function(){const modal=document.getElementById('briefing');const open=document.querySelector('[data-open="briefing"]');const close=modal.querySelector('.close');open.addEventListener('click',()=>{modal.classList.add('open');modal.setAttribute('aria-hidden','false')});close.addEventListener('click',()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')});modal.addEventListener('click',e=>{if(e.target===modal)close.click()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close.click()})})();
+(function(){
+  const modals=document.querySelectorAll('.modal');
+  document.querySelectorAll('[data-open]').forEach(btn=>btn.addEventListener('click',()=>{const m=document.getElementById(btn.dataset.open);if(m){m.classList.add('open');m.setAttribute('aria-hidden','false')}}));
+  modals.forEach(modal=>{const close=modal.querySelector('.close');close.addEventListener('click',()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')});modal.addEventListener('click',e=>{if(e.target===modal)close.click()})});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal.open .close').forEach(btn=>btn.click())});
+})();
 </script>
 </body>
 </html>
