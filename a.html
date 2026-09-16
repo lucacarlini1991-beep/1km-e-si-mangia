@@ -3,44 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>A — Bot Ticketag</title>
   <style>
     body{margin:0;font-family:Arial,sans-serif;background:#05633f;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
     .box{width:min(680px,100%);background:#fff;color:#073f2e;border-radius:18px;padding:26px;box-shadow:0 15px 40px rgba(0,0,0,.25)}
     h1{margin:0 0 8px;font-size:30px}.sub{color:#60756c;margin-bottom:22px}
     .status{border:1px solid #dce6e1;border-radius:14px;padding:18px;margin-bottom:18px}.dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:#888;margin-right:8px}
-    .ok .dot{background:#0b9b61}.found .dot{background:#f5a719}.error .dot{background:#d64545}
+    .ok .dot{background:#0b9b61}.found .dot{background:#f5a719}.error .dot{background:#d64545}.wait .dot{background:#888}
     .label{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#71847c}.value{font-size:21px;font-weight:700;margin-top:5px}
     a{display:block;text-align:center;background:#f5a719;color:#073f2e;text-decoration:none;font-weight:800;padding:15px;border-radius:12px;margin-top:18px}
     small{display:block;margin-top:14px;color:#71847c;line-height:1.4}
+    #details{font-size:13px;line-height:1.45;color:#60756c;display:none;white-space:pre-wrap}
   </style>
 </head>
 <body>
   <main class="box">
     <h1>Bot Ticketag</h1>
     <div class="sub">Pagina riservata — nome breve: <strong>A</strong></div>
-    <div id="status" class="status"><span class="dot"></span><span id="state">Caricamento stato bot…</span></div>
+    <div id="status" class="status wait"><span class="dot"></span><span id="state">Caricamento stato bot…</span></div>
     <div class="status"><div class="label">Partita monitorata</div><div class="value">Sampdoria – Catanzaro</div></div>
     <div class="status"><div class="label">Ultimo controllo</div><div class="value" id="checked">—</div></div>
-    <div class="status"><div class="label">Gradinata Sud</div><div class="value" id="result">—</div></div>
+    <div class="status"><div class="label">Gradinata Sud</div><div class="value" id="result">—</div><div id="details"></div></div>
     <a href="https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1" target="_blank" rel="noopener">Apri biglietti Sampdoria–Catanzaro</a>
-    <small>Il bot controlla automaticamente la pagina Ticketag/TicketOne. Non effettua acquisti: segnala soltanto la disponibilità rilevata.</small>
+    <small>Il bot controlla automaticamente la pagina Ticketag/TicketOne ogni 5 minuti. Non effettua acquisti: segnala soltanto la disponibilità rilevata.</small>
   </main>
 <script>
+const STATUS_URL='https://raw.githubusercontent.com/lucacarlini1991-beep/1km-e-si-mangia/main/bot-status.json';
+
 async function load(){
   try{
-    const r=await fetch('/bot-status.json?t='+Date.now(),{cache:'no-store'});
+    const r=await fetch(STATUS_URL+'?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
     const d=await r.json();
     const box=document.getElementById('status');
-    const found=!!d.available;
     const hasError=!!d.error;
+    const found=d.available===true;
     box.className='status '+(hasError?'error':(found?'found':'ok'));
-    document.getElementById('state').textContent=hasError?'⚠️ Errore nel controllo':(found?'🚨 BIGLIETTO RILEVATO':'Bot attivo — nessun biglietto rilevato');
+    document.getElementById('state').textContent=hasError?'⚠️ Errore nel controllo':(found?'🚨 BIGLIETTO RILEVATO':'🟢 Bot attivo — nessun biglietto rilevato');
     document.getElementById('checked').textContent=d.checkedAt?new Date(d.checkedAt).toLocaleString('it-IT'):'—';
     document.getElementById('result').textContent=hasError?'Controllo non riuscito':(found?'DISPONIBILE':'Non disponibile');
-  }catch(e){document.getElementById('state').textContent='Stato non ancora disponibile';}
+    const details=document.getElementById('details');
+    details.textContent=d.details||'';
+    details.style.display=found?'block':'none';
+  }catch(e){
+    const box=document.getElementById('status');
+    box.className='status wait';
+    document.getElementById('state').textContent='⚪ Stato non ancora disponibile';
+  }
 }
-load();setInterval(load,10000);
+load();
+setInterval(load,10000);
 </script>
 </body>
 </html>
