@@ -6,10 +6,6 @@ const TARGETS = ['gradinata sud', 'gradinata sud inferiore', 'gradinata sud supe
 const PURCHASE = /(acquista|compra|seleziona posto|scegli posto|aggiungi al carrello|procedi all'acquisto)/i;
 const SOLD = /(venduto|esaurit|sold out|non disponibile|terminat)/i;
 
-const previous = fs.existsSync('bot-status.json')
-  ? JSON.parse(fs.readFileSync('bot-status.json', 'utf8'))
-  : null;
-
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1200 }, locale: 'it-IT' });
 let available = false;
@@ -67,16 +63,16 @@ try {
   await browser.close();
 }
 
-const stateChanged = !previous || previous.available !== available || previous.error !== error;
+// checkedAt deve rappresentare l'ultimo controllo reale, anche quando lo stato
+// (disponibile/non disponibile) non cambia. In questo modo Pagina A può distinguere
+// un bot che sta lavorando da un dato realmente fermo.
 const result = {
-  checkedAt: stateChanged ? new Date().toISOString() : (previous.checkedAt || new Date().toISOString()),
+  checkedAt: new Date().toISOString(),
   available,
-  details: stateChanged ? details : (previous.details || details),
+  details,
   url: URL,
   error
 };
 
-// Keep the published status stable while repeated 15-second checks find the same state.
-// A Git commit is therefore created only when availability/error actually changes.
 fs.writeFileSync('bot-status.json', JSON.stringify(result, null, 2) + '\n');
-console.log(JSON.stringify({ ...result, stateChanged }, null, 2));
+console.log(JSON.stringify(result, null, 2));
