@@ -3,12 +3,12 @@ import fs from 'node:fs';
 
 const URL = process.env.TICKETAG_URL || 'https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1';
 const TARGETS = ['gradinata sud', 'gradinata sud inferiore', 'gradinata sud superiore'];
-// Only treat an explicit purchase/select action as availability.
-// Generic words such as "continua" or page text mentioning "disponibilità"
-// are intentionally excluded because Ticketag displays them even when all
-// currently listed tickets are already sold.
 const PURCHASE = /(acquista|compra|seleziona posto|scegli posto|aggiungi al carrello|procedi all'acquisto)/i;
 const SOLD = /(venduto|esaurit|sold out|non disponibile|terminat)/i;
+
+const previous = fs.existsSync('bot-status.json')
+  ? JSON.parse(fs.readFileSync('bot-status.json', 'utf8'))
+  : null;
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1200 }, locale: 'it-IT' });
@@ -31,9 +31,6 @@ try {
     const idx = lower.indexOf(target);
     details = body.slice(Math.max(0, idx - 250), idx + 900).trim();
 
-    // Inspect only visible, enabled interactive controls. The control itself
-    // must contain an explicit purchase/select action, and its nearby sector
-    // container must mention Gradinata Sud without sold/unavailable markers.
     const controls = await page.locator('button, a, [role="button"], input[type="submit"]')
       .evaluateAll((els, targets) => els.map(el => {
         const style = window.getComputedStyle(el);
@@ -54,8 +51,7 @@ try {
       if (!c.visible || c.disabled || !c.container) return false;
       if (!PURCHASE.test(c.control)) return false;
       const combined = `${c.control} ${c.container}`;
-      if (SOLD.test(combined)) return false;
-      return true;
+      return !SOLD.test(combined);
     });
 
     if (valid) {
@@ -65,23 +61,22 @@ try {
       details = 'Gradinata Sud presente, ma nessun controllo di acquisto/selezione attivo rilevato.';
     }
   }
-
-  if (process.env.SAVE_SCREENSHOT === '1') {
-    await page.screenshot({ path: 'ticketag-bot.png', fullPage: true });
-  }
 } catch (e) {
   error = e?.message || String(e);
 } finally {
   await browser.close();
 }
 
+const stateChanged = !previous || previous.available !== available || previous.error !== error;
 const result = {
-  checkedAt: new Date().toISOString(),
+  checkedAt: stateChanged ? new Date().toISOString() : (previous.checkedAt || new Date().toISOString()),
   available,
   details,
   url: URL,
   error
 };
 
+// Important: while the state remains unchanged, keep the previous timestamp.
+// This prevents a 15-second monitoring loop from generating a Git commit every time.
 fs.writeFileSync('bot-status.json', JSON.stringify(result, null, 2) + '\n');
-console.log(JSON.stringify(result, null, 2));
+console.log(JSON.stringify({ ...result, stateChanged }, null, 2));
