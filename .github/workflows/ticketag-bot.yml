@@ -29,7 +29,7 @@ jobs:
 
       - name: Check Ticketag
         env:
-          TICKETAG_URL: ${{ vars.TICKETAG_URL }}
+          TICKETAG_URL: https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1
         run: node bots/ticketag-bot.mjs
 
       - name: Publish status
