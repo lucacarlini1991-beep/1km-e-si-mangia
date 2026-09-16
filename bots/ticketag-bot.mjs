@@ -71,12 +71,12 @@ const stateChanged = !previous || previous.available !== available || previous.e
 const result = {
   checkedAt: stateChanged ? new Date().toISOString() : (previous.checkedAt || new Date().toISOString()),
   available,
-  details,
+  details: stateChanged ? details : (previous.details || details),
   url: URL,
   error
 };
 
-// Important: while the state remains unchanged, keep the previous timestamp.
-// This prevents a 15-second monitoring loop from generating a Git commit every time.
+// Keep the published status stable while repeated 15-second checks find the same state.
+// A Git commit is therefore created only when availability/error actually changes.
 fs.writeFileSync('bot-status.json', JSON.stringify(result, null, 2) + '\n');
 console.log(JSON.stringify({ ...result, stateChanged }, null, 2));
