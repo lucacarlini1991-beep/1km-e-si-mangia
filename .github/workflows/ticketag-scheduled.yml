@@ -6,9 +6,6 @@ on:
       - main
     paths-ignore:
       - bot-status.json
-  schedule:
-    # Riavvio di sicurezza ogni 5 minuti.
-    - cron: '4-59/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -48,19 +45,20 @@ jobs:
           git config user.name "ticketag-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Una singola esecuzione resta attiva quasi 6 ore: non dipendiamo
-          # dal trigger schedule per ogni singolo controllo.
+          # Una singola esecuzione resta attiva quasi 6 ore.
+          # Il riavvio finale la fa ripartire senza dipendere dal cron.
           for i in $(seq 1 290); do
             echo "===== Controllo $i/290: $(date -u '+%Y-%m-%d %H:%M:%S UTC') ====="
             node bots/ticketag-bot.mjs
 
-            git add bot-status.json
-            if git diff --cached --quiet; then
+            if git diff --quiet -- bot-status.json; then
               echo "Nessuna modifica da pubblicare."
             else
-              git pull --rebase origin main
+              # Prima creiamo il commit locale, poi riallineiamo main e infine pushiamo.
+              # In questo modo evitiamo il pull --rebase con modifiche già staged.
               git add bot-status.json
               git commit -m "Aggiorna stato bot Ticketag"
+              git pull --rebase origin main
               git push origin HEAD:main
             fi
 
@@ -70,8 +68,7 @@ jobs:
             fi
           done
 
-          # Riavvio autonomo: modifica un file diverso da bot-status.json,
-          # quindi il push avvia una nuova esecuzione senza creare un loop.
+          # Riavvio autonomo: il push di questo file avvia una nuova esecuzione.
           date -u '+%Y-%m-%dT%H:%M:%SZ' > .github/ticketag-heartbeat
           git add .github/ticketag-heartbeat
           git commit -m "Riavvia monitor Ticketag"
