@@ -3,15 +3,21 @@ name: Ticketag Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: '* * * * *'
+    # GitHub Actions supporta come minimo un avvio programmato ogni 5 minuti.
+    # Dentro ogni run eseguiamo 5 controlli, uno circa ogni minuto.
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
 
+concurrency:
+  group: ticketag-bot
+  cancel-in-progress: false
+
 jobs:
   check-ticketag:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,20 +35,34 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Check Ticketag
+      - name: Controllo Ticketag ogni minuto
         env:
           TICKETAG_URL: https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1
-        run: node bots/ticketag-bot.mjs
-
-      - name: Publish status
         run: |
-          git config user.name "ticketag-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add bot-status.json
-          if git diff --cached --quiet; then
-            echo "Nessun cambiamento nello stato."
-            exit 0
-          fi
-          git commit -m "Aggiorna stato bot Ticketag"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          set -e
+
+          for i in 1 2 3 4 5; do
+            echo "===== Controllo Ticketag $i/5 ====="
+
+            # Recupera eventuali modifiche remote prima di ogni pubblicazione.
+            git pull --rebase origin main
+
+            node bots/ticketag-bot.mjs
+
+            git config user.name "ticketag-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add bot-status.json
+
+            if git diff --cached --quiet; then
+              echo "Nessun cambiamento nello stato."
+            else
+              git commit -m "Aggiorna stato bot Ticketag"
+              git pull --rebase origin main
+              git push origin HEAD:main
+            fi
+
+            # Attendi circa un minuto prima del controllo successivo.
+            if [ "$i" -lt 5 ]; then
+              sleep 60
+            fi
+          done
