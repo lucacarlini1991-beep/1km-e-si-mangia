@@ -2,10 +2,6 @@ name: Ticketag Bot
 
 on:
   workflow_dispatch:
-  schedule:
-    # GitHub permette un avvio programmato non più frequente di 5 minuti.
-    # Offset di 3 minuti per ridurre i ritardi dei picchi allo scoccare dell'ora.
-    - cron: '3-58/5 * * * *'
 
 permissions:
   contents: write
