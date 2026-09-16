@@ -3,8 +3,6 @@ name: Ticketag Bot
 on:
   workflow_dispatch:
   schedule:
-    # GitHub Actions supporta come minimo un avvio programmato ogni 5 minuti.
-    # Dentro ogni run eseguiamo 5 controlli, uno circa ogni minuto.
     - cron: '*/5 * * * *'
 
 permissions:
@@ -17,7 +15,7 @@ concurrency:
 jobs:
   check-ticketag:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,6 +26,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install Playwright
         run: npm install --no-save playwright@1.55.0
@@ -35,18 +34,13 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Controllo Ticketag ogni minuto
+      - name: Controlli Ticketag
         env:
           TICKETAG_URL: https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1
         run: |
           set -e
-
           for i in 1 2 3 4 5; do
-            echo "===== Controllo Ticketag $i/5 ====="
-
-            # Recupera eventuali modifiche remote prima di ogni pubblicazione.
-            git pull --rebase origin main
-
+            echo "===== Controllo $i/5 $(date -u '+%H:%M:%S UTC') ====="
             node bots/ticketag-bot.mjs
 
             git config user.name "ticketag-bot"
@@ -54,15 +48,15 @@ jobs:
             git add bot-status.json
 
             if git diff --cached --quiet; then
-              echo "Nessun cambiamento nello stato."
+              echo "Stato invariato."
             else
               git commit -m "Aggiorna stato bot Ticketag"
               git pull --rebase origin main
               git push origin HEAD:main
             fi
 
-            # Attendi circa un minuto prima del controllo successivo.
             if [ "$i" -lt 5 ]; then
+              echo "Attendo 60 secondi..."
               sleep 60
             fi
           done
