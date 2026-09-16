@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - bot-status.json
   schedule:
     # Un controllo ogni 5 minuti, spostato fuori dal minuto 0 per ridurre i ritardi.
     - cron: '4-59/5 * * * *'
