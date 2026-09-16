@@ -1,0 +1,1 @@
+Trigger deploy after fixing the L'Ultima Lettera photo assets.
