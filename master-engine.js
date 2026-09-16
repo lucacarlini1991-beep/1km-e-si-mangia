@@ -1,69 +1,43 @@
-/* L'ULTIMA LETTERA — Static Text Adventure Engine
-   Parser locale: nessuna API AI necessaria.
-*/
-(function(){
-'use strict';
-const KEY='UL_STATIC_MASTER_V1';
-const clone=o=>JSON.parse(JSON.stringify(o));
-const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9àèéìòù\s]/g,' ').replace(/\s+/g,' ').trim();
-const initial={scene:'london_flat',clues:[],visited:[],flags:{},history:[],players:['Luca','Sara'],turn:0};
-const CASE={
- opening:`Il fascicolo UL-01 è aperto. Sono le 22:17 di una sera di ottobre 2026, a Londra.\n\nThomas Vale, consulente finanziario di 58 anni, è stato trovato morto nel suo appartamento di Bloomsbury. La porta non mostra segni di effrazione. Sul tavolo c'è una busta color avorio, senza francobollo e senza mittente.\n\nNon avete ancora un colpevole. Avete una scena, alcune domande e tutto il tempo necessario per farle nel vostro ordine.\n\nPotete scrivere normalmente: “esamino la scrivania”, “guardo la lettera”, “interrogo Margaret”, “controllo il telefono”, “voglio sapere dell'Ungheria”.`,
- scenes:{
-  london_flat:{name:'Appartamento di Thomas Vale',text:`L'appartamento è ordinato in modo quasi innaturale. Il corpo è già stato rimosso. Restano la polizia scientifica, la scrivania, il telefono di Thomas, una libreria e la busta color avorio sul tavolo.`},
-  desk:{name:'Scrivania',text:`Sulla scrivania trovate un taccuino, una penna stilografica, un computer spento e una ricevuta piegata in quattro. Nel cestino c'è una seconda ricevuta strappata.`},
-  letter:{name:'Busta color avorio',text:`La busta è stata aperta senza essere strappata. Dentro c'è un foglio con una sola frase dattiloscritta: “Alcune promesse sopravvivono a chi le ha fatte.” In basso compare una data: 14/10/1984.`},
-  phone:{name:'Telefono di Thomas',text:`Il telefono è protetto ma le notifiche recenti sono visibili. Alle 21:41 Thomas ha ricevuto un messaggio da un contatto salvato come “M.”: “Non puoi continuare a nasconderlo.” Alle 21:53 una chiamata persa da un numero londinese non salvato.`},
-  bookshelf:{name:'Libreria',text:`Tra libri di storia economica e archivi di giornali c'è un volume fotografico su Budapest. Una pagina è piegata all'altezza di un'immagine del 1984.`}
- },
- clues:{
-  letter:{text:`La data sulla lettera è 14 ottobre 1984. La frase sembra una minaccia solo a prima vista; non contiene un nome.`},
-  receipt:{text:`La ricevuta è di un deposito bagagli alla stazione di King's Cross, ore 18:32. La data è quella del giorno della morte.`},
-  tornreceipt:{text:`La ricevuta strappata riporta soltanto “BUD... 84” e una cifra parzialmente leggibile.`},
-  phone:{text:`Il messaggio delle 21:41 dice: “Non puoi continuare a nasconderlo.” Il contatto “M.” e il numero della chiamata persa restano da identificare.`},
-  book:{text:`Nel volume su Budapest la fotografia mostra una piccola sala conferenze nel 1984. Sul retro, scritto a matita, c'è: “Hotel Gellért — 14/10”.`},
-  notebook:{text:`Nel taccuino compaiono tre iniziali: M.V., E.H., R.K. Accanto alle prime due c'è un segno di spunta; accanto a R.K. una domanda.`},
-  margaret:{text:`Margaret Vale, ex moglie di Thomas, ammette di averlo incontrato quella sera alle 20:10. Dice di aver litigato con lui per una vecchia questione di famiglia e di essere andata via alle 20:35.`},
-  edward:{text:`Edward Hart, socio d'affari, sostiene di essere rimasto in ufficio fino alle 21:30. Conosceva Thomas da oltre vent'anni e nega di sapere qualcosa di Budapest.`},
-  rachel:{text:`Rachel Kovacs, storica e consulente d'archivio, dice di aver parlato con Thomas alle 19:15. Quando sente nominare Budapest, evita di rispondere direttamente e chiede chi vi abbia parlato del 1984.`},
-  station:{text:`Alla stazione emerge che il deposito bagagli è stato ritirato alle 21:07 da una persona che ha usato un codice, non un documento. Il codice non è ancora collegato a un nome.`},
-  archive:{text:`Un archivio fotografico collega la conferenza dell'Hotel Gellért del 14/10/1984 a un piccolo gruppo di giovani economisti britannici presenti a Budapest.`}
- },
- helps:{
-  1:`Livello 1 — Direzione: avete già davanti almeno tre piste concrete. Non limitatevi alla scena: cercate un collegamento tra gli oggetti e le persone.`,
-  2:`Livello 2 — Dettaglio: una data compare in più di un punto del fascicolo. Quando una data si ripete, confrontate ciò che accadde nello stesso giorno e non soltanto ciò che accadde a Londra.`,
-  3:`Livello 3 — Svolta: il collegamento con Budapest non è un semplice ricordo del passato. Cercate chi avrebbe avuto un motivo per conservare, nascondere o recuperare qualcosa legato al 14 ottobre 1984.`
- }
+/* L'ULTIMA LETTERA — Static Text Adventure Engine */
+(function(){'use strict';
+const KEY='UL_STATIC_MASTER_V2';const clone=o=>JSON.parse(JSON.stringify(o));
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+const initial={clues:[],visited:[],history:[],players:['Luca','Sara'],turn:0,finished:false};
+const C={
+opening:`Il fascicolo UL-01 è aperto. Sono le 22:17 di una sera di ottobre 2026, a Londra.\n\nThomas Vale, consulente finanziario di 58 anni, è stato trovato morto nel suo appartamento di Bloomsbury. La porta non mostra segni di effrazione. Sul tavolo c'è una busta color avorio, senza mittente.\n\nVoi siete gli investigatori. Non c'è un percorso obbligatorio: potete esaminare, interrogare, confrontare e tornare su qualsiasi pista.\n\nScrivete liberamente cosa fate.`,
+clues:{
+scene:`La scena è ordinata. Sul tavolo: busta color avorio, una tazza da tè vuota e un cucchiaino. Sulla scrivania: taccuino, computer spento e ricevute. Non ci sono segni evidenti di effrazione.`,
+letter:`La lettera contiene: “Alcune promesse sopravvivono a chi le ha fatte.” In fondo compare la data 14/10/1984. La carta è moderna, ma la data è chiaramente intenzionale.`,
+tea:`La tazza presenta tracce di una sostanza amara. Il laboratorio segnala che non è possibile stabilire la sostanza dal solo esame visivo; il referto completo è nel fascicolo.`,
+receipt:`La ricevuta è di un deposito bagagli a King's Cross, ore 18:32, il giorno della morte. Nel cestino c'è un frammento con la sigla “BUD...84”.`,
+phone:`Alle 21:41 Thomas ha ricevuto: “Non puoi continuare a nasconderlo.” Alle 21:53 c'è una chiamata persa da un numero non salvato. Il contatto del messaggio è “M.”`,
+book:`Nel volume su Budapest una fotografia è segnata. Sul retro: “Hotel Gellért — 14/10/1984”. Un archivio identifica una conferenza privata di giovani economisti britannici tenuta quella sera.`,
+notebook:`Nel taccuino: M.V., E.H., R.K. Accanto a M.V. ed E.H. c'è un segno di spunta; accanto a R.K. una domanda. In una pagina successiva: “promessa / copia / originale”.`,
+margaret:`Margaret Vale ammette di aver visto Thomas alle 20:10 e di essere andata via alle 20:35. Dice che stavano discutendo di una vecchia questione familiare. Non conosce, a suo dire, il significato della lettera.`,
+edward:`Edward Hart sostiene di essere rimasto in ufficio fino alle 21:30. Conosceva Thomas da vent'anni e nega di sapere qualcosa di Budapest.`,
+rachel:`Rachel Kovacs, storica d'archivio, dice di aver parlato con Thomas alle 19:15. Alla domanda su Budapest risponde: “Il 1984 non è una storia che Thomas avrebbe dovuto riaprire.”`,
+station:`Il deposito di King's Cross è stato ritirato alle 21:07 usando un codice, senza documento. Il codice era associato a una prenotazione effettuata da Thomas due giorni prima.`,
+lab:`Il referto tossicologico indica una sostanza cardiotossica assunta per via orale. L'assunzione è compatibile con una bevanda consumata poco prima del decesso. Non risultano ferite che spieghino la morte.`,
+archive:`L'archivio della conferenza del 14/10/1984 mostra Thomas Vale, Edward Hart e una terza persona indicata solo come R.K. Margaret non compare nell'elenco. La conferenza fu seguita da un accordo privato mai pubblicato.`
+},
+helps:{1:`Livello 1 — Direzione: non avete un solo mistero. Ci sono la morte, gli spostamenti della sera e la data del 1984. Cercate i collegamenti fra queste tre cose.`,2:`Livello 2 — Dettaglio: una bevanda, un messaggio e un deposito bagagli possono essere letti insieme. E la data 14/10/1984 compare in più di un luogo.`,3:`Livello 3 — Svolta: provate a ricostruire chi poteva sapere del passato di Thomas, chi poteva raggiungerlo quella sera e quale oggetto è stato preparato prima della sua morte.`},
+solution:`La soluzione completa è: Rachel Kovacs ha ucciso Thomas Vale somministrandogli una sostanza cardiotossica nella bevanda. Il movente nasce dall'accordo segreto del 14/10/1984 all'Hotel Gellért: Thomas e Edward avevano sottratto e poi nascosto una copia di documenti che riguardavano Rachel e la sua famiglia. Thomas aveva conservato l'originale come leva. Nel 2026 Rachel ha scoperto che Thomas voleva riaprire la vicenda e recuperare il deposito di King's Cross. Ha usato il loro incontro delle 19:15 per predisporre la bevanda e ha cercato di recuperare il materiale attraverso il codice del deposito. La lettera serve a far capire che la vecchia promessa è tornata a galla. Margaret ed Edward hanno entrambi motivi per sembrare sospetti, ma i loro alibi e gli altri indizi li collocano in piste differenti.`
 };
-function load(){try{return Object.assign(clone(initial),JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){return clone(initial)}}
-function save(s){localStorage.setItem(KEY,JSON.stringify(s))}
-function has(s,c){return s.clues.includes(c)}
-function addClue(s,c){if(!has(s,c))s.clues.push(c)}
-function contains(q,arr){return arr.some(x=>q.includes(x))}
-function response(s,text,kind='normal'){s.history.push({q:text,a:kind});s.turn++;save(s);return kind}
-function parse(s,input){const q=norm(input);if(!q)return 'Scrivete un’azione: esaminate qualcosa, interrogate qualcuno oppure formulate una teoria.';
- if(contains(q,['aiuto livello 1','aiuto 1','aiuto primo']))return response(s,input,CASE.helps[1]);
- if(contains(q,['aiuto livello 2','aiuto 2','aiuto secondo']))return response(s,input,CASE.helps[2]);
- if(contains(q,['aiuto livello 3','aiuto 3','aiuto terzo']))return response(s,input,CASE.helps[3]);
- if(contains(q,['ricomincia','nuova partita','reset'])){Object.assign(s,clone(initial));save(s);return CASE.opening}
- if(contains(q,['soluzione','chi e l assassino','chi ha ucciso','accuso']))return response(s,input,finale(s,q));
- if(contains(q,['scena','appartamento','salotto','camera','corpo'])){s.visited.push('london_flat');return response(s,input,CASE.scenes.london_flat.text)}
- if(contains(q,['scrivania','tavolo','cestino','ricevuta'])){s.visited.push('desk');addClue(s,'receipt');addClue(s,'tornreceipt');return response(s,input,CASE.scenes.desk.text+'\n\n'+CASE.clues.receipt.text+'\n\n'+CASE.clues.tornreceipt.text)}
- if(contains(q,['busta','lettera','foglio','frase'])){s.visited.push('letter');addClue(s,'letter');return response(s,input,CASE.scenes.letter.text+'\n\n'+CASE.clues.letter.text)}
- if(contains(q,['telefono','messaggio','chiamata','numero'])){s.visited.push('phone');addClue(s,'phone');return response(s,input,CASE.scenes.phone.text+'\n\n'+CASE.clues.phone.text)}
- if(contains(q,['libreria','libro','budapest','ungheria','gellert','gellért'])){s.visited.push('bookshelf');addClue(s,'book');addClue(s,'archive');return response(s,input,CASE.scenes.bookshelf.text+'\n\n'+CASE.clues.book.text+'\n\n'+CASE.clues.archive.text)}
- if(contains(q,['taccuino','appunti','iniziali','notebook'])){addClue(s,'notebook');return response(s,input,CASE.clues.notebook.text)}
- if(contains(q,['margaret','ex moglie','moglie'])){addClue(s,'margaret');return response(s,input,CASE.clues.margaret.text)}
- if(contains(q,['edward','hart','socio'])){addClue(s,'edward');return response(s,input,CASE.clues.edward.text)}
- if(contains(q,['rachel','kovacs','storica','archivista'])){addClue(s,'rachel');return response(s,input,CASE.clues.rachel.text)}
- if(contains(q,['stazione','king cross','king’s cross','deposito','bagagli'])){addClue(s,'station');return response(s,input,CASE.clues.station.text)}
- if(contains(q,['confronta','confrontiamo','orario','ore','tempo','cronologia']))return response(s,input,compare(s));
- if(contains(q,['teoria','penso','secondo me','credo','sospetto','forse']))return response(s,input,`Teoria registrata. Il fascicolo non vi dirà se è corretta. Per metterla alla prova, cercate un fatto indipendente che possa confermarla o smentirla.`);
- if(contains(q,['sospettati','chi sono','persone','indagati']))return response(s,input,`Per ora emergono tre nomi dal materiale disponibile: Margaret Vale, Edward Hart e Rachel Kovacs. Non sono equivalenti: ciascuno ha una relazione diversa con Thomas e con ciò che state scoprendo.`);
- if(contains(q,['budapest 1984','1984'])){addClue(s,'book');return response(s,input,`La data 1984 è presente nel fascicolo. Per ora sapete soltanto che la lettera riporta 14/10/1984 e che un archivio fotografico collega quella data all'Hotel Gellért di Budapest.`)}
- return response(s,input,`Il Master prende nota della vostra azione, ma non trova ancora un elemento preciso da associare. Provate a specificare cosa volete esaminare, chi volete interrogare o quale fatto volete confrontare.`)
-}
-function compare(s){let out=[];if(has(s,'letter'))out.push('14/10/1984 — data sulla lettera.');if(has(s,'book'))out.push('14/10/1984 — Hotel Gellért, Budapest.');if(has(s,'receipt'))out.push('18:32 — deposito bagagli a King’s Cross.');if(has(s,'phone'))out.push('21:41 — messaggio “Non puoi continuare a nasconderlo”; 21:53 — chiamata persa.');return out.length?out.join('\n'):`Non avete ancora abbastanza orari nel fascicolo. Cercate documenti e comunicazioni prima di ricostruire la cronologia.`}
-function finale(s,q){const ready=['letter','receipt','phone','book','notebook','station'].every(c=>has(s,c));if(!ready)return `Non è ancora il momento della soluzione. Avete bisogno di collegare meglio gli elementi del fascicolo. Una buona accusa dovrebbe spiegare chi, come, perché, cosa accadde a Budapest nel 1984 e perché la vicenda è riemersa ora.`;if(contains(q,['rachel','kovacs'])&&contains(q,['margaret','edward']))return `Avete formulato un'accusa completa. Il fascicolo può ora passare alla verifica finale.`;return `Avete raggiunto abbastanza elementi per tentare un'accusa, ma questa frase non specifica ancora tutti i punti necessari. Indicate chiaramente: CHI, COME, PERCHÉ, COSA ACCADDE A BUDAPEST e PERCHÉ È RIEMERSO ORA.`}
-window.UltimaLetteraEngine={load,save,parse,caseData:CASE,reset:function(){const s=clone(initial);save(s);return s},clueCount:function(s){return s.clues.length}};
-})();
+function load(){try{return Object.assign(clone(initial),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){return clone(initial)}}function save(s){localStorage.setItem(KEY,JSON.stringify(s))}function has(s,c){return s.clues.includes(c)}function add(s,c){if(!has(s,c))s.clues.push(c)}function log(s,q,a){s.history.push({q,a});s.turn++;save(s);return a}function any(q,words){return words.some(w=>q.includes(w))}
+function final(s,q){const ready=['scene','letter','tea','receipt','phone','book','notebook','rachel','station','lab','archive'].every(c=>has(s,c));if(!ready)return `Il Master non conferma ancora la soluzione. Per arrivare alla fase finale dovete collegare la scena, la causa della morte, il 14/10/1984, gli spostamenti e almeno un interrogatorio.`;const rachel=any(q,['rachel','kovacs']);const poison=any(q,['veleno','sostanza','tossic','bevanda','te']);const bud=any(q,['budapest','1984','gellert','gellért']);if(rachel&&poison&&bud){s.finished=true;save(s);return C.solution+`\n\n— VERIFICA FINALE COMPLETATA —\nAvete ricostruito i cinque elementi richiesti: chi, come, perché, cosa accadde a Budapest e perché il passato è riemerso ora.`}return `Potete tentare l'accusa, ma deve spiegare insieme CHI, COME, PERCHÉ, COSA ACCADDE A BUDAPEST NEL 1984 e PERCHÉ È RIEMERSO ORA.`}
+function parse(s,input){const q=norm(input);if(!q)return 'Dite cosa volete fare.';if(any(q,['ricomincia','nuova partita','reset'])){const n=clone(initial);save(n);return C.opening}if(any(q,['aiuto livello 1','aiuto 1','aiuto primo']))return log(s,input,C.helps[1]);if(any(q,['aiuto livello 2','aiuto 2','aiuto secondo']))return log(s,input,C.helps[2]);if(any(q,['aiuto livello 3','aiuto 3','aiuto terzo']))return log(s,input,C.helps[3]);if(any(q,['soluzione','accuso','accusa','chi ha ucciso','assassino']))return log(s,input,final(s,q));
+if(any(q,['scena','appartamento','corpo','tazza','cucchiaino'])){add(s,'scene');if(any(q,['tazza','cucchiaino','bevanda']))add(s,'tea');return log(s,input,C.clues.scene+(has(s,'tea')?'\n\n'+C.clues.tea:''))}
+if(any(q,['busta','lettera','foglio','frase'])){add(s,'letter');return log(s,input,C.clues.letter)}
+if(any(q,['scrivania','ricevuta','cestino'])){add(s,'receipt');return log(s,input,C.clues.receipt)}
+if(any(q,['telefono','messaggio','chiamata','numero'])){add(s,'phone');return log(s,input,C.clues.phone)}
+if(any(q,['libreria','libro','budapest','ungheria','gellert','1984'])){add(s,'book');return log(s,input,C.clues.book)}
+if(any(q,['taccuino','appunti','iniziali','promessa','copia','originale'])){add(s,'notebook');return log(s,input,C.clues.notebook)}
+if(any(q,['margaret','ex moglie'])){add(s,'margaret');return log(s,input,C.clues.margaret)}
+if(any(q,['edward','hart','socio'])){add(s,'edward');return log(s,input,C.clues.edward)}
+if(any(q,['rachel','kovacs','storica','archivista'])){add(s,'rachel');return log(s,input,C.clues.rachel)}
+if(any(q,['stazione','king cross','deposito','bagagli','codice'])){add(s,'station');return log(s,input,C.clues.station)}
+if(any(q,['laboratorio','tossicologia','referto','veleno','sostanza','autopsia'])){add(s,'lab');return log(s,input,C.clues.lab)}
+if(any(q,['archivio','conferenza','elenco','accordo'])){add(s,'archive');return log(s,input,C.clues.archive)}
+if(any(q,['orario','cronologia','confront','tempo','ore'])){let a=[];if(has(s,'margaret'))a.push('20:10–20:35 — incontro con Margaret.');if(has(s,'receipt'))a.push('18:32 — deposito a King’s Cross.');if(has(s,'station'))a.push('21:07 — ritiro del deposito.');if(has(s,'rachel'))a.push('19:15 — incontro con Rachel.');if(has(s,'phone'))a.push('21:41 — messaggio; 21:53 — chiamata persa.');return log(s,input,a.length?a.join('\n'):'Avete ancora pochi orari: cercate documenti e interrogatori.')}
+if(any(q,['sospettati','chi sono','indagati']))return log(s,input,'I nomi emersi sono Margaret Vale, Edward Hart e Rachel Kovacs. Il fascicolo non assegna loro un ruolo: dovrete verificarlo voi.');if(any(q,['teoria','penso','credo','sospetto','forse']))return log(s,input,'Teoria registrata. Il Master non la corregge: cercate una prova indipendente che la sostenga o la smentisca.');return log(s,input,'Azione non ancora associata a un elemento preciso. Provate a specificare un luogo, un oggetto, una persona, un documento o una domanda.');}
+window.UltimaLetteraEngine={load,save,parse,caseData:C,reset:function(){const n=clone(initial);save(n);return n},clueCount:s=>s.clues.length};})();
