@@ -7,7 +7,7 @@ on:
     paths-ignore:
       - bot-status.json
   schedule:
-    # Un controllo ogni 5 minuti, spostato fuori dal minuto 0 per ridurre i ritardi.
+    # Riavvio di sicurezza ogni 5 minuti.
     - cron: '4-59/5 * * * *'
   workflow_dispatch:
 
@@ -16,12 +16,12 @@ permissions:
 
 concurrency:
   group: ticketag-bot
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   check-ticketag:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 355
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Controllo Ticketag
+      - name: Controllo Ticketag continuo
         env:
           TICKETAG_URL: https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1
         run: |
@@ -48,14 +48,31 @@ jobs:
           git config user.name "ticketag-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          echo "===== Controllo: $(date -u '+%Y-%m-%d %H:%M:%S UTC') ====="
-          node bots/ticketag-bot.mjs
+          # Una singola esecuzione resta attiva quasi 6 ore: non dipendiamo
+          # dal trigger schedule per ogni singolo controllo.
+          for i in $(seq 1 290); do
+            echo "===== Controllo $i/290: $(date -u '+%Y-%m-%d %H:%M:%S UTC') ====="
+            node bots/ticketag-bot.mjs
 
-          git add bot-status.json
-          if git diff --cached --quiet; then
-            echo "Nessuna modifica da pubblicare."
-          else
-            git commit -m "Aggiorna stato bot Ticketag"
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
+            git add bot-status.json
+            if git diff --cached --quiet; then
+              echo "Nessuna modifica da pubblicare."
+            else
+              git pull --rebase origin main
+              git add bot-status.json
+              git commit -m "Aggiorna stato bot Ticketag"
+              git push origin HEAD:main
+            fi
+
+            if [ "$i" -lt 290 ]; then
+              echo "Attendo 60 secondi prima del prossimo controllo..."
+              sleep 60
+            fi
+          done
+
+          # Riavvio autonomo: modifica un file diverso da bot-status.json,
+          # quindi il push avvia una nuova esecuzione senza creare un loop.
+          date -u '+%Y-%m-%dT%H:%M:%SZ' > .github/ticketag-heartbeat
+          git add .github/ticketag-heartbeat
+          git commit -m "Riavvia monitor Ticketag"
+          git push origin HEAD:main
