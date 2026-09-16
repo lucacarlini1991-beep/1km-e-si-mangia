@@ -5,6 +5,7 @@ on:
     paths:
       - 'crime-scene-generated.svg'
       - 'caso.html'
+      - 'crime-photo-trigger.txt'
 permissions:
   contents: write
 jobs:
