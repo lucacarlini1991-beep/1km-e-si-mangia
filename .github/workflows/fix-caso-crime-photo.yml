@@ -1,0 +1,35 @@
+name: Fix caso crime photo
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crime-scene-generated.svg'
+      - 'crime-photo-trigger.txt'
+      - 'caso.html'
+permissions:
+  contents: write
+jobs:
+  replace-photo:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'Add generated crime-scene photo')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace crime scene image
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('caso.html')
+          s = p.read_text()
+          old_url = 'https://images.unsplash.com/photo-1743616288131-5b124bbb6b2f?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000'
+          s = s.replace(old_url, '/crime-photo.svg', 1)
+          s = s.replace('/crime-scene-generated.svg', '/crime-photo.svg', 1)
+          p.write_text(s)
+          PY
+      - name: Commit replacement
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add caso.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Use stable crime photo asset in caso'
+          git push
