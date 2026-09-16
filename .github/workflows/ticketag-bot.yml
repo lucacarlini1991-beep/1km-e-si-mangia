@@ -36,7 +36,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Controllo Ticketag continuo
+      - name: Monitoraggio Ticketag rapido
         env:
           TICKETAG_URL: https://sampdoria-ticketag.ticketone.it/Partita/25dcc650-296c-4652-874e-58f9e4f947c3?tickets=1
         run: |
@@ -44,21 +44,28 @@ jobs:
           git config user.name "ticketag-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          for i in 1 2 3 4 5; do
-            echo "===== Controllo $i/5: $(date -u '+%Y-%m-%d %H:%M:%S UTC') ====="
+          # GitHub può avviare il job solo ogni 5 minuti; durante ogni job
+          # teniamo il browser attivo e controlliamo frequentemente.
+          for i in $(seq 1 20); do
+            echo "===== Controllo $i/20: $(date -u '+%Y-%m-%d %H:%M:%S UTC') ====="
             node bots/ticketag-bot.mjs
 
-            git add bot-status.json
-            if git diff --cached --quiet; then
-              echo "Stato invariato."
-            else
-              git commit -m "Aggiorna stato bot Ticketag"
+            # Pubblichiamo subito un cambio di disponibilità, ma evitiamo
+            # 20 commit consecutivi quando lo stato resta invariato.
+            CURRENT_AVAILABLE=$(node -e "const s=require('./bot-status.json'); process.stdout.write(String(s.available))")
+            PREVIOUS_AVAILABLE=$(git show HEAD:bot-status.json 2>/dev/null | node -e "let d=''; process.stdin.on('data',x=>d+=x).on('end',()=>{try{process.stdout.write(String(JSON.parse(d).available))}catch{process.stdout.write('unknown')}})" || true)
+
+            if [ "$CURRENT_AVAILABLE" != "$PREVIOUS_AVAILABLE" ]; then
+              git add bot-status.json
+              git commit -m "Aggiorna disponibilità Ticketag"
               git pull --rebase origin main
               git push origin HEAD:main
+            else
+              echo "Disponibilità invariata ($CURRENT_AVAILABLE): nessun commit."
             fi
 
-            if [ "$i" -lt 5 ]; then
-              echo "Attendo 60 secondi per il prossimo controllo..."
-              sleep 60
+            if [ "$i" -lt 20 ]; then
+              echo "Attendo 15 secondi..."
+              sleep 15
             fi
           done
