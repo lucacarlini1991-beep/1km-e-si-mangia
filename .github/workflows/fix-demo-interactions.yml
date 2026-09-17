@@ -1,0 +1,43 @@
+name: Fix demo interactions
+on:
+  push:
+    paths:
+      - 'demo-interactions-trigger.txt'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch casodemo.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('casodemo.html')
+          s=p.read_text()
+          old="function ev(k){if(!S.evidence[k])return add('master','Questa prova non è ancora disponibile.');let e=E[k];document.getElementById('modalbody').innerHTML='<h2>'+e[0]+'</h2><div class=\"small\">'+e[1]+'</div><img class=\"photo\" src=\"'+e[2]+'\"><div class=\"doc\">'+e[3]+'</div>';document.getElementById('modal').classList.add('open')}"
+          new="function ev(k){if(!S.evidence[k])return add('master','Questa prova non è ancora disponibile.');let e=E[k];document.getElementById('modalbody').innerHTML='<h2>'+e[0]+'</h2><div class=\"small\">'+e[1]+'</div><img class=\"photo\" src=\"'+e[2]+'\"><div class=\"doc\">'+e[3]+'</div><div class=\"doc\"><b>NOTA INVESTIGATIVA</b><p>'+desc(k)+'</p></div>';document.getElementById('modal').classList.add('open')}\nfunction desc(k){return ({letter:'La fotografia documenta la scena dopo la rimozione della salma. Osservate posizione degli oggetti, accessi e dettagli fuori posto: questa prova va confrontata con le altre, senza anticipare conclusioni.',receipt:'Documento collegato al Blackbird. Controllate orario, consumazioni e dettagli del cliente: possono servire per ricostruire chi era presente e quando.',key:'Reperto fisico. La chiave non produce alcun accesso da sola: deve essere realmente nel vostro inventario quando tentate di usarla.',photo:'Fotografia acquisita durante l’indagine. Il retro contiene una nota che può indicare un punto preciso e una modalità di accesso.',log:'Registro da leggere riga per riga. Orari, firme e modalità di accesso vanno confrontati con le dichiarazioni dei sospetti.',voice:'Trascrizione di una telefonata. Le parole sono una dichiarazione acquisita e possono essere riascoltate senza consumare altre domande.'}[k]||'Esaminate attentamente questo elemento e confrontatelo con il resto del fascicolo.')}"
+          if old not in s:
+              raise SystemExit('target ev function not found')
+          s=s.replace(old,new,1)
+          marker="document.getElementById('evidence').onclick=e=>{let x=e.target.closest('[data-e]');if(x&&S.evidence[x.dataset.e])ev(x.dataset.e)};"
+          replacement="document.getElementById('evidence').onclick=e=>{let x=e.target.closest('[data-e]');if(x&&S.evidence[x.dataset.e])ev(x.dataset.e)};\ndocument.getElementById('inventory').onclick=e=>{let x=e.target.closest('[data-i]');if(x)inspectItem(x.dataset.i)};\nfunction inspectItem(k){if(!S.inventory.includes(k))return;let e=E[k];let details={letter:'Una busta semplice, senza mittente né firma. La carta presenta pieghe da essere stata manipolata più volte. Sul foglio è riportata una frase che richiama lo studio di Arthur.',key:'Chiave d’ottone, apparentemente vecchia ma ben conservata. Il suo stato è fisico: se la lasciate in un luogo, non è più con voi e non potete usarla da lontano.',photo:'Fotografia stampata del cortile. Sul retro compare una nota manoscritta: “Lato nord. Non guardare la porta principale.”'}[k]||e[3];document.getElementById('modalbody').innerHTML='<h2>'+e[0]+'</h2><div class=\"small\">OGGETTO NELL’INVENTARIO</div><img class=\"photo\" src=\"'+e[2]+'\"><div class=\"doc\"><b>OSSERVAZIONE</b><p>'+details+'</p></div><button class=\"btn\" onclick=\"ev(\''+k+'\')\">APRİ LA SCHEDA COMPLETA</button>';document.getElementById('modal').classList.add('open')}"
+          if marker not in s:
+              raise SystemExit('inventory marker not found')
+          s=s.replace(marker,replacement,1)
+          old_render="document.getElementById('inventory').innerHTML=S.inventory.map(o=>'<div class=\"item\"><b>'+E[o][0]+'</b><br><span class=\"small\">CON VOI</span></div>').join('')||'<div class=\"small\">Inventario vuoto</div>';"
+          new_render="document.getElementById('inventory').innerHTML=S.inventory.map(o=>'<div class=\"item\" data-i=\"'+o+'\" style=\"cursor:pointer\"><b>'+E[o][0]+'</b><br><span class=\"small\">CON VOI · CLICCA PER ESAMINARE</span></div>').join('')||'<div class=\"small\">Inventario vuoto</div>';"
+          if old_render not in s:
+              raise SystemExit('inventory render not found')
+          s=s.replace(old_render,new_render,1)
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add casodemo.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Fix demo evidence and inventory interactions'
+          git push
