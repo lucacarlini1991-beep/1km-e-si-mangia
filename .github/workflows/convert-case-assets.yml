@@ -1,0 +1,61 @@
+name: Converti prove reali per caso
+on:
+  push:
+    paths:
+      - case-assets-trigger.txt
+permissions:
+  contents: write
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scarica fotografie reali
+        run: |
+          set -e
+          mkdir -p assets/case
+          curl -L --fail --retry 3 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Handwritten_Letter.jpg' -o assets/case/letter.jpg
+          curl -L --fail --retry 3 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Receipt.jpg' -o assets/case/receipt.jpg
+          curl -L --fail --retry 3 'https://commons.wikimedia.org/wiki/Special:Redirect/file/House_key.jpg' -o assets/case/key.jpg
+          curl -L --fail --retry 3 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mobile_phone_text_messages.jpg' -o assets/case/phone.jpg
+          curl -L --fail --retry 3 'https://commons.wikimedia.org/wiki/Special:Redirect/file/V5C_Logbook_.jpg' -o assets/case/logbook.jpg
+          curl -L --fail --retry 3 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Niepce_table.jpg' -o assets/case/photo.jpg
+          cp assets/case-demo/scene-repertata.jpg assets/case/scene.jpg
+      - name: Aggiorna caso.html e pulisce la demo
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('caso.html')
+          s=p.read_text(encoding='utf-8')
+          new="IMG={letter:'/assets/case/letter.jpg',receipt:'/assets/case/receipt.jpg',photo:'/assets/case/photo.jpg',key:'/assets/case/key.jpg',phone:'/assets/case/phone.jpg',log:'/assets/case/logbook.jpg',scene:'/assets/case/scene.jpg'},E="
+          s=re.sub(r'IMG=\{.*?\},E=',new,s,count=1,flags=re.S)
+          s=re.sub(r"(log:\['Registro d’accesso'[^\n]*?)(IMG\.letter)",r"\1IMG.log",s,count=1)
+          s=re.sub(r"(voice:\['Trascrizione telefonata'[^\n]*?)(IMG\.letter)",r"\1IMG.phone",s,count=1)
+          s=s.replace('🎩 MASTER OPERATIVO · DEMO · VERSIONE STABILE','🎩 MASTER OPERATIVO · IL QUARTO CASSETTO')
+          s=s.replace('Demo tecnica: prove fotografiche, password, inventario, luoghi e interrogatori.','Fascicolo investigativo digitale. Le immagini rappresentano oggetti e supporti reali; il contenuto della prova varia in base al caso.')
+          s=s.replace('↻ AZZERA DEMO','↻ AZZERA CASO')
+          p.write_text(s,encoding='utf-8')
+          PY
+          rm -rf assets/case-demo
+          rm -f casodemo.html casodemo-syntax-trigger.txt casodemo-ui-repair-trigger.txt demo-interactions-trigger.txt demo-real-photos-trigger.txt crime-photo-trigger.txt
+          rm -f .github/workflows/add-demo-real-photos.yml .github/workflows/fix-casodemo-syntax.yml .github/workflows/fix-demo-interactions.yml .github/workflows/install-demo-generated-scene.yml .github/workflows/repair-casodemo-ui.yml .github/workflows/fix-caso-crime-photo.yml
+          rm -f convert-case-assets.yml
+          cat > assets/case/README.md <<'EOF'
+          # Immagini reali usate dal caso
+          Le fotografie sono immagini reali reperite da Wikimedia Commons e usate come riferimenti visivi generici. Il contenuto testuale/descritto delle prove è definito dal caso e non pretende di essere quello della fotografia originale.
+          - Handwritten Letter.jpg — CC BY-SA 4.0
+          - Receipt.jpg — CC BY-SA 3.0
+          - House key.jpg — CC BY-SA 3.0 / GFDL
+          - Mobile phone text messages.jpg — CC BY-SA 4.0
+          - V5C Logbook.jpg — CC0
+          - Niepce table.jpg — Wikimedia Commons
+          - Scena Del Crimine con gli oggetti sopra la tavola — Federico Candoni — CC BY-SA 4.0
+          EOF
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Immagini reali per caso e rimozione demo' || exit 0
+          git push
