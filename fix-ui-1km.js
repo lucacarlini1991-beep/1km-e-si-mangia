@@ -4,6 +4,30 @@
   if (window.__1kmGlobalUiFix) return;
   window.__1kmGlobalUiFix = true;
 
+
+  function installAnalyticsFilter() {
+    if (window.__1kmAnalyticsFilter) return;
+    window.__1kmAnalyticsFilter = true;
+
+    const blockedPaths = new Set(["/a", "/caso"]);
+
+    function register() {
+      if (typeof window.va !== "function") {
+        setTimeout(register, 500);
+        return;
+      }
+      window.va("beforeSend", function (event) {
+        try {
+          const path = new URL(event.url).pathname.replace(/\\/+$/, "") || "/";
+          if (blockedPaths.has(path)) return null;
+        } catch (_) {}
+        return event;
+      });
+    }
+
+    register();
+  }
+
   function installGlobalStyle() {
     if (document.getElementById("one-km-ui-global-style")) return;
     const style = document.createElement("style");
@@ -60,6 +84,7 @@
   }
 
   function avvia() {
+    installAnalyticsFilter();
     installGlobalStyle();
     sistemaMenu();
     sistemaAltreSchede();
