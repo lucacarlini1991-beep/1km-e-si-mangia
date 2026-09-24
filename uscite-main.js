@@ -913,22 +913,6 @@ window.mostraTuttiRistoranti = mostraTuttiRistoranti;
 // =====================================================
 
 document.addEventListener("click", function(event) {
-  const recensioneBtn = event.target.closest && event.target.closest("[data-recensione-id]");
-  if (recensioneBtn) {
-    if (window.__UNIFIED_REVIEWS_READY) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const id = recensioneBtn.getAttribute("data-recensione-id");
-    const elencoCorrente = Array.isArray(window._ristorantiVisualizzati)
-      ? window._ristorantiVisualizzati
-      : ristorantiDatabase;
-    const ristorante = elencoCorrente.find(function(item) {
-      return String(item.id || item.osm_id || item.nome) === String(id);
-    });
-    if (ristorante) apriRecensione(ristorante);
-    return;
-  }
-
   const navigaBtn = event.target.closest && event.target.closest("[data-naviga-ristorante]");
   if (navigaBtn) {
     event.preventDefault();
