@@ -102,9 +102,8 @@ for (const file of htmlFiles) {
   }
 
   if (file === 'uscite.html') {
-    // Il motore vero è quello preservato da dist/script.js prima del build.
-    // Il parametro versione evita che Safari/iPhone riutilizzi il vecchio JS.
-    html = html.replaceAll('src="dist/script.js', 'src="uscite-main.js?v=20260827-mapfix4');
+    // Il motore canonico è uscite-main.js. Non dipende più da dist/script.js.
+    html = html.replaceAll('src="dist/script.js?v=20260912-review-detail-fix"', 'src="uscite-main.js?v=20260924-canonical"');
     html = html.replaceAll('src="script.js?v=20260827-filter3"', 'src="script.js?v=20260827-filter4"');
   }
 
