@@ -33,6 +33,7 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     'vercel.json',
     'build-database.js',
     'genera_ristoranti.js',
+    'script.js',
     'uscite-main.js'
   ]);
   const allowed = ['.html', '.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.ico', '.txt'];
@@ -102,9 +103,8 @@ for (const file of htmlFiles) {
   }
 
   if (file === 'uscite.html') {
-    // Il motore canonico è uscite-main.js. Non dipende più da dist/script.js.
+    // Il motore canonico è uscite-main.js. Non dipende da script.js.
     html = html.replaceAll('src="dist/script.js?v=20260912-review-detail-fix"', 'src="uscite-main.js?v=20260924-canonical"');
-    html = html.replaceAll('src="script.js?v=20260827-filter3"', 'src="script.js?v=20260827-filter4"');
   }
 
   // Un solo stile UI per tutte le pagine: menu, schede e modali.
