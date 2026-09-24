@@ -95,9 +95,6 @@ for (const file of htmlFiles) {
     html = html.replace('<section class="range">', googleBox + '\n<section class="range">');
   }
 
-  if (file === 'uscite.html' && !html.includes('google-zona.js')) {
-    html = html.replace(/<\/body>/i, '<script src="google-zona.js?v=20260826"></script>\n</body>');
-  }
 
   if (file === 'uscite.html') {
   }
