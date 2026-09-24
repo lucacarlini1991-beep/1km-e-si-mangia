@@ -1,1 +1,0 @@
-Asset fotografici del catalogo casi: caricamento completato per gli asset disponibili.
