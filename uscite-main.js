@@ -199,6 +199,31 @@ let usciteItaliane = [];
 
     if(url.includes("/api/places")){
       attivaGoogleRoute();
+      try {
+        if (init?.method === "POST" && typeof init.body === "string") {
+          const body = JSON.parse(init.body);
+          const exitLat = Number(body?.exit?.lat);
+          const exitLon = Number(body?.exit?.lon);
+          const posizione = window.GPSManager?.getLastPosition?.();
+          const userLat = Number(posizione?.lat);
+          const userLon = Number(posizione?.lng ?? posizione?.lon);
+          if ([exitLat, exitLon, userLat, userLon].every(Number.isFinite)) {
+            const R = 6371000;
+            const p1 = exitLat * Math.PI / 180;
+            const p2 = userLat * Math.PI / 180;
+            const dp = (userLat - exitLat) * Math.PI / 180;
+            const dl = (userLon - exitLon) * Math.PI / 180;
+            const h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+            const distanza = 2 * R * Math.asin(Math.sqrt(h));
+            if (distanza <= 5000) {
+              body.searchOrigin = { lat: userLat, lon: userLon };
+              init = { ...init, body: JSON.stringify(body) };
+            }
+          }
+        }
+      } catch (error) {
+        console.warn("Google zona: richiesta invariata", error);
+      }
       return originalFetch(input, init);
     }
 
