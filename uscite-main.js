@@ -80,19 +80,18 @@ L.tileLayer(
 // GRUPPO USCITE
 // =====================================================
 
-const clusterUscite = L.markerClusterGroup({
-
-  showCoverageOnHover: false,
-
-  spiderfyOnMaxZoom: false,
-
-  zoomToBoundsOnClick: false,
-
-  removeOutsideVisibleBounds: true,
-
-  maxClusterRadius: 55
-
-});
+// MarkerCluster è un miglioramento, non una dipendenza bloccante:
+// se il CDN del plugin non risponde, la mappa deve comunque mostrare
+// tutte le uscite e mantenere attiva l'intera struttura ristoranti.
+const clusterUscite = typeof L.markerClusterGroup === "function"
+  ? L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: false,
+      zoomToBoundsOnClick: false,
+      removeOutsideVisibleBounds: true,
+      maxClusterRadius: 55
+    })
+  : L.layerGroup();
 
 map.addLayer(clusterUscite);
 
@@ -658,16 +657,11 @@ function uscitaValida(uscita) {
   }
 
 
-  if (
+  const lat = Number(uscita.lat);
+  const lon = Number(uscita.lon);
 
-    typeof uscita.lat !== "number" ||
-
-    typeof uscita.lon !== "number"
-
-  ) {
-
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
     return false;
-
   }
 
 
@@ -893,8 +887,8 @@ fetch("./uscite.json")
       const marker = L.marker(
 
         [
-          uscita.lat,
-          uscita.lon
+          Number(uscita.lat),
+          Number(uscita.lon)
         ],
 
         {
