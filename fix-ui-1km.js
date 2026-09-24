@@ -9,7 +9,7 @@
     if (window.__1kmAnalyticsFilter) return;
     window.__1kmAnalyticsFilter = true;
 
-    const blockedPaths = new Set(["/a", "/caso"]);
+    const blockedPaths = new Set(["/a"]);
 
     function register() {
       if (typeof window.va !== "function") {
