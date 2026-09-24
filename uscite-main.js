@@ -342,16 +342,6 @@ function bloccoRistoranteExtra(ristorante) {
     </div>`;
 }
 
-function creaPopupRistorante(ristorante) {
-  const nome = escapeHtml(ristorante.nome || "Ristorante");
-  const distanza = Number.isFinite(Number(ristorante?.uscita?.distanza_m))
-    ? `<small>📍 ${Math.round(Number(ristorante.uscita.distanza_m))} m dall'uscita</small>` : "";
-  const parcheggio = ristorante.parcheggio?.presente === true
-    ? `<small>🅿️ Parcheggio ${ristorante.parcheggio.distanza_m != null ? Math.round(Number(ristorante.parcheggio.distanza_m)) + " m" : "presente"}</small>`
-    : `<small>🅿️ Parcheggio da verificare</small>`;
-  return `<div style="min-width:210px;line-height:1.4"><strong>${nome}</strong>${ristorante.cucina ? `<small>🍽️ ${escapeHtml(ristorante.cucina)}</small>` : ""}${distanza}${parcheggio}${ristorante.telefono ? `<small>📞 ${escapeHtml(ristorante.telefono)}</small>` : ""}${bloccoRistoranteExtra(ristorante)}</div>`;
-}
-
 function apriRecensione(ristorante) {
   document.getElementById("recensioneModal1km")?.remove();
   const recensioni = recensioniCache(ristorante);
@@ -1082,6 +1072,7 @@ window.mostraTuttiRistoranti = mostraTuttiRistoranti;
 document.addEventListener("click", function(event) {
   const recensioneBtn = event.target.closest && event.target.closest("[data-recensione-id]");
   if (recensioneBtn) {
+    if (window.__UNIFIED_REVIEWS_READY) return;
     event.preventDefault();
     event.stopPropagation();
     const id = recensioneBtn.getAttribute("data-recensione-id");
