@@ -31,9 +31,7 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     'package.json',
     'package-lock.json',
     'vercel.json',
-    'build-database.js',
     'genera_ristoranti.js',
-    'script.js',
     'uscite-main.js'
   ]);
   const allowed = ['.html', '.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.ico', '.txt'];
@@ -44,7 +42,6 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
 }
 
 // Ricrea esplicitamente il vero motore della pagina uscite.
-// script.js nella root resta esclusivamente il filtro delle aree di servizio.
 if (mainMapScript) {
   fs.writeFileSync(path.join(out, 'uscite-main.js'), mainMapScript);
   console.log('Motore mappa salvato in dist/uscite-main.js');
@@ -103,8 +100,6 @@ for (const file of htmlFiles) {
   }
 
   if (file === 'uscite.html') {
-    // Il motore canonico è uscite-main.js. Non dipende da script.js.
-    html = html.replaceAll('src="dist/script.js?v=20260912-review-detail-fix"', 'src="uscite-main.js?v=20260924-canonical"');
   }
 
   // Un solo stile UI per tutte le pagine: menu, schede e modali.
