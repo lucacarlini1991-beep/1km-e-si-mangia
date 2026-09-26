@@ -1002,8 +1002,24 @@
       .hero-content{width:100%;max-width:100%;min-width:0}
       .content-wrap{width:calc(100% - 32px) !important;max-width:none !important;margin-left:auto !important;margin-right:auto !important}
       .why-section{padding:64px 0 70px !important}
-      .why-section::before{background-position:24% center !important;background-size:cover !important}
-      .why-grid{display:block !important;width:100% !important}
+      .why-section::before{
+        background-image:linear-gradient(180deg,rgba(0,35,28,.58),rgba(0,48,36,.46)),url("assets/home-hero.png") !important;
+        background-position:24% center !important;
+        background-size:cover !important;
+      }
+      .why-grid{
+        display:block !important;
+        width:calc(100% - 32px) !important;
+        max-width:none !important;
+        margin-left:auto !important;
+        margin-right:auto !important;
+      }
+      .why-section .eyebrow{font-size:14px !important;line-height:1.25 !important}
+      .why-section h2{
+        font-size:40px !important;
+        line-height:1 !important;
+        margin:14px 0 28px !important;
+      }
       .journey-grid{display:flex !important;flex-direction:column !important;gap:16px !important;width:100% !important}
       .journey-card{width:100% !important;min-width:0 !important;min-height:260px !important;padding:26px !important}
       .journey-card h3{font-size:28px !important}
