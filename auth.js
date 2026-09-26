@@ -21,7 +21,7 @@
   `;document.head.appendChild(style);
 
   const fab=document.createElement('button');fab.className='auth-fab';fab.type='button';fab.setAttribute('aria-label','Accedi o apri il tuo account');document.body.appendChild(fab);
-  const menu=document.createElement('div');menu.className='auth-menu';menu.innerHTML='<button data-action="profile">👤 Il mio profilo</button><button data-action="reviews">⭐ Le mie recensioni</button><button data-action="name">✏️ Modifica username</button><button class="logout" data-action="logout">🚪 Esci</button>';document.body.appendChild(menu);
+  const menu=document.createElement('div');menu.className='auth-menu';menu.innerHTML='<button data-action="profile">👤 Il mio profilo</button><button data-action="reviews">⭐ Le mie recensioni</button><button data-action="contribute">🤝 Contribuisci al sito</button><button data-action="name">✏️ Modifica username</button><button class="logout" data-action="logout">🚪 Esci</button>';document.body.appendChild(menu);
 
   const modal=document.createElement('div');modal.className='auth-modal';
   modal.innerHTML='<div class="auth-box" role="dialog" aria-modal="true"><button class="auth-close" type="button" aria-label="Chiudi">×</button><h2 id="authTitle">Accedi</h2><p id="authText">Accedi per lasciare recensioni.</p><div id="authFields"></div><button id="authSubmit" type="button">ACCEDI</button><button id="authSwitch" class="alt" type="button">REGISTRATI</button><button id="authForgot" class="auth-link" type="button">Password dimenticata?</button><div class="auth-msg" id="authMsg" aria-live="polite"></div></div>';
@@ -78,7 +78,7 @@
   async function toggleMenu(anchor=fab){const user=await currentUser();if(!user){await open('login');return}const r=anchor.getBoundingClientRect();menu.style.top=(r.bottom+8)+'px';menu.style.right=Math.max(12,window.innerWidth-r.right)+'px';menu.classList.toggle('open')}
 
   fab.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await toggleMenu()});q('.auth-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!fab.contains(e.target))closeMenu()});
-  menu.addEventListener('click',async e=>{const a=e.target.closest('[data-action]');if(!a)return;closeMenu();const act=a.dataset.action;if(act==='logout'){await s.auth.signOut();mode='login';await refresh();return}if(act==='reviews')return open('myreviews');if(act==='name'||act==='profile')return open('account')});
+  menu.addEventListener('click',async e=>{const a=e.target.closest('[data-action]');if(!a)return;closeMenu();const act=a.dataset.action;if(act==='logout'){await s.auth.signOut();mode='login';await refresh();return}if(act==='reviews')return open('myreviews');if(act==='contribute'){window.Contributi?.open();return}if(act==='name'||act==='profile')return open('account')});
   q('#authSwitch').onclick=async()=>{if(mode==='login')mode='register';else if(mode==='register'||mode==='forgot')mode='login';else if(mode==='account')mode='forgot';await render()};q('#authForgot').onclick=async()=>{mode='forgot';await render()};
   q('#authSubmit').onclick=async()=>{msg('');const email=(q('#authEmail')?.value||'').trim(),password=q('#authPassword')?.value||'',name=(q('#authName')?.value||'').trim();try{
     if(mode==='login'){if(!email||!password){msg('Inserisci email e password.');return}const r=await s.auth.signInWithPassword({email,password});if(r.error)throw r.error;msg('Accesso effettuato!');await refresh();setTimeout(close,500);return}
