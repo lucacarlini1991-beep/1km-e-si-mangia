@@ -119,6 +119,24 @@ body{background:#f5f7f6!important}
  .how-it-works .map-header{padding:34px 20px!important}
 }
 </style>
+<style id="faq-intro-fix">
+/* FAQ: la scheda informativa resta chiara, non deve usare il fondo fotografico */
+main .intro{
+  background:#fff!important;
+  color:#23463a!important;
+  border:1px solid #e0e8e4!important;
+  border-radius:20px!important;
+  box-shadow:0 8px 24px rgba(0,77,54,.07)!important;
+}
+main .intro:before{display:none!important}
+main .intro>*{position:static!important;color:inherit!important}
+main .intro h2{
+  color:#075c3b!important;
+  font-size:30px!important;
+  line-height:1.1!important;
+}
+main .intro p{color:#587066!important}
+</style>
 </head>
 <body>
 <header class="topbar">
