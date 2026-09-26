@@ -763,6 +763,33 @@
     /* =========================
        HOME CARDS - DESIGN DEFINITIVO
     ========================= */
+    @media(min-width:751px){
+      .hero-content{
+        width:min(1320px,calc(100% - 96px)) !important;
+        max-width:1320px !important;
+      }
+      .home-tools{
+        width:min(1120px,100%) !important;
+        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+        gap:18px !important;
+        margin:34px 0 24px !important;
+      }
+      .home-tool{
+        min-height:330px !important;
+      }
+      .home-tool-media{
+        height:142px !important;
+        flex-basis:142px !important;
+        overflow:visible !important;
+      }
+      .home-tool-body{
+        padding-top:42px !important;
+      }
+      .home-search{
+        width:min(1120px,100%) !important;
+      }
+    }
+
     .home-tools{
       display:grid;
       grid-template-columns:repeat(3,minmax(0,1fr));
