@@ -41,8 +41,13 @@
     document.body.style.overflow='';
   }
 
-  function open() {
+  async function open() {
     if (!window.ReviewsAuth?.client) {
+      document.getElementById('siteAccountButton')?.click();
+      return;
+    }
+    const user = await window.ReviewsAuth.getUser?.();
+    if (!user) {
       document.getElementById('siteAccountButton')?.click();
       return;
     }
