@@ -62,7 +62,7 @@ for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
 }
 
 const analyticsSnippet = `\n<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>\n<script defer src="/_vercel/insights/script.js"></script>\n`;
-const globalUiSnippet = '\n<script src="fix-ui-1km.js?v=20260914-global"></script>\n<script src="contributi.js?v=20260926-contributi"></script>\n';
+const globalUiSnippet = '\n<script src="fix-ui-1km.js?v=20260914-global"></script>\n<script src="contributi.js?v=20260926-contributi2"></script>\n';
 
 const htmlFiles = fs.readdirSync(out).filter(name => name.toLowerCase().endsWith('.html'));
 
