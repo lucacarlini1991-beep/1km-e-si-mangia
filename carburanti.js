@@ -53,8 +53,28 @@ window.openNavChooser=function(lat,lon,place){
   document.getElementById('fuelNavPlace').textContent=place||'Distributore carburanti';
 }
 window.__fuelStationsById=window.__fuelStationsById||{};
-window.openFuelReport=function(mimitId){const station=window.__fuelStationsById?.[String(mimitId)];if(station)window.Contributi?.open('fuel',station)};
-function popup(s){return '<div style="min-width:220px"><b style="font-size:16px">'+(s.brand||s.name||'Distributore')+'</b><br><small>'+[s.address,s.municipality].filter(Boolean).join(' · ')+'</small><div style="margin:10px 0;display:grid;gap:5px"><div>🟢 Benzina <b>'+money(s.benzina)+'</b></div><div>🟡 Gasolio <b>'+money(s.gasolio)+'</b></div><div>🔵 GPL <b>'+money(s.gpl)+'</b></div></div><button type="button" onclick="window.openNavChooser('+Number(s.lat)+','+Number(s.lon)+','+JSON.stringify((s.brand||s.name||'Distributore')).replace(/'/g,"\\'")+')" style="width:100%;border:0;background:#075c3b;color:#fff;padding:11px 10px;border-radius:10px;font-weight:900;font-size:14px;cursor:pointer">NAVIGA →</button><button type="button" onclick="openFuelReport(\'+String(s.mimit_id)+\')" style="width:100%;margin-top:8px;border:1px solid #075c3b;background:#fff;color:#075c3b;padding:10px;border-radius:10px;font-weight:900;font-size:13px;cursor:pointer">✏️ SEGNALA PREZZI TROVATI</button></div>'}
+window.openFuelReport=function(mimitId){
+  const station=window.__fuelStationsById?.[String(mimitId)];
+  if(station) window.Contributi?.open('fuel',station);
+};
+document.addEventListener('click',function(e){
+  const nav=e.target.closest?.('[data-fuel-nav]');
+  if(nav){
+    e.preventDefault();
+    window.openNavChooser(Number(nav.dataset.lat),Number(nav.dataset.lon),decodeURIComponent(nav.dataset.place||'Distributore carburanti'));
+    return;
+  }
+  const report=e.target.closest?.('[data-fuel-report]');
+  if(report){
+    e.preventDefault();
+    window.openFuelReport(report.dataset.fuelReport);
+  }
+});
+function popup(s){
+  const place=encodeURIComponent(s.brand||s.name||'Distributore');
+  const id=String(s.mimit_id||'');
+  return '<div style="min-width:220px"><b style="font-size:16px">'+(s.brand||s.name||'Distributore')+'</b><br><small>'+[s.address,s.municipality].filter(Boolean).join(' · ')+'</small><div style="margin:10px 0;display:grid;gap:5px"><div>🟢 Benzina <b>'+money(s.benzina)+'</b></div><div>🟡 Gasolio <b>'+money(s.gasolio)+'</b></div><div>🔵 GPL <b>'+money(s.gpl)+'</b></div></div><button type="button" data-fuel-nav data-lat="'+Number(s.lat)+'" data-lon="'+Number(s.lon)+'" data-place="'+place+'" style="width:100%;border:0;background:#075c3b;color:#fff;padding:11px 10px;border-radius:10px;font-weight:900;font-size:14px;cursor:pointer">NAVIGA →</button><button type="button" data-fuel-report="'+id+'" style="width:100%;margin-top:8px;border:1px solid #075c3b;background:#fff;color:#075c3b;padding:10px;border-radius:10px;font-weight:900;font-size:13px;cursor:pointer">✏️ SEGNALA PREZZI TROVATI</button></div>';
+}
 
 async function load(){if(!userPos)return;statusEl.textContent='⛽ Cerco i distributori e i prezzi aggiornati...';stationLayer.clearLayers();stationsEl.innerHTML='';
 try{const u=API+'?lat='+userPos.lat+'&lon='+userPos.lng+'&radius='+radius+'&limit=150';const r=await fetch(u);const d=await r.json();if(!r.ok)throw new Error(d.error||'Errore API');const list=d.stations||[];list.forEach(s=>{if(s.mimit_id)window.__fuelStationsById[String(s.mimit_id)]=s});const reports=await communityReports(list);countEl.textContent=list.length;statusEl.textContent='✓ '+list.length+' distributori nel raggio di '+radius+' km';list.forEach(s=>{L.marker([s.lat,s.lon],{icon:icon(s)}).addTo(stationLayer).bindPopup(popup(s));const card=document.createElement('article');card.className='station-card';card.innerHTML='<div><h3>'+((s.brand||s.name||'Distributore'))+'</h3><p>'+[s.address,s.municipality].filter(Boolean).join(' · ')+' · 📍 '+Number(s.distance_km).toFixed(1).replace('.',',')+' km</p><div class="prices"><span class="price">🟢 Benzina '+money(s.benzina)+'</span><span class="price">🟡 Gasolio '+money(s.gasolio)+'</span><span class="price">🔵 GPL '+money(s.gpl)+'</span></div>'+(communityLabel(reports[s.mimit_id])?'<div style="margin-top:8px;font-size:12px;color:#075c3b;font-weight:800">'+communityLabel(reports[s.mimit_id])+'</div>':'')+'</div><a class="nav-btn" href="#" rel="noopener">NAVIGA →</a>';card.querySelector('.nav-btn').onclick=e=>{e.preventDefault();window.openNavChooser(s.lat,s.lon,(s.brand||s.name||'Distributore'))};card.onclick=e=>{if(e.target.tagName!=='A')map.setView([s.lat,s.lon],16)};stationsEl.appendChild(card)});if(list.length){const bounds=L.latLngBounds(list.map(s=>[s.lat,s.lon]));bounds.extend([userPos.lat,userPos.lng]);map.fitBounds(bounds,{padding:[45,45],maxZoom:14})}}catch(e){statusEl.textContent='⚠️ '+e.message}}
