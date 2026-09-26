@@ -719,11 +719,16 @@
     .project-intro h2,.why-section h2,.services-section h2{margin:16px 0 22px;color:#fff;font-size:clamp(42px,5vw,68px);line-height:.95}
     .lead{max-width:850px;color:#eef7f2;font-size:22px;line-height:1.55;margin:0 0 48px}
     .journey-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-    .journey-card{min-height:310px;padding:30px;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.7);position:relative;box-shadow:0 12px 30px rgba(0,0,0,.14)}
-    .journey-number{font-size:13px;letter-spacing:2px;color:#8aa097;font-weight:800}
+    .journey-card{min-height:310px;padding:30px;position:relative;overflow:hidden;isolation:isolate;border:1px solid rgba(255,255,255,.55);box-shadow:0 12px 30px rgba(0,0,0,.22);color:#fff;background-size:cover;background-position:center}
+    .journey-card::before{content:"";position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center;transform:scale(1.01)}
+    .journey-card::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,25,20,.22),rgba(0,35,28,.66))}
+    .journey-card:nth-child(1)::before{background-image:url("assets/card-mangia.png")}
+    .journey-card:nth-child(2)::before{background-image:url("assets/card-esplora.png")}
+    .journey-card:nth-child(3)::before{background-image:url("assets/card-riparti.png")}
+    .journey-number{font-size:13px;letter-spacing:2px;color:#fff;font-weight:800;text-shadow:0 2px 8px rgba(0,0,0,.55)}
     .journey-icon{font-size:42px;margin:34px 0 20px}
-    .journey-card h3{margin:0 0 14px;color:var(--verde-scuro);font-size:25px}
-    .journey-card p{margin:0;color:#5b7067;font-size:18px;line-height:1.5}
+    .journey-card h3{margin:0 0 14px;color:#fff;font-size:25px;text-shadow:0 2px 10px rgba(0,0,0,.65)}
+    .journey-card p{margin:0;color:#fff;font-size:18px;line-height:1.5;text-shadow:0 2px 8px rgba(0,0,0,.7)}
     .why-section{
       position:relative;
       background:transparent !important;
