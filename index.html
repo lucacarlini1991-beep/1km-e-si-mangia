@@ -463,13 +463,16 @@
         padding: 42px 18px 48px;
       }
 
-      .home-tools{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;margin:24px 0 22px}
-      .home-tool{min-height:250px;padding:0 9px 12px;border-radius:18px}
-      .home-tool-photo{height:70px;margin:0 -9px 10px;font-size:30px}
-      .home-tool-title{font-size:16px;letter-spacing:0;text-align:center;white-space:nowrap}
-      .home-tool-text{font-size:13px;line-height:1.3;min-height:86px;margin-bottom:8px}
-      .home-tool-action{width:100%;justify-content:center;gap:4px;padding:9px 4px;border-radius:10px;font-size:11px;line-height:1.15;text-align:center;white-space:normal}
-      .home-tool-action b{font-size:16px;flex:0 0 auto}
+      .home-tools{display:grid;grid-template-columns:1fr;gap:12px;width:100%;margin:26px 0 24px}
+      .home-tool{min-height:96px;height:auto;padding:0 12px 0 0;border-radius:18px;display:grid;grid-template-columns:82px minmax(0,1fr) auto;align-items:stretch;overflow:hidden}
+      .home-tool-photo{width:82px;height:100%;min-height:96px;margin:0;display:flex;align-items:center;justify-content:center;font-size:34px;background:linear-gradient(135deg,rgba(0,77,54,.14),rgba(245,167,25,.24))}
+      .home-tool-title{font-size:18px;letter-spacing:.2px;text-align:left;white-space:nowrap;align-self:end;margin:0 10px 2px}
+      .home-tool-text{font-size:13px;line-height:1.25;text-align:left;min-height:0;margin:0 10px 10px;color:#52635d;grid-column:2;align-self:start}
+      .home-tool-action{width:auto;min-width:0;margin:0 0 0 auto;align-self:center;justify-self:end;display:inline-flex;justify-content:center;gap:4px;padding:10px 8px;border-radius:11px;font-size:11px;line-height:1.1;text-align:center;white-space:normal}
+      .home-tool-action b{font-size:17px;flex:0 0 auto}
+      .home-tool-food .home-tool-photo{background:linear-gradient(135deg,#fff0dc,#f6b65b)}
+      .home-tool-explore .home-tool-photo{background:linear-gradient(135deg,#dcecff,#72aee8)}
+      .home-tool-go .home-tool-photo{background:linear-gradient(135deg,#d9f2e5,#62bd91)}
 
       .small-title {
         font-size: 13px;
