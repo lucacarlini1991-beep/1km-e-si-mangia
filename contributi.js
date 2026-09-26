@@ -41,7 +41,7 @@
     document.body.style.overflow='';
   }
 
-  async function open(startSection) {
+  async function open(startSection, startFuelStation) {
     if (!window.ReviewsAuth?.client) {
       document.getElementById('siteAccountButton')?.click();
       return;
@@ -59,7 +59,7 @@
     document.body.style.overflow='hidden';
     o.querySelector('.c1-close').onclick=close;
     o.addEventListener('click',e=>{if(e.target===o)close()});
-    if (startSection === 'fuel') showFuel(); else showCategories();
+    if (startSection === 'fuel') showFuel(startFuelStation || null); else showCategories();
   }
 
   function showCategories() {
@@ -168,19 +168,23 @@
     return data||[];
   }
 
-  function showFuel() {
+  function showFuel(presetStation) {
     const box=document.getElementById('c1-content');if(!box)return;
     box.innerHTML='<button class="c1-back" type="button">← Torna alle categorie</button>'+
       '<h3 style="margin:0 0 4px">⛽ Segnala i prezzi carburante</h3>'+
-      '<p class="c1-sub">Scegli il distributore e inserisci solo i numeri che leggi sulla colonnina. Il formato è già pronto.</p>'+
-      '<label class="c1-label">Cerca distributore</label><input id="c1-fuel-search" class="c1-input" placeholder="Nome, marca o comune" autocomplete="off"><div id="c1-fuel-results" class="c1-results"></div>'+
-      '<div id="c1-fuel-selected"></div><div id="c1-fuel-form" style="display:none;margin-top:12px">'+
+      '<p class="c1-sub">Inserisci solo i numeri che leggi sulla colonnina. Il formato è già pronto.</p>'+
+      (presetStation ? '<div id="c1-fuel-selected"></div>' : '<label class="c1-label">Cerca distributore</label><input id="c1-fuel-search" class="c1-input" placeholder="Nome, marca o comune" autocomplete="off"><div id="c1-fuel-results" class="c1-results"></div><div id="c1-fuel-selected"></div>')+
+      '<div id="c1-fuel-form" style="display:none;margin-top:12px">'+
       '<div class="c1-price-grid">'+
       ['benzina_self:Benzina · self','benzina_servito:Benzina · servito','gasolio_self:Gasolio · self','gasolio_servito:Gasolio · servito','gpl_self:GPL · self','gpl_servito:GPL · servito','metano_self:Metano · self','metano_servito:Metano · servito'].map(x=>{const [id,label]=x.split(':');return '<div class="c1-price"><label for="c1-'+id+'">'+label+'</label><input id="c1-'+id+'" inputmode="decimal" type="text" autocomplete="off" placeholder="0,000" pattern="[0-9]+([,.][0-9]{1,3})?"></div>'}).join('')+
       '</div><p class="c1-note">Lascia vuote le categorie che non sono disponibili. Inserisci €/litro (metano in €/kg se indicato).</p><button class="c1-submit" id="c1-fuel-submit" type="button">PUBBLICA PREZZI VISTI ORA</button><div class="c1-msg" id="c1-fuel-msg"></div></div>';
     box.querySelector('.c1-back').onclick=showCategories;
-    let selected=null,timer=null;
+    let selected=presetStation||null,timer=null;
     const search=box.querySelector('#c1-fuel-search'),results=box.querySelector('#c1-fuel-results');
+    if(selected){
+      box.querySelector('#c1-fuel-selected').innerHTML='<div class="c1-selected">⛽ <strong>'+esc(selected.brand||selected.name||'Distributore')+'</strong><br><small>'+esc([selected.address,selected.municipality].filter(Boolean).join(' · '))+'</small></div>';
+      box.querySelector('#c1-fuel-form').style.display='block';
+    }
     async function doSearch(){
       if(!search.value.trim()){results.innerHTML='';return}
       results.innerHTML='<div class="c1-empty">Cerco...</div>';
