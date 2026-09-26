@@ -141,7 +141,7 @@ main .intro p{color:#587066!important}
 <body>
 <header class="topbar">
   <a href="index.html" class="logo-link" aria-label="Home 1 KM E SI MANGIA"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="site-logo"></a>
-  <button class="menu-button" id="menuButton" aria-label="Apri menu" aria-expanded="false">☰</button>
+  <button type="button" class="site-account" id="siteAccountButton" aria-label="Accedi">👤 <span>ACCEDI</span></button><button class="menu-button" id="menuButton" aria-label="Apri menu" aria-expanded="false">☰</button>
 </header>
 <div class="menu-overlay" id="menuOverlay" aria-hidden="true"><div class="menu-inner">
   <div class="menu-top"><a href="index.html"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA" class="menu-logo"></a><button class="menu-close" id="menuClose" aria-label="Chiudi menu">×</button></div>
@@ -210,4 +210,5 @@ function openMenu(){m.classList.add('open');m.setAttribute('aria-hidden','false'
 function closeMenu(){m.classList.remove('open');m.setAttribute('aria-hidden','true');b.setAttribute('aria-expanded','false');document.body.style.overflow=''}
 b.addEventListener('click',openMenu);c.addEventListener('click',closeMenu);m.addEventListener('click',e=>{if(e.target===m)closeMenu()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260926-header-avatar"></script><script src="auth.js?v=20260926-header-avatar"></script>
 </body></html>
