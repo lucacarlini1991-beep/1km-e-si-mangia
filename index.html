@@ -990,6 +990,26 @@
       .home-search input{font-size:14px;height:42px}
       .home-search button{height:42px;padding:0 15px;font-size:14px}
     }
+
+    /* FIX MOBILE HOMEPAGE — layout piena larghezza e sezioni impilate */
+    @media(max-width:750px){
+      html,body{width:100%;max-width:100%;overflow-x:hidden}
+      main,.home,.hero-home,.project-intro,.why-section,.services-section{width:100%;max-width:100%;min-width:0}
+      .hero-home{background-position:28% center}
+      .hero-content{width:100%;max-width:100%;min-width:0}
+      .content-wrap{width:calc(100% - 32px) !important;max-width:none !important;margin-left:auto !important;margin-right:auto !important}
+      .why-section{padding:64px 0 70px !important}
+      .why-section::before{background-position:24% center !important;background-size:cover !important}
+      .why-grid{display:block !important;width:100% !important}
+      .why-grid>div{width:100% !important;max-width:100% !important}
+      .why-section h2{font-size:46px !important;line-height:.95 !important;margin-bottom:28px !important}
+      .why-copy p{font-size:19px !important;line-height:1.45 !important;margin-bottom:20px !important}
+      .services-section{padding:64px 0 72px !important}
+      .services-section h2{font-size:46px !important;line-height:.95 !important}
+      .services-lead{font-size:19px !important;line-height:1.4 !important;margin-bottom:28px !important}
+      .service-links{display:flex !important;flex-direction:column !important;gap:14px !important;width:100% !important}
+      .service-link{width:100% !important;min-height:150px !important;padding:24px !important}
+    }
   </style>
 
   <meta name="description" content="Un servizio pensato per chi viaggia: trova dove mangiare vicino alle uscite, esplora cosa c’è intorno a te e trova servizi utili lungo il percorso.">
