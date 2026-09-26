@@ -190,25 +190,23 @@
     ========================= */
 
     .home {
-      background: var(--verde);
       min-height: calc(100vh - 96px);
-      padding: 54px 24px 50px;
+      padding: 0 0 50px;
+      background-image: linear-gradient(90deg, rgba(0,48,34,.82) 0%, rgba(0,77,54,.42) 52%, rgba(0,77,54,.16) 100%), url("assets/home-hero.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
 
     .hero-home {
-      width: min(1200px, 100%);
-      min-height: 590px;
+      width: 100%;
+      min-height: 680px;
       margin: 0 auto;
-      border: 1px solid rgba(255,255,255,.8);
+      border: 0;
       padding: 75px 65px;
       display: flex;
       align-items: center;
-      background:
-        radial-gradient(
-          circle at 90% 85%,
-          rgba(255,255,255,.08),
-          transparent 25%
-        );
+      background: transparent;
     }
 
     .hero-content {
