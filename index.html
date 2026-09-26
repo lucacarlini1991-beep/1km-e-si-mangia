@@ -724,7 +724,16 @@
     .journey-icon{font-size:42px;margin:34px 0 20px}
     .journey-card h3{margin:0 0 14px;color:var(--verde-scuro);font-size:25px}
     .journey-card p{margin:0;color:#5b7067;font-size:18px;line-height:1.5}
-    .why-section{background:var(--verde);padding:90px 0;color:#fff}
+    .why-section{
+      position:relative;
+      background-image:
+        linear-gradient(90deg,rgba(0,48,34,.84),rgba(0,77,54,.72)),
+        url("assets/home-hero.png");
+      background-size:cover;
+      background-position:center 72%;
+      padding:90px 0;
+      color:#fff
+    }
     .why-section .eyebrow{color:#f7c55a}
     .why-section h2{color:#fff}
     .why-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:70px}
@@ -879,6 +888,7 @@
       cursor:pointer;
     }
     @media(max-width:750px){
+      .why-section{background-position:center 72%}
       .home-tools{
         display:flex !important;
         flex-direction:column !important;
