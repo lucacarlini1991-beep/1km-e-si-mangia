@@ -6,6 +6,7 @@
 
   const style=document.createElement('style');
   style.textContent=`
+  .site-account .auth-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#eaf2ed;display:inline-flex;align-items:center;justify-content:center;font-size:17px}.site-account .site-account-name{display:inline-block}.site-account.has-avatar{gap:7px;padding:5px 9px}@media(max-width:600px){.site-account.has-avatar{min-width:42px;width:42px;padding:5px}.site-account .site-account-name{display:none}.site-account .auth-avatar{width:30px;height:30px}}
   .auth-fab{position:fixed;right:18px;bottom:18px;z-index:9999;border:0;border-radius:999px;background:#fff;color:#075c3b;padding:7px 14px 7px 7px;font:800 16px 'Roboto Condensed',sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;gap:8px}
   .auth-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#eaf2ed;display:inline-flex;align-items:center;justify-content:center;font-size:18px}
   .auth-menu{position:fixed;z-index:10001;display:none;width:220px;background:#fff;border:1px solid #dce7e0;border-radius:15px;padding:7px;box-shadow:0 14px 35px rgba(0,0,0,.2)}
@@ -45,6 +46,17 @@
     const user=await currentUser();profileCache=user?await getProfile(user):null;
     const name=profileCache?.display_name||user?.user_metadata?.display_name||user?.email?.split('@')[0]||'ACCEDI';
     fab.innerHTML=(user?avatarHTML(profileCache):'<span class="auth-avatar">👤</span>')+'<span>'+esc(name)+'</span>';
+    const siteBtn=document.getElementById('siteAccountButton');
+    if(siteBtn){
+      siteBtn.classList.toggle('has-avatar',!!user);
+      siteBtn.innerHTML=(user?avatarHTML(profileCache):'<span class="auth-avatar">👤</span>')+'<span class="site-account-name">'+(user?esc(name):'ACCEDI')+'</span>';
+      siteBtn.title=user?'Apri il mio profilo':'Accedi o registrati';
+      if(!siteBtn.dataset.authBound){
+        siteBtn.dataset.authBound='1';
+        siteBtn.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await open(user?'account':'login')});
+      }
+    }
+    if(siteBtn) fab.style.display='none';
     document.dispatchEvent(new CustomEvent('reviews-auth-changed',{detail:{user,profile:profileCache}}));
     document.dispatchEvent(new CustomEvent('profile-changed',{detail:{user,profile:profileCache}}));
     return user;
