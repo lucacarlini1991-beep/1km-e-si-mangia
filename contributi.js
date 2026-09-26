@@ -73,12 +73,17 @@
   }
 
   async function searchPlaces(type, term) {
-    const s=client(); if(!s || !term.trim()) return [];
+    if (!term.trim()) return [];
+    if (type === 'restaurant') {
+      const list = window._ristorantiVisualizzati || window._ristorantiCorrenti || [];
+      const needle = term.trim().toLocaleLowerCase('it-IT');
+      return list.filter(x => [x.nome, x.name, x.comune, x.municipality, x.indirizzo, x.address]
+        .filter(Boolean).some(v => String(v).toLocaleLowerCase('it-IT').includes(needle))).slice(0, 12);
+    }
+    const s=client(); if(!s) return [];
     const q='%'+term.trim().replace(/[%_]/g,'')+'%';
-    let table='parcheggi';
-    let name='nome', city='comune';
-    if(type==='camper_service') table='camper_service';
-    const {data,error}=await s.from(table).select('*').or(name+'.ilike.'+q+','+city+'.ilike.'+q).limit(12);
+    const table=type==='camper_service'?'camper_service':'parcheggi';
+    const {data,error}=await s.from(table).select('*').or('nome.ilike.'+q+',comune.ilike.'+q+',indirizzo.ilike.'+q).limit(12);
     if(error) { console.warn('Ricerca contributi:',error.message); return []; }
     return data||[];
   }
@@ -130,7 +135,7 @@
     [nameEl,cityEl].forEach(el=>el.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(doSearch,350)}));
 
     function prepareManual(){
-      selected={id:(type==='restaurant'?'restaurant:':'')+slug(nameEl.value)+'-'+slug(cityEl.value),name:nameEl.value.trim()||reviewLabel(type)};
+      selected={id:type==='restaurant'?(nameEl.value.trim()||reviewLabel(type)):type+':'+slug(nameEl.value)+'-'+slug(cityEl.value),name:nameEl.value.trim()||reviewLabel(type)};
       box.querySelector('#c1-selected').innerHTML='<div class="c1-selected">📍 <strong>'+esc(selected.name)+'</strong> · '+esc(cityEl.value||'Comune non indicato')+'</div>';
       box.querySelector('#c1-review-form').style.display='block';
     }
