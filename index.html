@@ -1068,6 +1068,44 @@
       .service-links{display:flex !important;flex-direction:column !important;gap:14px !important;width:100% !important}
       .service-link{width:100% !important;min-height:150px !important;padding:24px !important}
     }
+    /* HOME: un'unica fotografia continua dietro tutte le sezioni */
+    main{
+      position:relative;
+      background-image:url("assets/home-hero.png") !important;
+      background-size:cover !important;
+      background-position:center top !important;
+      background-repeat:no-repeat !important;
+      background-attachment:fixed !important;
+    }
+    .hero-home{
+      background-image:linear-gradient(90deg,rgba(0,48,34,.82) 0%,rgba(0,77,54,.42) 52%,rgba(0,77,54,.16) 100%) !important;
+      background-color:transparent !important;
+    }
+    .project-intro{
+      background-image:linear-gradient(90deg,rgba(0,35,28,.58),rgba(0,48,36,.40)) !important;
+      background-color:transparent !important;
+    }
+    .why-section{
+      background-image:linear-gradient(90deg,rgba(0,35,28,.58),rgba(0,48,36,.40)) !important;
+      background-color:transparent !important;
+    }
+    .why-section::before{
+      background-image:none !important;
+      background:transparent !important;
+    }
+    @media(max-width:750px){
+      main{
+        background-attachment:scroll !important;
+        background-size:auto 100% !important;
+        background-position:center top !important;
+      }
+      .project-intro{
+        background-image:linear-gradient(180deg,rgba(0,35,28,.62),rgba(0,48,36,.44)) !important;
+      }
+      .why-section{
+        background-image:linear-gradient(180deg,rgba(0,35,28,.62),rgba(0,48,36,.44)) !important;
+      }
+    }
   </style>
 
   <meta name="description" content="Un servizio pensato per chi viaggia: trova dove mangiare vicino alle uscite, esplora cosa c’è intorno a te e trova servizi utili lungo il percorso.">
