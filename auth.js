@@ -50,7 +50,7 @@
     return user;
   }
   async function render(){
-    msg('');const user=await currentUser(),title=q('#authTitle'),text=q('#authText'),submit=q('#authSubmit'),sw=q('#authSwitch'),forgot=q('#authForgot');
+    msg('');const user=await currentUser(),title=q('#authTitle'),text=q('#authText'),submit=q('#authSubmit'),sw=q('#authSwitch'),forgot=q('#authForgot'),social=q('.auth-social'),logout=q('#authLogout');
     if(mode==='account'&&user){social.style.display='none';const p=await getProfile(user);title.textContent='Il mio profilo';text.textContent='Il tuo nome e la foto saranno visibili insieme alle tue recensioni.';
       const av=p?.avatar_url?'<img src="'+esc(p.avatar_url)+'" alt="Foto profilo">':'<div class="avatar-placeholder">👤</div>';
       fields().innerHTML='<div class="avatar-editor">'+av+'<div class="avatar-actions"><label for="authAvatar">📷 Carica foto profilo<input id="authAvatar" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="avatar-note">JPG, PNG o WEBP · max 5 MB</div></div></div>'+input('authName','text','Nome visualizzato',p?.display_name||'');
