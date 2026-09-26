@@ -41,7 +41,7 @@
     document.body.style.overflow='';
   }
 
-  async function open() {
+  async function open(startSection) {
     if (!window.ReviewsAuth?.client) {
       document.getElementById('siteAccountButton')?.click();
       return;
@@ -59,7 +59,7 @@
     document.body.style.overflow='hidden';
     o.querySelector('.c1-close').onclick=close;
     o.addEventListener('click',e=>{if(e.target===o)close()});
-    showCategories();
+    if (startSection === 'fuel') showFuel(); else showCategories();
   }
 
   function showCategories() {
