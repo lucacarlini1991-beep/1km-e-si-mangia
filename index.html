@@ -726,22 +726,31 @@
     .journey-card p{margin:0;color:#5b7067;font-size:18px;line-height:1.5}
     .why-section{
       position:relative;
+      background:transparent !important;
       padding:90px 0;
       color:#fff;
-      background-color:#0b5d45 !important;
-      background-image:url("assets/home-hero.png") !important;
-      background-size:cover !important;
-      background-position:28% center !important;
-      background-repeat:no-repeat !important;
-      background-blend-mode:normal !important;
+      overflow:hidden;
     }
-    .why-section > .content-wrap{position:relative;z-index:1}
+    .why-section::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background-image:url("assets/home-hero.png");
+      background-size:cover;
+      background-position:28% 72%;
+      background-repeat:no-repeat;
+      z-index:0;
+    }
+    .why-section > .content-wrap{
+      position:relative;
+      z-index:1;
+    }
     .why-section .eyebrow{color:#f7c55a}
     .why-section h2{color:#fff}
     .why-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:70px}
     .why-copy p{font-size:21px;line-height:1.6;margin:0 0 22px;color:#edf5f1}
     .why-copy strong{color:#fff}
-    .services-section{background:#dce3df !important;padding:90px 0 100px}
+    .services-section{background:#e4e9e6;padding:90px 0 100px}
     .services-lead{color:#5c7068;font-size:21px;margin:-6px 0 38px}
     .service-links{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
     .service-link{min-height:220px;padding:28px;background:#fff;border:1px solid #d9e3de;color:var(--verde-scuro);text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;transition:.2s;position:relative}
@@ -890,9 +899,9 @@
       cursor:pointer;
     }
     @media(max-width:750px){
-      .why-section{
-        background-position:24% center !important;
-        background-size:auto 100% !important;
+      .why-section::before{
+        background-position:24% 68%;
+        background-size:auto 100%;
       }
       .home{
         background-position:28% center;
