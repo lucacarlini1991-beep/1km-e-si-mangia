@@ -758,7 +758,13 @@
     .why-copy{padding:18px 24px;border-radius:18px;background:rgba(0,35,28,.18);backdrop-filter:blur(1.5px)}
     .why-copy p{font-size:21px;line-height:1.6;margin:0 0 22px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.55)}
     .why-copy strong{color:#fff}
-    .services-section{background:#e4e9e6;padding:90px 0 100px}
+    .services-section{
+      background:
+        radial-gradient(circle at 15% 0%,rgba(7,128,77,.10),transparent 38%),
+        linear-gradient(180deg,#e7efeb 0%,#dfe9e4 100%);
+      border-top:1px solid rgba(7,128,77,.10);
+      padding:90px 0 100px;
+    }
     .services-lead{color:#5c7068;font-size:21px;margin:-6px 0 38px}
     .service-links{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
     .service-link{min-height:220px;padding:28px;background:#fff;border:1px solid #d9e3de;color:var(--verde-scuro);text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;transition:.2s;position:relative}
