@@ -735,7 +735,9 @@
       content:"";
       position:absolute;
       inset:0;
-      background-image:url("assets/home-hero.png");
+      background-image:
+        linear-gradient(90deg,rgba(0,35,28,.68) 0%,rgba(0,45,35,.48) 48%,rgba(0,35,28,.62) 100%),
+        url("assets/home-hero.png");
       background-size:cover;
       background-position:28% 72%;
       background-repeat:no-repeat;
@@ -746,9 +748,10 @@
       z-index:1;
     }
     .why-section .eyebrow{color:#f7c55a}
-    .why-section h2{color:#fff}
+    .why-section h2{color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.32)}
     .why-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:70px}
-    .why-copy p{font-size:21px;line-height:1.6;margin:0 0 22px;color:#edf5f1}
+    .why-copy{padding:18px 24px;border-radius:18px;background:rgba(0,35,28,.18);backdrop-filter:blur(1.5px)}
+    .why-copy p{font-size:21px;line-height:1.6;margin:0 0 22px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.55)}
     .why-copy strong{color:#fff}
     .services-section{background:#e4e9e6;padding:90px 0 100px}
     .services-lead{color:#5c7068;font-size:21px;margin:-6px 0 38px}
