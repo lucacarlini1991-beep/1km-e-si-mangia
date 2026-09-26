@@ -463,11 +463,13 @@
         padding: 42px 18px 48px;
       }
 
-      .home-tools{grid-template-columns:1fr;gap:14px;margin:26px 0 22px}
-      .home-tool{min-height:188px;padding-bottom:16px;border-radius:18px}
-      .home-tool-photo{height:64px;font-size:34px}
-      .home-tool-title{font-size:23px}
-      .home-tool-text{font-size:15px;min-height:auto;margin-bottom:12px}
+      .home-tools{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;margin:24px 0 22px}
+      .home-tool{min-height:250px;padding:0 9px 12px;border-radius:18px}
+      .home-tool-photo{height:70px;margin:0 -9px 10px;font-size:30px}
+      .home-tool-title{font-size:18px;letter-spacing:0;text-align:center;white-space:nowrap}
+      .home-tool-text{font-size:13px;line-height:1.3;min-height:86px;margin-bottom:8px}
+      .home-tool-action{width:100%;justify-content:center;gap:5px;padding:9px 5px;border-radius:18px;font-size:12px;line-height:1.15;text-align:center}
+      .home-tool-action b{font-size:17px}
 
       .small-title {
         font-size: 13px;
@@ -476,10 +478,10 @@
       }
 
       .hero-home h1 {
-        font-size: 58px;
-        line-height: .9;
+        font-size: 50px;
+        line-height: .92;
         letter-spacing: -1px;
-        margin-bottom: 28px;
+        margin-bottom: 24px;
       }
 
       .description {
