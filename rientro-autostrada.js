@@ -251,18 +251,11 @@
       { lat: destinazione.lat, lon: destinazione.lon }
     );
 
-    if (destinazione.coordinateApprossimative) {
-      info.innerHTML =
-        '<strong>Casello di rientro</strong><br>' +
-        'Il punto preciso dell’ingresso non è presente nel database: ' +
-        'il navigatore cercherà direttamente l’ingresso del casello.';
-    } else {
-      info.innerHTML =
-        '<strong>Casello di rientro</strong><br>' +
-        (distanza != null
-          ? 'Circa ' + distanza.toFixed(1) + ' km dal ristorante.'
-          : 'Destinazione disponibile.');
-    }
+    info.innerHTML =
+      '<strong>Casello di rientro</strong><br>' +
+      (distanza != null
+        ? 'Ti guideremo al casello di ' + nomeCasello(destinazione.uscita) + ', a circa ' + distanza.toFixed(1) + ' km dal ristorante.'
+        : 'Ti guideremo direttamente al casello di ' + nomeCasello(destinazione.uscita) + '.');
 
     const vai = document.createElement('button');
     vai.type = 'button';
