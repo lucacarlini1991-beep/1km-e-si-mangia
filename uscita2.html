@@ -2,10 +2,11 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
+<meta name="uscita2-version" content="20260926-redesign">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Esplora Uscite: scopri luoghi, attrazioni e cose da vedere vicino alla tua uscita autostradale.">
   <title>Esplora Uscite | 1 KM E SI MANGIA</title>
-  <link rel="stylesheet" href="uscita2.css">
+  <link rel="stylesheet" href="uscita2.css?v=20260926-redesign">
 <style>
 /* MENU IDENTICO ALLA HOME */
 .menu-overlay{position:fixed;inset:0;background:rgba(3,69,45,.32);z-index:2000;display:none;overflow-y:auto}
@@ -126,7 +127,42 @@
     }
 </style>
 <link rel="stylesheet" href="assets/home-menu-unified.css?v=20260911-2210">
-<style id="site-account-style">.site-account{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:42px;padding:0 13px;border:1px solid rgba(7,92,59,.18);border-radius:12px;background:#fff;color:#075c3b;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);white-space:nowrap}.site-account:hover{transform:translateY(-1px)}@media(max-width:600px){.site-account{min-width:42px;height:42px;padding:0 10px;font-size:0}.site-account::first-letter{font-size:20px}}</style></head>
+<style id="site-account-style">.site-account{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:42px;padding:0 13px;border:1px solid rgba(7,92,59,.18);border-radius:12px;background:#fff;color:#075c3b;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);white-space:nowrap}.site-account:hover{transform:translateY(-1px)}@media(max-width:600px){.site-account{min-width:42px;height:42px;padding:0 10px;font-size:0}.site-account::first-letter{font-size:20px}}</style>
+<style id="uscita2-page-redesign">
+body{background:#e8eeeb!important}
+.topbar{background:#075c3b!important;color:#fff!important;border:0!important;box-shadow:0 4px 18px rgba(0,0,0,.16)!important}
+.topbar .title{color:#fff!important;font-weight:800}
+.topbar .brand img{filter:none}
+.topbar .menu-button{color:#fff!important}
+.hero{position:relative!important;overflow:hidden!important;background:#0b5d45 url("assets/home-hero.png") center/cover no-repeat!important;border:0!important;color:#fff!important}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,54,39,.86),rgba(2,54,39,.45));pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:1200px!important;padding:78px 25px 54px!important;text-align:left!important}
+.hero .eyebrow{color:#f5a900!important;letter-spacing:3px}
+.hero h1{color:#fff!important;font-size:clamp(44px,6vw,76px)!important;line-height:.95!important;letter-spacing:-1px!important}
+.hero em{color:#f5a900!important}
+.hero .subtitle{max-width:760px;color:rgba(255,255,255,.94)!important;font-size:21px!important;line-height:1.45}
+.search{margin:28px 0 0!important;max-width:720px!important;border:0!important;border-radius:16px!important;padding:8px 12px!important;box-shadow:0 12px 35px rgba(0,0,0,.22)!important}
+.locate{margin:12px 0 0!important;background:#f5a900!important;color:#064a35!important;border:0!important;border-radius:14px!important;box-shadow:0 8px 22px rgba(0,0,0,.2)!important;font-weight:800!important}
+.coverage-banner{margin-left:0!important;background:rgba(255,255,255,.96)!important;border:0!important;box-shadow:0 8px 22px rgba(0,0,0,.16)!important}
+.shell{max-width:1200px!important;padding:58px 25px 70px!important}
+.chooser{background:#fff;border-radius:24px;padding:30px;box-shadow:0 12px 35px rgba(0,0,0,.07);border:1px solid #dfe8e3}
+.section-head h2{color:#075c3b!important;font-size:38px!important}
+.exit-card{border:1px solid #dfe8e3!important;box-shadow:0 8px 20px rgba(0,0,0,.07)!important}
+.exit-card:hover{border-color:#f5a900!important}
+.detail{box-shadow:0 12px 35px rgba(0,0,0,.08)!important}
+footer{background:#fff!important}
+@media(max-width:750px){
+.hero-inner{padding:50px 16px 40px!important}
+.hero h1{font-size:44px!important}
+.hero .subtitle{font-size:18px!important}
+.search{margin-top:22px!important}
+.coverage-banner{margin-left:auto!important;margin-right:auto!important}
+.shell{padding:34px 16px 50px!important}
+.chooser{padding:20px;border-radius:20px}
+.section-head h2{font-size:30px!important}
+}
+</style>
+</head>
 <body>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="Torna a 1 KM E SI MANGIA"><img src="assets/logo-definitivo.png" alt="1 KM E SI MANGIA"></a>
