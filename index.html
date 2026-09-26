@@ -740,101 +740,225 @@
     /* =========================
        HOME CARD MOBILE - LAYOUT ORIZZONTALE
     ========================= */
-    @media (max-width:750px){
+    /* =========================
+       HOME CARDS - DESIGN DEFINITIVO
+    ========================= */
+    .home-tools{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+      width:min(1040px,100%);
+      margin:34px 0 22px;
+    }
+    .home-tool{
+      min-width:0;
+      min-height:315px;
+      padding:0 0 16px;
+      background:#fff;
+      border:2px solid rgba(255,255,255,.9);
+      border-radius:20px;
+      color:#111;
+      text-decoration:none;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      box-shadow:0 16px 34px rgba(0,0,0,.22);
+      transition:transform .2s ease,box-shadow .2s ease;
+    }
+    .home-tool:hover{transform:translateY(-5px);box-shadow:0 22px 40px rgba(0,0,0,.28)}
+    .home-tool-media{
+      height:132px;
+      flex:0 0 132px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      position:relative;
+      background-image:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.18)),url("assets/home-hero.png");
+      background-size:cover;
+      overflow:hidden;
+    }
+    .home-tool-food .home-tool-media{background-position:left center}
+    .home-tool-explore .home-tool-media{background-position:center center}
+    .home-tool-go .home-tool-media{background-position:right center}
+    .home-tool-icon{
+      width:58px;
+      height:58px;
+      margin-bottom:-29px;
+      border-radius:50%;
+      border:5px solid #fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:27px;
+      position:relative;
+      z-index:2;
+      box-shadow:0 5px 13px rgba(0,0,0,.22);
+    }
+    .home-tool-food .home-tool-icon{background:#f28c16}
+    .home-tool-explore .home-tool-icon{background:#1679df}
+    .home-tool-go .home-tool-icon{background:#07804d}
+    .home-tool-body{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      flex:1;
+      padding:39px 14px 0;
+    }
+    .home-tool-title{
+      font-size:24px;
+      line-height:1;
+      font-weight:900;
+      letter-spacing:.3px;
+      color:#111;
+      margin:0 0 10px;
+      white-space:nowrap;
+    }
+    .home-tool-text{
+      max-width:250px;
+      font-size:15px;
+      line-height:1.3;
+      color:#47544f;
+      min-height:58px;
+      margin:0 auto 14px;
+    }
+    .home-tool-action{
+      margin:auto 0 0;
+      min-height:40px;
+      padding:0 17px;
+      border-radius:11px;
+      color:#fff;
+      font-size:14px;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+    .home-tool-food .home-tool-action{background:#f28c16}
+    .home-tool-explore .home-tool-action{background:#1679df}
+    .home-tool-go .home-tool-action{background:#07804d}
+    .home-tool-action b{font-size:19px;line-height:1}
+    .home-search{
+      width:min(1040px,100%);
+      min-height:62px;
+      margin:8px 0 24px;
+      padding:7px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:#fff;
+      border-radius:13px;
+      box-shadow:0 12px 28px rgba(0,0,0,.22);
+    }
+    .home-search-pin{
+      width:42px;
+      text-align:center;
+      font-size:27px;
+      color:#07804d;
+    }
+    .home-search input{
+      min-width:0;
+      flex:1;
+      height:46px;
+      border:0;
+      outline:0;
+      font:500 16px "Roboto Condensed",Arial,sans-serif;
+      color:#29443a;
+      background:transparent;
+    }
+    .home-search button{
+      height:46px;
+      padding:0 28px;
+      border:0;
+      border-radius:10px;
+      background:#07804d;
+      color:#fff;
+      font:800 16px "Roboto Condensed",Arial,sans-serif;
+      cursor:pointer;
+    }
+    @media(max-width:750px){
       .home-tools{
         display:flex !important;
         flex-direction:column !important;
         gap:12px !important;
         width:100% !important;
-        margin:28px 0 26px !important;
+        margin:28px 0 18px !important;
       }
       .home-tool{
         width:100% !important;
         min-height:104px !important;
         height:104px !important;
-        padding:0 8px 0 0 !important;
-        margin:0 !important;
-        border-radius:18px !important;
+        padding:0 !important;
+        border-radius:17px !important;
         display:grid !important;
-        grid-template-columns:76px minmax(0,1fr) 92px !important;
-        grid-template-rows:42px 1fr !important;
-        align-items:stretch !important;
+        grid-template-columns:86px minmax(0,1fr) 92px !important;
         overflow:hidden !important;
       }
-      .home-tool-photo{
+      .home-tool-media{
         grid-column:1 !important;
-        grid-row:1 / 3 !important;
-        width:76px !important;
+        grid-row:1 !important;
+        width:86px !important;
         height:104px !important;
         min-height:104px !important;
-        margin:0 !important;
-        font-size:32px !important;
+        background-position:center !important;
+        flex:none !important;
+        align-items:center !important;
       }
-      .home-tool-title{
+      .home-tool-icon{
+        width:50px !important;
+        height:50px !important;
+        margin:0 !important;
+        font-size:24px !important;
+        border-width:4px !important;
+      }
+      .home-tool-body{
         grid-column:2 !important;
         grid-row:1 !important;
-        align-self:end !important;
-        margin:0 7px 0 !important;
-        padding:0 !important;
-        font-size:17px !important;
-        line-height:1 !important;
-        letter-spacing:0 !important;
+        min-width:0 !important;
+        padding:15px 7px 12px !important;
+        display:flex !important;
+        align-items:flex-start !important;
         text-align:left !important;
-        white-space:nowrap !important;
-        overflow:hidden !important;
-        text-overflow:clip !important;
+      }
+      .home-tool-title{
+        font-size:18px !important;
+        margin:0 0 6px !important;
+        line-height:1 !important;
       }
       .home-tool-text{
-        grid-column:2 !important;
-        grid-row:2 !important;
-        align-self:start !important;
-        margin:5px 7px 0 !important;
-        padding:0 !important;
-        min-height:0 !important;
         font-size:12.5px !important;
-        line-height:1.2 !important;
-        text-align:left !important;
-        overflow:hidden !important;
+        line-height:1.22 !important;
+        min-height:0 !important;
+        margin:0 !important;
+        max-width:none !important;
       }
       .home-tool-action{
         grid-column:3 !important;
-        grid-row:1 / 3 !important;
+        grid-row:1 !important;
+        align-self:center !important;
+        margin:0 8px 0 0 !important;
         width:84px !important;
-        min-width:84px !important;
-        max-width:84px !important;
-        min-height:58px !important;
-        margin:auto 0 auto auto !important;
-        padding:8px 6px !important;
-        border-radius:13px !important;
+        min-height:54px !important;
+        padding:7px 5px !important;
+        border-radius:12px !important;
         font-size:11px !important;
         line-height:1.1 !important;
-        text-align:center !important;
         white-space:normal !important;
-        overflow:hidden !important;
+        text-align:center !important;
       }
-      .home-tool-action b{
-        font-size:16px !important;
-        flex:0 0 auto !important;
+      .home-tool-action b{font-size:15px !important}
+      .home-search{
+        min-height:56px !important;
+        margin:8px 0 20px !important;
+        padding:6px !important;
+        border-radius:12px !important;
       }
+      .home-search-pin{width:34px;font-size:23px}
+      .home-search input{font-size:14px;height:42px}
+      .home-search button{height:42px;padding:0 15px;font-size:14px}
     }
-    .service-icon{font-size:42px}
-    .service-link strong{display:block;font-size:25px;margin-bottom:10px}
-    .service-link small{display:block;font-size:18px;color:#667a72;line-height:1.35}
-    .service-link b{font-size:30px;color:var(--arancio);align-self:flex-end}
-    @media(max-width:750px){
-      .hero-home{min-height:auto;padding:58px 24px 62px}
-      .hero-home h1{font-size:51px;line-height:.94}
-      .description{font-size:20px}
-      .content-wrap{width:min(100% - 32px,650px)}
-      .project-intro,.why-section,.services-section{padding:60px 0}
-      .project-intro h2,.why-section h2,.services-section h2{font-size:46px}
-      .lead{font-size:20px}
-      .journey-grid,.why-grid,.service-links{grid-template-columns:1fr}
-      .journey-card{min-height:auto;padding:28px}
-      .journey-icon{margin:22px 0 14px}
-      .why-grid{gap:24px}
-      .why-copy p{font-size:19px}
-      .service-link{min-height:170px}
     }
   </style>
 
@@ -995,26 +1119,38 @@
 
           <div class="home-tools" aria-label="Cosa vuoi fare?">
             <a class="home-tool home-tool-food" href="uscite.html">
-              <span class="home-tool-photo">🍝</span>
-              <span class="home-tool-title">MANGIA</span>
-              <span class="home-tool-text">Trova ristoranti vicino alla tua uscita.</span>
-              <span class="home-tool-action">Cerca ristoranti <b aria-hidden="true">→</b></span>
+              <span class="home-tool-media"><span class="home-tool-icon">🍴</span></span>
+              <span class="home-tool-body">
+                <span class="home-tool-title">MANGIA</span>
+                <span class="home-tool-text">Trova ristoranti vicino alla tua uscita.</span>
+                <span class="home-tool-action">Cerca ristoranti <b aria-hidden="true">→</b></span>
+              </span>
             </a>
 
             <a class="home-tool home-tool-explore" href="uscita2.html">
-              <span class="home-tool-photo">🧭</span>
-              <span class="home-tool-title">ESPLORA</span>
-              <span class="home-tool-text">Scopri cosa vedere e cosa trovi nei dintorni.</span>
-              <span class="home-tool-action">Cosa da vedere <b aria-hidden="true">→</b></span>
+              <span class="home-tool-media"><span class="home-tool-icon">📷</span></span>
+              <span class="home-tool-body">
+                <span class="home-tool-title">ESPLORA</span>
+                <span class="home-tool-text">Scopri cosa vedere e vivere nei dintorni.</span>
+                <span class="home-tool-action">Cosa da vedere <b aria-hidden="true">→</b></span>
+              </span>
             </a>
 
             <a class="home-tool home-tool-go" href="carburanti.html">
-              <span class="home-tool-photo">🚗</span>
-              <span class="home-tool-title">RIPARTI</span>
-              <span class="home-tool-text">Trova carburante, parcheggi e servizi lungo il percorso.</span>
-              <span class="home-tool-action">Trova servizi <b aria-hidden="true">→</b></span>
+              <span class="home-tool-media"><span class="home-tool-icon">⛽</span></span>
+              <span class="home-tool-body">
+                <span class="home-tool-title">RIPARTI</span>
+                <span class="home-tool-text">Trova carburante, parcheggi e servizi utili lungo il percorso.</span>
+                <span class="home-tool-action">Trova servizi <b aria-hidden="true">→</b></span>
+              </span>
             </a>
           </div>
+
+          <form class="home-search" action="uscita2.html" method="get">
+            <span class="home-search-pin" aria-hidden="true">⌖</span>
+            <input type="search" name="q" placeholder="Inserisci un'uscita o una località..." aria-label="Inserisci un'uscita o una località">
+            <button type="submit"><span aria-hidden="true">⌕</span> Cerca</button>
+          </form>
 
           <a class="hero-cta" href="#come-ti-aiutiamo">SCOPRI COME TI AIUTIAMO <span aria-hidden="true">↓</span></a>
         </div>
