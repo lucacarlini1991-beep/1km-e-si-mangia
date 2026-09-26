@@ -690,6 +690,16 @@ function uscitaValida(uscita) {
 }
 
 
+// Escape HTML per i contenuti dinamici dei popup.
+function escapeHtml(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // =====================================================
 // CREA POPUP
 // =====================================================
