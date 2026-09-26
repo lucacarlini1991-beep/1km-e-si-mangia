@@ -774,67 +774,40 @@ function creaPopup(uscita) {
 // =====================================================
 // CARICA DATABASE USCITE
 // =====================================================
+// Loader indipendente: il rendering dei caselli non dipende dal motore
+// ristoranti, da Google Places o dal plugin MarkerCluster.
+(async function caricaUscite() {
+  try {
+    const response = await fetch("/uscite.json?map=20260926", { cache: "no-store" });
+    if (!response.ok) throw new Error("uscite.json HTTP " + response.status);
 
-fetch("./uscite.json")
-
-  .then(function(response) {
-
-    if (!response.ok) {
-
-      throw new Error(
-        "Impossibile caricare uscite.json"
-      );
-
-    }
-
-    return response.json();
-
-  })
-
-  .then(function(database) {
+    const database = await response.json();
+    if (!Array.isArray(database)) throw new Error("uscite.json non contiene un array");
 
     usciteItaliane = database;
 
+    // Puliamo eventuali marker generati da un retry e ricostruiamo il layer.
+    if (typeof clusterUscite.clearLayers === "function") {
+      clusterUscite.clearLayers();
+    }
 
-    console.log(
-      "================================="
-    );
-
-    console.log(
-      "DATABASE 1 KM E SI MANGIA"
-    );
-
-    console.log(
-      "Uscite caricate:",
-      usciteItaliane.length
-    );
-
-    console.log(
-      "================================="
-    );
-
-
-    let usciteVisibili = 0;
-
-    let usciteEscluse = 0;
-
-    // Evita doppioni dello stesso casello presenti per le due carreggiate
-    // o per nodi OSM molto vicini (es. Isola del Cantone).
     const usciteMostrate = [];
+    let usciteVisibili = 0;
+    let usciteEscluse = 0;
 
     function distanzaTraCoordinate(aLat, aLon, bLat, bLon) {
       const R = 6371000;
       const toRad = Math.PI / 180;
       const dLat = (bLat - aLat) * toRad;
       const dLon = (bLon - aLon) * toRad;
-      const x = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      const x = Math.sin(dLat / 2) ** 2 +
         Math.cos(aLat * toRad) * Math.cos(bLat * toRad) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+        Math.sin(dLon / 2) ** 2;
+      return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(Math.max(0, 1 - x)));
     }
 
     function chiaveNomeUscita(uscita) {
-      return String(uscita && uscita.nome || "")
+      return String(uscita?.nome || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
@@ -842,34 +815,20 @@ fetch("./uscite.json")
         .trim();
     }
 
-
-    // ---------------------------------------------
-    // CREA MARKER
-    // ---------------------------------------------
-
-    usciteItaliane.forEach(function(uscita) {
-
-      if (
-        !uscitaValida(uscita)
-      ) {
-
+    database.forEach(function(uscita) {
+      if (!uscitaValida(uscita)) {
         usciteEscluse++;
-
         return;
-
       }
 
-      // Lo stesso casello può comparire due volte nel database, uno per
-      // ciascun nodo/carreggiata. Sulla mappa ne mostriamo uno solo.
+      const lat = Number(uscita.lat);
+      const lon = Number(uscita.lon);
       const nomeChiave = chiaveNomeUscita(uscita);
+
       const doppione = usciteMostrate.some(function(esistente) {
-        return esistente.nome === nomeChiave &&
-          distanzaTraCoordinate(
-            esistente.lat,
-            esistente.lon,
-            Number(uscita.lat),
-            Number(uscita.lon)
-          ) < 1000;
+        return nomeChiave &&
+          esistente.nome === nomeChiave &&
+          distanzaTraCoordinate(esistente.lat, esistente.lon, lat, lon) < 1000;
       });
 
       if (doppione) {
@@ -877,101 +836,42 @@ fetch("./uscite.json")
         return;
       }
 
-      usciteMostrate.push({
-        nome: nomeChiave,
-        lat: Number(uscita.lat),
-        lon: Number(uscita.lon)
+      usciteMostrate.push({ nome: nomeChiave, lat, lon });
+
+      const marker = L.marker([lat, lon], {
+        icon: exitIcon,
+        riseOnHover: true,
+        keyboard: true
       });
 
-
-      const marker = L.marker(
-
-        [
-          Number(uscita.lat),
-          Number(uscita.lon)
-        ],
-
-        {
-          icon: exitIcon
-        }
-
-      );
-
-      // Dati dell'uscita sul marker: servono per evitare che un cluster
-      // con punti vicini faccia perdere la selezione dell'uscita corretta.
       marker._uscita1km = uscita;
+      marker.bindPopup(creaPopup(uscita), {
+        maxWidth: 300,
+        autoPan: true
+      });
 
-
-      marker.bindPopup(
-        creaPopup(uscita)
-      );
-
-
-      // -------------------------------------------
-      // CLICK MARKER
-      // -------------------------------------------
-
-      marker.on(
-
-        "click",
-
-        function() {
-          // Il popup Leaflet si apre normalmente. Niente flyTo automatico:
-          // su iPhone il movimento della mappa poteva far richiudere subito la scheda.
-        }
-
-      );
-
-
-      clusterUscite.addLayer(
-        marker
-      );
-
-
+      clusterUscite.addLayer(marker);
       usciteVisibili++;
-
     });
 
+    // MarkerCluster richiede un refresh esplicito in alcune versioni/CDN.
+    if (typeof clusterUscite.refreshClusters === "function") {
+      clusterUscite.refreshClusters();
+    }
 
-    console.log(
-      "Uscite visibili:",
-      usciteVisibili
-    );
+    console.log("DATABASE 1 KM E SI MANGIA", {
+      caricate: database.length,
+      visibili: usciteVisibili,
+      escluse: usciteEscluse
+    });
 
-
-    console.log(
-      "Elementi esclusi:",
-      usciteEscluse
-    );
-
-
-    console.log(
-      "Filtro ristoranti:",
-      CONFIG.distanzaMassimaRistoranteKm +
-      " km + " +
-      CONFIG.tolleranzaDistanzaMetri +
-      " m"
-    );
-
-
-    console.log(
-      "Distanza effettiva:",
-      CONFIG.distanzaMassimaEffettivaMetri +
-      " m"
-    );
-
-  })
-
-
-  .catch(function(error) {
-
-    console.error(
-      "Errore database:",
-      error
-    );
-
-  });
-
+    if (!usciteVisibili) {
+      throw new Error("Nessuna uscita valida è stata renderizzata sulla mappa");
+    }
+  } catch (error) {
+    console.error("Errore caricamento uscite:", error);
+  }
+})();
 
 // =====================================================
 // PULSANTE "ESPLORA LA MAPPA"
