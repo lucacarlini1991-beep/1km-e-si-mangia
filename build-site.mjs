@@ -99,7 +99,7 @@ for (const file of htmlFiles) {
   if (file === 'uscite.html') {
   }
 
-  // Google AdSense: inserisce lo snippet Auto Ads in tutte le pagine pubblicate.\n  if (!html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')) {\n    html = html.replace(/<\\/head>/i, adsenseSnippet + '</head>');\n  }\n\n  // Google AdSense: unità display manuale uniforme su tutte le pagine pubblicate.
+  // Google AdSense: inserisce lo snippet Auto Ads in tutte le pagine pubblicate.\n  if (!html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')) {\n    html = html.replace(/<\/head>/i, adsenseSnippet + '</head>');\n  }\n\n  // Google AdSense: unità display manuale uniforme su tutte le pagine pubblicate.
   // Sulla home sostituisce il riquadro già predisposto; sulle altre pagine viene aggiunta prima del footer.
   const manualAdUnit = `
 <section class="home-ad adsense-manual-section" aria-label="Spazio pubblicitario" style="width:100%;margin:0;padding:25px 24px 30px;background:#004d36">
@@ -121,10 +121,10 @@ for (const file of htmlFiles) {
 </div>`;
 
   if (file === 'come-funziona.html' && !html.includes('adsense-compact-wrap')) {
-    html = html.replace(/<div class="advertising"[^>]*>[\\s\\S]*?<\\/div>/i, compactAdUnit);
+    html = html.replace(/<div class="advertising"[^>]*>[\s\S]*?<\/div>/i, compactAdUnit);
   }
   if (file === 'uscite.html' && !html.includes('adsense-compact-wrap')) {
-    html = html.replace(/<\\/main>/i, compactAdUnit + '\\n</main>');
+    html = html.replace(/<\/main>/i, compactAdUnit + '\\n</main>');
   }
   if (file === 'carburanti.html' && !html.includes('adsense-compact-wrap')) {
     html = html.replace(/<section class="source-note"/i, compactAdUnit + '\\n<section class="source-note"');
@@ -134,16 +134,16 @@ for (const file of htmlFiles) {
   }
 
   if (!html.includes('adsense-compact-box')) {
-    html = html.replace(/<\\/head>/i, '<style>.adsense-compact-wrap{width:100%;padding:18px 16px 24px;margin:10px 0;background:#004d36;box-sizing:border-box}.adsense-compact-box{position:relative;width:min(360px,100%);min-height:100px;margin:0 auto;background:#fff;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;overflow:hidden}.adsense-compact-box .ad-label{position:absolute;left:8px;top:6px;font-size:8px;letter-spacing:1.5px;color:#aaa;z-index:1}</style></head>');
+    html = html.replace(/<\/head>/i, '<style>.adsense-compact-wrap{width:100%;padding:18px 16px 24px;margin:10px 0;background:#004d36;box-sizing:border-box}.adsense-compact-box{position:relative;width:min(360px,100%);min-height:100px;margin:0 auto;background:#fff;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;overflow:hidden}.adsense-compact-box .ad-label{position:absolute;left:8px;top:6px;font-size:8px;letter-spacing:1.5px;color:#aaa;z-index:1}</style></head>');
   }
 
   if (!html.includes('data-ad-slot="4214417995"')) {
     if (html.includes('<section class="home-ad"')) {
-      html = html.replace(/<section class="home-ad"[\\s\\S]*?<\\/section>/i, manualAdUnit);
+      html = html.replace(/<section class="home-ad"[\s\S]*?<\/section>/i, manualAdUnit);
     } else if (/<footer[\\s>]/i.test(html)) {
       html = html.replace(/<footer/i, manualAdUnit + '\\n<footer');
     } else {
-      html = html.replace(/<\\/body>/i, manualAdUnit + '\\n</body>');
+      html = html.replace(/<\/body>/i, manualAdUnit + '\\n</body>');
     }
   }
 
