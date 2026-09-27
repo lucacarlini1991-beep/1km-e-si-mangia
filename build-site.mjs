@@ -61,8 +61,17 @@ for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
   }
 }
 
-const analyticsSnippet = `\n<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>\n<script defer src="/_vercel/insights/script.js"></script>\n`;\n\n// Google AdSense Auto Ads.\nconst adsenseSnippet = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5415767702264945" crossorigin="anonymous"></script>\\n';
-const globalUiSnippet = '\n<script src="fix-ui-1km.js?v=20260914-global"></script>\n<script src="contributi.js?v=20260926-contributi2"></script>\n';
+const analyticsSnippet = `
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+`;
+
+// Google AdSense Auto Ads.
+const adsenseSnippet = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5415767702264945" crossorigin="anonymous"></script>\n';
+const globalUiSnippet = `
+<script src="fix-ui-1km.js?v=20260914-global"></script>
+<script src="contributi.js?v=20260926-contributi2"></script>
+`;
 
 const htmlFiles = fs.readdirSync(out).filter(name => name.toLowerCase().endsWith('.html'));
 
