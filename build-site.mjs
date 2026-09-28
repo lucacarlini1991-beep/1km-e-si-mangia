@@ -121,10 +121,16 @@ for (const file of htmlFiles) {
 
   // Uniforma tutte le pagine: un solo spazio pubblicitario verde, sempre in fondo.
   // Rimuove le vecchie unità compatte/home e inserisce la stessa unità subito prima del footer.
-  html = html.replace(/<section class="home-ad"[^>]*>[\\s\\S]*?<\\/section>/gi, "");
-  html = html.replace(/<div class="adsense-compact-wrap"[^>]*>[\\s\\S]*?<\\/div>\\s*<\\/div>/gi, "");
-  html = html.replace(/<footer/i, manualAdUnit + "\n<footer");
-  if (!/<footer/i.test(html)) html = html.replace(/<\\/body>/i, manualAdUnit + "\n</body>");\n  // Un solo stile UI per tutte le pagine: menu, schede e modali.
+  html = html.replace(/<section class="home-ad"[^>]*>[^]*?<\/section>/gi, "");
+  html = html.replace(/<div class="adsense-compact-wrap"[^>]*>[^]*?<\/div>\s*<\/div>/gi, "");
+  const footerPos = html.search(/<footer/i);
+  if (footerPos >= 0) html = html.slice(0, footerPos) + manualAdUnit + String.fromCharCode(10) + html.slice(footerPos);
+  else {
+    const bodyPos = html.search(/<\/body>/i);
+    if (bodyPos >= 0) html = html.slice(0, bodyPos) + manualAdUnit + String.fromCharCode(10) + html.slice(bodyPos);
+    else html += manualAdUnit;
+  }
+  // Un solo stile UI per tutte le pagine: menu, schede e modali.
   // fix-ui-1km.js è protetto internamente contro il doppio caricamento.
   if (!html.includes('fix-ui-1km.js')) {
     html = html.replace(/<\/body>/i, `${globalUiSnippet}</body>`);
