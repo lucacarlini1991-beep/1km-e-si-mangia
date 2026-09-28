@@ -119,44 +119,7 @@ for (const file of htmlFiles) {
   </div>
 </section>`;
 
-  // Formato AdSense compatto per le pagine più lunghe: stesso slot Google, contenitore grafico più piccolo.
-  const compactAdUnit = `
-<div class="adsense-compact-wrap" aria-label="Spazio pubblicitario">
-  <div class="adsense-compact-box">
-    <span class="ad-label">PUBBLICITÀ</span>
-    <ins class="adsbygoogle" style="display:block;width:100%;min-height:100px" data-ad-client="ca-pub-5415767702264945" data-ad-slot="4214417995" data-ad-format="auto" data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});<\\/script>
-  </div>
-</div>`;
-
-  if (file === 'come-funziona.html' && !html.includes('adsense-compact-wrap')) {
-    html = html.replace(/<div class="advertising"[^>]*>[\s\S]*?<\/div>/i, compactAdUnit);
-  }
-  if (file === 'uscite.html' && !html.includes('adsense-compact-wrap')) {
-    html = html.replace(/<\/main>/i, compactAdUnit + '\\n</main>');
-  }
-  if (file === 'carburanti.html' && !html.includes('adsense-compact-wrap')) {
-    html = html.replace(/<section class="source-note"/i, compactAdUnit + '\\n<section class="source-note"');
-  }
-  if (file === 'faq.html' && !html.includes('adsense-compact-wrap')) {
-    html = html.replace(/<section class="cta"/i, compactAdUnit + '\\n<section class="cta"');
-  }
-
-  if (!html.includes('adsense-compact-box')) {
-    html = html.replace(/<\/head>/i, '<style>.adsense-compact-wrap{width:100%;padding:18px 16px 24px;margin:10px 0;background:#004d36;box-sizing:border-box}.adsense-compact-box{position:relative;width:min(360px,100%);min-height:100px;margin:0 auto;background:#fff;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;overflow:hidden}.adsense-compact-box .ad-label{position:absolute;left:8px;top:6px;font-size:8px;letter-spacing:1.5px;color:#aaa;z-index:1}</style></head>');
-  }
-
-  if (!html.includes('data-ad-slot="4214417995"')) {
-    if (html.includes('<section class="home-ad"')) {
-      html = html.replace(/<section class="home-ad"[\s\S]*?<\/section>/i, manualAdUnit);
-    } else if (/<footer[\\s>]/i.test(html)) {
-      html = html.replace(/<footer/i, manualAdUnit + '\\n<footer');
-    } else {
-      html = html.replace(/<\/body>/i, manualAdUnit + '\\n</body>');
-    }
-  }
-
-  // Un solo stile UI per tutte le pagine: menu, schede e modali.
+  // Uniforma tutte le pagine: un solo spazio pubblicitario verde, sempre in fondo.\n  // Rimuove le vecchie unità compatte/home e inserisce la stessa unità subito prima del footer.\n  html = html.replace(/<section class="home-ad"[^>]*>[\\s\\S]*?<\\/section>/gi, "");\n  html = html.replace(/<div class="adsense-compact-wrap"[^>]*>[\\s\\S]*?<\\/div>\\s*<\\/div>/gi, "");\n  html = html.replace(/<footer/i, manualAdUnit + "\\n<footer");\n  if (!/<footer/i.test(html)) html = html.replace(/<\\/body>/i, manualAdUnit + "\\n</body>");\n  // Un solo stile UI per tutte le pagine: menu, schede e modali.
   // fix-ui-1km.js è protetto internamente contro il doppio caricamento.
   if (!html.includes('fix-ui-1km.js')) {
     html = html.replace(/<\/body>/i, `${globalUiSnippet}</body>`);
