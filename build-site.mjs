@@ -69,6 +69,55 @@ const analyticsSnippet = `
 // Google AdSense Auto Ads.
 const adsenseSnippet = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5415767702264945" crossorigin="anonymous"></script>\n';
 const globalUiSnippet = `
+<style id="site-global-header-fix">
+@media(max-width:750px){
+  .topbar{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:10px!important;
+  }
+  .topbar .logo-link,.topbar>a:first-child{
+    flex:0 1 auto!important;
+    min-width:0!important;
+    margin-right:auto!important;
+  }
+  .topbar .site-account,#siteAccountButton.site-account{
+    position:static!important;
+    top:auto!important;
+    right:auto!important;
+    left:auto!important;
+    transform:none!important;
+    order:2!important;
+    flex:0 0 44px!important;
+    width:44px!important;
+    min-width:44px!important;
+    height:44px!important;
+    margin:0!important;
+    padding:5px!important;
+    border-radius:12px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+  }
+  .topbar .site-account .auth-avatar,#siteAccountButton .auth-avatar{
+    width:30px!important;
+    height:30px!important;
+    margin:0!important;
+  }
+  .topbar .site-account .site-account-name,#siteAccountButton .site-account-name{
+    display:none!important;
+  }
+  .topbar .menu-button{
+    order:3!important;
+    flex:0 0 46px!important;
+    width:46px!important;
+    min-width:46px!important;
+    margin:0!important;
+  }
+}
+</style>
 <script src="fix-ui-1km.js?v=20260914-global"></script>
 <script src="contributi.js?v=20260926-contributi2"></script>
 `;
