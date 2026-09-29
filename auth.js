@@ -6,7 +6,7 @@
 
   const style=document.createElement('style');
   style.textContent=`
-  .site-account .auth-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#eaf2ed;display:inline-flex;align-items:center;justify-content:center;font-size:17px}.site-account .site-account-name{display:inline-block}.site-account.has-avatar{gap:7px;padding:5px 9px}@media(max-width:600px){.site-account.has-avatar{min-width:42px;width:42px;padding:5px}.site-account .site-account-name{display:none}.site-account .auth-avatar{width:30px;height:30px}}
+  .site-account .auth-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#eaf2ed;display:inline-flex;align-items:center;justify-content:center;font-size:17px;overflow:hidden}.site-account .auth-avatar[hidden]{display:none!important}.site-account .site-account-name{display:inline-block}.site-account.has-avatar{gap:7px;padding:5px 9px}@media(max-width:600px){.site-account.has-avatar{min-width:42px;width:42px;padding:5px}.site-account .site-account-name{display:none}.site-account .auth-avatar{width:30px;height:30px}}
   .auth-fab{position:fixed;right:18px;bottom:18px;z-index:9999;border:0;border-radius:999px;background:#fff;color:#075c3b;padding:7px 14px 7px 7px;font:800 16px 'Roboto Condensed',sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;gap:8px}
   .auth-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#eaf2ed;display:inline-flex;align-items:center;justify-content:center;font-size:18px}
   .auth-menu{position:fixed;z-index:10001;display:none;width:220px;background:#fff;border:1px solid #dce7e0;border-radius:15px;padding:7px;box-shadow:0 14px 35px rgba(0,0,0,.2)}
@@ -17,7 +17,7 @@
   .auth-box button{width:100%;padding:13px;border:0;border-radius:10px;background:#075c3b;color:#fff;font:800 16px inherit;cursor:pointer;margin-top:8px}.auth-box .alt{background:#edf3ef;color:#075c3b}.auth-social{display:flex;gap:8px;margin-top:8px}.auth-social button{margin-top:0;flex:1}.auth-google{background:#fff!important;color:#1f2937!important;border:1px solid #d6ddd9!important}.auth-box .danger{background:#f8e9e7;color:#a22}
   .auth-msg{min-height:20px;font-weight:700;font-size:14px;margin-top:10px}.auth-close{float:right;width:auto!important;background:transparent!important;color:#075c3b!important;font-size:26px!important;margin:0!important}
   .auth-link{display:block;background:transparent!important;color:#075c3b!important;text-decoration:underline;font-size:14px!important;padding:8px 0!important;margin:4px 0!important}.auth-divider{height:1px;background:#e3ebe6;margin:15px 0}
-  .avatar-editor{display:flex;align-items:center;gap:14px;padding:12px 0 16px}.avatar-editor img,.avatar-placeholder{width:76px;height:76px;border-radius:50%;object-fit:cover;background:#edf4ef;border:1px solid #d7e4dc}.avatar-placeholder{display:flex;align-items:center;justify-content:center;font-size:32px}.avatar-actions{flex:1}.avatar-actions label{display:block;padding:10px 12px;background:#edf3ef;color:#075c3b;border-radius:10px;font-weight:800;text-align:center;cursor:pointer}.avatar-actions input{display:none!important}.avatar-note{font-size:12px;color:#718078;margin-top:6px}
+  .avatar-editor{display:flex;align-items:center;gap:14px;padding:12px 0 16px}.avatar-editor img,.avatar-placeholder{width:76px;height:76px;border-radius:50%;object-fit:cover;background:#edf4ef;border:1px solid #d7e4dc}.avatar-editor img[hidden],.avatar-placeholder[hidden]{display:none!important}.avatar-placeholder{display:flex;align-items:center;justify-content:center;font-size:32px}.avatar-actions{flex:1}.avatar-actions label{display:block;padding:10px 12px;background:#edf3ef;color:#075c3b;border-radius:10px;font-weight:800;text-align:center;cursor:pointer}.avatar-actions input{display:none!important}.avatar-note{font-size:12px;color:#718078;margin-top:6px}
   .my-review{padding:12px 0;border-bottom:1px solid #e4ece7}.my-review:last-child{border-bottom:0}.my-review .stars{color:#e39a10;font-size:18px}.my-review .date{font-size:12px;color:#718078;margin-top:5px}
   `;document.head.appendChild(style);
 
@@ -41,7 +41,10 @@
     profileCache=data||{id:user.id,display_name:user.user_metadata?.display_name||user.email?.split('@')[0]||'Profilo',avatar_url:user.user_metadata?.avatar_url||null};
     return profileCache;
   }
-  function avatarHTML(p){return p?.avatar_url?'<img class="auth-avatar" src="'+esc(p.avatar_url)+'" alt="">':'<span class="auth-avatar">👤</span>'}
+  function avatarHTML(p){
+    if(!p?.avatar_url)return '<span class="auth-avatar">👤</span>';
+    return '<img class="auth-avatar" src="'+esc(p.avatar_url)+'" alt="" loading="eager" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="auth-avatar" hidden>👤</span>';
+  }
   async function refresh(){
     const user=await currentUser();profileCache=user?await getProfile(user):null;
     const name=profileCache?.display_name||user?.user_metadata?.display_name||user?.email?.split('@')[0]||'ACCEDI';
@@ -64,7 +67,7 @@
   async function render(){
     msg('');const user=await currentUser(),title=q('#authTitle'),text=q('#authText'),submit=q('#authSubmit'),sw=q('#authSwitch'),forgot=q('#authForgot'),social=q('.auth-social'),logout=q('#authLogout');
     if(mode==='account'&&user){social.style.display='none';const p=await getProfile(user);title.textContent='Il mio profilo';text.textContent='Il tuo nome e la foto saranno visibili insieme alle tue recensioni.';
-      const av=p?.avatar_url?'<img src="'+esc(p.avatar_url)+'" alt="Foto profilo">':'<div class="avatar-placeholder">👤</div>';
+      const av=p?.avatar_url?'<img class="profile-avatar-image" src="'+esc(p.avatar_url)+'" alt="Foto profilo" loading="eager" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="avatar-placeholder" hidden>👤</div>':'<div class="avatar-placeholder">👤</div>';
       fields().innerHTML='<div class="avatar-editor">'+av+'<div class="avatar-actions"><label for="authAvatar">📷 Carica foto profilo<input id="authAvatar" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="avatar-note">JPG, PNG o WEBP · max 5 MB</div></div></div>'+input('authName','text','Nome visualizzato',p?.display_name||'');
       q('#authAvatar').onchange=uploadAvatar;submit.textContent='SALVA PROFILO';submit.style.display='block';sw.textContent='CAMBIA PASSWORD';sw.style.display='block';forgot.style.display='none';logout.style.display='block';return}
     if(mode==='myreviews'&&user){social.style.display='none';title.textContent='Le mie recensioni';text.textContent='Tutte le recensioni pubblicate dal tuo account.';submit.style.display=sw.style.display=forgot.style.display=logout.style.display='none';fields().innerHTML='<div id="myReviews">Caricamento...</div>';loadMyReviews(user);return}
