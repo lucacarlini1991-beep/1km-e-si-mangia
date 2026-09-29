@@ -15,3 +15,88 @@
 .coverage-banner:hover{transform:translateY(-2px);border-color:#78a999;box-shadow:0 12px 28px #063c3214}
 .coverage-flag{font-size:25px}.coverage-copy{flex:1;display:grid;gap:3px}.coverage-copy b{font-size:14px}.coverage-copy small{font-size:12px;color:var(--muted);line-height:1.35}.coverage-arrow{font-size:22px;font-weight:800;color:var(--green2)}
 @media(max-width:600px){.coverage-banner{padding:12px 14px}.coverage-copy b{font-size:13px}.coverage-copy small{font-size:11px}}
+
+
+/* =========================================================
+   BANNER ADSENSE VERTICALE — ESPLORA USCITE
+   Desktop: colonna laterale sticky.
+   Mobile: blocco verticale tra titolo e risultati.
+   ========================================================= */
+.chooser-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 280px;
+  gap:24px;
+  align-items:start;
+}
+.chooser-layout .exit-list{
+  min-width:0;
+}
+.vertical-ad{
+  width:100%;
+  position:sticky;
+  top:94px;
+  align-self:start;
+}
+.vertical-ad-label{
+  margin:0 0 7px;
+  padding-left:4px;
+  color:#7a8782;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+.vertical-ad-box{
+  position:relative;
+  width:100%;
+  min-height:430px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  overflow:hidden;
+  background:#fff;
+  border:1px solid #e1e8e4;
+  border-radius:18px;
+  box-shadow:0 8px 22px rgba(0,0,0,.07);
+  padding:10px;
+}
+.vertical-ad-box .adsbygoogle{
+  width:100%;
+  min-height:400px;
+}
+@media(max-width:900px){
+  .chooser-layout{
+    grid-template-columns:minmax(0,1fr) 240px;
+    gap:18px;
+  }
+}
+@media(max-width:750px){
+  .chooser-layout{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .vertical-ad{
+    order:1;
+    position:relative;
+    top:auto;
+    width:100%;
+  }
+  .chooser-layout .exit-list{
+    order:2;
+    width:100%;
+  }
+  .vertical-ad-label{
+    padding-left:2px;
+    margin-bottom:6px;
+  }
+  .vertical-ad-box{
+    min-height:270px;
+    max-height:360px;
+    border-radius:16px;
+    padding:8px;
+  }
+  .vertical-ad-box .adsbygoogle{
+    min-height:250px;
+  }
+}
