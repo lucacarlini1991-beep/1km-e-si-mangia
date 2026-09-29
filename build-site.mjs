@@ -125,10 +125,10 @@ for (const file of htmlFiles) {
 
   // Uniforma tutte le pagine: un solo spazio pubblicitario reale, sempre in fondo.
   // Elimina i vecchi placeholder e le vecchie unità prima di inserirne una sola.
-  html = html.replace(/<section[^>]*class="[^"]*\\bhome-ad\\b[^"]*"[^>]*>[\\s\\S]*?<\\/section>/gi, "");
-  html = html.replace(/<section[^>]*class="[^"]*\\bad-space\\b[^"]*"[^>]*>[\\s\\S]*?<\\/section>/gi, "");
-  html = html.replace(/<div[^>]*class="[^"]*\\badsense-compact-wrap\\b[^"]*"[^>]*>[\\s\\S]*?<\\/div>\\s*<\\/div>/gi, "");
-  html = html.replace(/<section[^>]*class="[^"]*\\badsense-manual-section\\b[^"]*"[^>]*>[\\s\\S]*?<\\/section>/gi, "");
+  html = html.replace(/<section[^>]*class="[^"]*\bhome-ad\b[^"]*"[^>]*>[\s\S]*?<\\/section>/gi, "");
+  html = html.replace(/<section[^>]*class="[^"]*\bad-space\b[^"]*"[^>]*>[\s\S]*?<\\/section>/gi, "");
+  html = html.replace(/<div[^>]*class="[^"]*\badsense-compact-wrap\b[^"]*"[^>]*>[\s\S]*?<\\/div>\s*<\\/div>/gi, "");
+  html = html.replace(/<section[^>]*class="[^"]*\badsense-manual-section\b[^"]*"[^>]*>[\s\S]*?<\\/section>/gi, "");
   const footerPos = html.search(/<footer/i);
   if (footerPos >= 0) html = html.slice(0, footerPos) + manualAdUnit + String.fromCharCode(10) + html.slice(footerPos);
   else {
