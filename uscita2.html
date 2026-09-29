@@ -2,11 +2,11 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-<meta name="uscita2-version" content="20260926-redesign">
+<meta name="uscita2-version" content="20260929-vertical-ad">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Esplora Uscite: scopri luoghi, attrazioni e cose da vedere vicino alla tua uscita autostradale.">
   <title>Esplora Uscite | 1 KM E SI MANGIA</title>
-  <link rel="stylesheet" href="uscita2.css?v=20260926-redesign">
+  <link rel="stylesheet" href="uscita2.css?v=20260929-vertical-ad">\n  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5415767702264945" crossorigin="anonymous"></script>
 <style>
 /* MENU IDENTICO ALLA HOME */
 .menu-overlay{position:fixed;inset:0;background:rgba(3,69,45,.32);z-index:2000;display:none;overflow-y:auto}
@@ -299,7 +299,20 @@ footer{background:#fff!important}
 <main class="shell">
   <section id="chooser" class="chooser">
     <div class="section-head"><div><p class="eyebrow" data-i18n="startHere">PARTI DA QUI</p><h2 id="chooserTitle" data-i18n="chooseYourExit">Scegli la tua uscita</h2></div><span id="exitCount"></span></div>
-    <div id="exitList" class="exit-list"></div>
+    <div class="chooser-layout">
+      <div id="exitList" class="exit-list"></div>
+      <aside class="vertical-ad" aria-label="Spazio pubblicitario">
+        <div class="vertical-ad-label">PUBBLICITÀ</div>
+        <div class="vertical-ad-box">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-5415767702264945"
+               data-ad-slot="4214417995"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+        </div>
+      </aside>
+    </div>
   </section>
   <section id="detail" class="detail hidden" aria-live="polite">
     <button class="all-exits" id="allExits" data-i18n="backExits">← Torna alle uscite</button>
