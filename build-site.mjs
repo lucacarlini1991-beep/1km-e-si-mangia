@@ -108,7 +108,11 @@ for (const file of htmlFiles) {
   if (file === 'uscite.html') {
   }
 
-  // Google AdSense: inserisce lo snippet Auto Ads in tutte le pagine pubblicate.\n  if (!html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')) {\n    html = html.replace(/<\/head>/i, adsenseSnippet + '</head>');\n  }\n\n  // Google AdSense: unità display manuale uniforme su tutte le pagine pubblicate.
+  // Google AdSense: inserisce lo snippet Auto Ads in tutte le pagine pubblicate.
+  if (!html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')) {
+    html = html.replace(/<\/head>/i, adsenseSnippet + '</head>');
+  }
+
   // Sulla home sostituisce il riquadro già predisposto; sulle altre pagine viene aggiunta prima del footer.
   const manualAdUnit = `
 <section class="home-ad adsense-manual-section" aria-label="Spazio pubblicitario" style="width:100%;margin:0;padding:25px 24px 30px;background:#004d36">
