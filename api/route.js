@@ -15,16 +15,16 @@ function distanzaGeograficaMetri(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res, env = {}) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Metodo non consentito." });
   }
 
   const apiKey =
-    process.env.GOOGLE_PLACES_API_KEY ||
-    process.env.GOOGLE_MAPS_API_KEY ||
-    process.env.GOOGLE_API_KEY;
+    env.GOOGLE_PLACES_API_KEY ||
+    env.GOOGLE_MAPS_API_KEY ||
+    env.GOOGLE_API_KEY;
 
   try {
     const body = req.body || {};
