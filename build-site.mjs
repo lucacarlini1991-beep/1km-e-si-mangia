@@ -113,7 +113,7 @@ const globalUiSnippet = `
   }
 }
 </style>
-<script src="fix-ui-1km.js?v=20260914-global"></script>
+
 <script src="contributi.js?v=20260926-contributi2"></script>
 `;
 
@@ -184,14 +184,12 @@ for (const file of htmlFiles) {
   // il build Cloudflare stia pubblicando davvero l'ultima versione del codice.
   html = html.replace(/<ins class="adsbygoogle"/g, '<ins class="adsbygoogle" data-ad-deploy="20261002-cloudflare"');
 
-  // Un solo stile UI per tutte le pagine: menu, schede e modali.
-  // fix-ui-1km.js è protetto internamente contro il doppio caricamento.
-  if (!html.includes('fix-ui-1km.js')) {
-    html = html.replace(/<\/body>/i, `${globalUiSnippet}</body>`);
+  if (!html.includes('rel="icon"')) {
+    html = html.replace(/<\/head>/i, '<link rel="icon" type="image/png" href="assets/logo-definitivo.png">\n</head>');
   }
 
-  if (!html.includes('/_vercel/insights/script.js')) {
-    html = html.replace(/<\/body>/i, `${analyticsSnippet}</body>`);
+  if (!html.includes('contributi.js?v=20260926-contributi2')) {
+    html = html.replace(/<\/body>/i, globalUiSnippet + '</body>');
   }
 
   fs.writeFileSync(filePath, html);
