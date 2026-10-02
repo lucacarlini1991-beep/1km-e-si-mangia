@@ -1,5 +1,5 @@
 // 1 KM E SI MANGIA - Google Places proxy
-// Vercel Node Serverless Function (CommonJS)
+// Cloudflare Worker-compatible server handler
 //
 // Cerca ristoranti con Google Places e applica un filtro forte
 // per escludere distributori, Autogrill e aree di servizio.
@@ -120,16 +120,16 @@ function eAttivitaDaEscludere(place) {
   return false;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res, env = {}) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Metodo non consentito." });
   }
 
   const apiKey =
-    process.env.GOOGLE_PLACES_API_KEY ||
-    process.env.GOOGLE_MAPS_API_KEY ||
-    process.env.GOOGLE_API_KEY;
+    env.GOOGLE_PLACES_API_KEY ||
+    env.GOOGLE_MAPS_API_KEY ||
+    env.GOOGLE_API_KEY;
 
   if (!apiKey) {
     console.error("Nessuna chiave Google Places configurata.");
