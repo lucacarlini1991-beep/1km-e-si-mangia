@@ -1,7 +1,24 @@
 import fuelHandler from "./api/fuel-nearby.js";
+import placesHandler from "./api/places.js";
+import routeHandler from "./api/route.js";
+import healthHandler from "./api/health.js";
 
-function handleFuelRequest(request) {
+async function handleRequest(request, env, handler) {
   const url = new URL(request.url);
+  const method = request.method;
+  let body = undefined;
+
+  if (method !== "GET" && method !== "HEAD") {
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      try {
+        body = await request.json();
+      } catch (_) {
+        body = {};
+      }
+    }
+  }
+
   const responseState = {
     status: 200,
     headers: {},
@@ -9,8 +26,9 @@ function handleFuelRequest(request) {
   };
 
   const req = {
-    method: request.method,
-    query: Object.fromEntries(url.searchParams.entries())
+    method,
+    query: Object.fromEntries(url.searchParams.entries()),
+    body
   };
 
   const res = {
@@ -22,20 +40,20 @@ function handleFuelRequest(request) {
       responseState.headers[name] = String(value);
       return this;
     },
-    json(body) {
-      responseState.body = body;
+    json(payload) {
+      responseState.body = payload;
       return this;
     }
   };
 
-  return Promise.resolve(fuelHandler(req, res)).then(() => {
-    return new Response(JSON.stringify(responseState.body ?? {}), {
-      status: responseState.status,
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        ...responseState.headers
-      }
-    });
+  await handler(req, res, env);
+
+  return new Response(JSON.stringify(responseState.body ?? {}), {
+    status: responseState.status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...responseState.headers
+    }
   });
 }
 
@@ -44,7 +62,19 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/fuel-nearby") {
-      return handleFuelRequest(request);
+      return handleRequest(request, env, fuelHandler);
+    }
+
+    if (url.pathname === "/api/places") {
+      return handleRequest(request, env, placesHandler);
+    }
+
+    if (url.pathname === "/api/route") {
+      return handleRequest(request, env, routeHandler);
+    }
+
+    if (url.pathname === "/api/health") {
+      return handleRequest(request, env, healthHandler);
     }
 
     return env.ASSETS.fetch(request);
