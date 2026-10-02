@@ -1,7 +1,7 @@
 (()=>{
 const exits=window.USCITE2||[];
 const list=document.querySelector('#exitList'),chooser=document.querySelector('#chooser'),detail=document.querySelector('#detail'),input=document.querySelector('#exitSearch'),suggestions=document.querySelector('#suggestions'),clear=document.querySelector('#clearSearch'),locate=document.querySelector('#locateMe'),locationStatus=document.querySelector('#locationStatus'),chooserTitle=document.querySelector('#chooserTitle'),tabsEl=document.querySelector('#tabs'),roadName=document.querySelector('#roadName'),exitName=document.querySelector('#exitName'),exitDescription=document.querySelector('#exitDescription'),mapLink=document.querySelector('#mapLink');
-let current=null,shownExits=[],distanceLimit=5;
+let current=null,shownExits=exits.slice(),distanceLimit=5;
 const tabs={places:{icon:'✨',title:'Cosa offre l’uscita'},parking:{icon:'🅿️',title:'Parcheggi'},camper:{icon:'🚐',title:'Camper'}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const km=(a,b,c,d)=>{const R=6371,q=x=>x*Math.PI/180,h=Math.sin(q(c-a)/2)**2+Math.cos(q(a))*Math.cos(q(c))*Math.sin(q(d-b)/2)**2;return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))};
@@ -38,8 +38,8 @@ function renderTabs(active){
 }
 function search(){
   const q=input.value.trim().toLowerCase();clear.hidden=!q;
-  chooser.classList.add('hidden');
-  if(!q){suggestions.innerHTML='';return}
+  if(!q){suggestions.innerHTML='';chooser.classList.remove('hidden');renderList(shownExits);return}
+  chooser.classList.remove('hidden');
   const f=exits.filter(e=>(e.name+' '+e.road+' '+e.city).toLowerCase().includes(q)).slice(0,8);
   suggestions.innerHTML=f.length
     ? f.map(e=>'<div class="suggestion" data-id="'+esc(e.id)+'"><b>'+esc(e.name)+'</b><span>'+esc(e.road)+' · '+esc(e.city)+'</span></div>').join('')
@@ -63,10 +63,11 @@ locate.onclick=()=>{
   },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
 };
 document.querySelector('#allExits').onclick=()=>{
-  detail.classList.add('hidden');chooser.classList.add('hidden');
-  input.focus();window.scrollTo({top:0,behavior:'smooth'});
+  detail.classList.add('hidden');chooser.classList.remove('hidden');
+  chooserTitle.textContent='Scegli la tua uscita';renderList(shownExits);input.value='';clear.hidden=true;suggestions.innerHTML='';
+  window.scrollTo({top:0,behavior:'smooth'});
 };
-document.querySelector('#exitCount').textContent='';
-list.innerHTML='';
-chooser.classList.add('hidden');
+chooserTitle.textContent='Scegli la tua uscita';
+renderList(shownExits);
+chooser.classList.remove('hidden');
 })();
