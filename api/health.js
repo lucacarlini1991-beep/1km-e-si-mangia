@@ -1,4 +1,4 @@
-module.exports = async function handler(req, res) {
+export default async function handler(req, res, env = {}) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({
@@ -8,11 +8,11 @@ module.exports = async function handler(req, res) {
   }
 
   const googleConfigured = Boolean(
-    process.env.GOOGLE_PLACES_API_KEY
+    env.GOOGLE_PLACES_API_KEY
   );
 
   const supabaseConfigured = Boolean(
-    process.env.SUPABASE_SERVICE_ROLE_KEY
+    env.SUPABASE_SERVICE_ROLE_KEY
   );
 
   return res.status(200).json({
