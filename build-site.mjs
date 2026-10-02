@@ -61,11 +61,6 @@ for (const file of ['ads.txt', 'robots.txt', 'sitemap.xml']) {
   }
 }
 
-const analyticsSnippet = `
-<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
-<script defer src="/_vercel/insights/script.js"></script>
-`;
-
 // Google AdSense Auto Ads.
 const adsenseSnippet = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5415767702264945" crossorigin="anonymous"></script>\n';
 const globalUiSnippet = `
