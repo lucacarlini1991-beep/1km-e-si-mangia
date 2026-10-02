@@ -100,3 +100,6 @@
     min-height:250px;
   }
 }
+
+/* Filtri ricerca Esplora Uscite */
+.exit-filters{margin:12px auto 0;max-width:680px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.filter-label{font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap}.zone-pills{display:flex;gap:7px;flex-wrap:wrap}.zone-pill,.load-more-exits{border:1px solid #cfe0d9;background:#fff;color:var(--green);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer}.zone-pill.active{background:var(--green);color:#fff;border-color:var(--green)}.load-more-exits{display:block;margin:22px auto 0;border-radius:12px;padding:11px 18px}.load-more-exits:hover,.zone-pill:hover{border-color:#78a999}@media(max-width:600px){.exit-filters{align-items:flex-start}.zone-pills{width:100%}.zone-pill{padding:8px 10px}}
