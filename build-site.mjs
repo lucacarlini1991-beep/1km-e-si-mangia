@@ -164,7 +164,7 @@ for (const file of htmlFiles) {
 
   // Sulla home sostituisce il riquadro già predisposto; sulle altre pagine viene aggiunta prima del footer.
   const manualAdUnit = `
-<section class="home-ad adsense-manual-section" aria-label="Spazio pubblicitario" style="width:100%;margin:0;padding:25px 24px 30px;background:#004d36">
+<section class="home-ad adsense-manual-section" data-ad-deploy="20261002-cloudflare" aria-label="Spazio pubblicitario" style="width:100%;margin:0;padding:25px 24px 30px;background:#004d36">
   <div class="ad-box adsense-manual-box" style="width:min(728px,100%);min-height:110px;height:auto;margin:0 auto;background:#fff;border:1px solid #ddd;position:relative;display:flex;align-items:center;justify-content:center">
     <span class="ad-label" style="position:absolute;left:8px;top:7px;font-size:9px;letter-spacing:2px;color:#aaa;z-index:1">PUBBLICITÀ</span>
     <ins class="adsbygoogle" style="display:block;width:100%;min-height:90px" data-ad-client="ca-pub-5415767702264945" data-ad-slot="4214417995" data-ad-format="auto" data-full-width-responsive="true"></ins>
@@ -185,6 +185,10 @@ for (const file of htmlFiles) {
     if (bodyPos >= 0) html = html.slice(0, bodyPos) + manualAdUnit + String.fromCharCode(10) + html.slice(bodyPos);
     else html += manualAdUnit;
   }
+  // Garantisce un identificatore di versione nel markup pubblicitario, utile per verificare che
+  // il build Cloudflare stia pubblicando davvero l'ultima versione del codice.
+  html = html.replace(/<ins class="adsbygoogle"/g, '<ins class="adsbygoogle" data-ad-deploy="20261002-cloudflare"');
+
   // Un solo stile UI per tutte le pagine: menu, schede e modali.
   // fix-ui-1km.js è protetto internamente contro il doppio caricamento.
   if (!html.includes('fix-ui-1km.js')) {
