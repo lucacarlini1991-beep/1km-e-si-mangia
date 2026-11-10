@@ -195,6 +195,15 @@ for (const file of htmlFiles) {
   fs.writeFileSync(filePath, html);
 }
 
+// Pubblica anche l'URL pulito /itinerari/ per Cloudflare Pages.
+const itinerariHtml = path.join(out, 'itinerari.html');
+if (fs.existsSync(itinerariHtml)) {
+  const itineraryDir = path.join(out, 'itinerari');
+  fs.mkdirSync(itineraryDir, { recursive: true });
+  const itineraryContent = fs.readFileSync(itinerariHtml, 'utf8').replace('<head>', '<head><base href="/">');
+  fs.writeFileSync(path.join(itineraryDir, 'index.html'), itineraryContent);
+}
+
 console.log('Sito sincronizzato in dist/.');
 console.log('Pagine:', fs.readdirSync(out).filter(x => x.endsWith('.html')).join(', '));
 console.log('Analytics Vercel: snippet inserito nelle pagine HTML.');
